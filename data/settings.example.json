@@ -1,0 +1,13 @@
+{
+  "rotationStrategy": "round_robin",
+  "healthCheckIntervalSec": 120,
+  "stickyTtlMs": 600000,
+  "maxConsecFails": 3,
+  "gatewayEnabled": true,
+  "healthCheckTimeoutMs": 9000,
+  "requireApiKeyPublic": false,
+  "accounts": [
+    { "id": "acc1", "label": "Account 1", "username": "CHANGE_ME", "password": "CHANGE_ME", "plan": "Datacenter", "proxies": 0 },
+    { "id": "acc2", "label": "Account 2", "username": "CHANGE_ME", "password": "CHANGE_ME", "plan": "Datacenter", "proxies": 0 }
+  ]
+}
