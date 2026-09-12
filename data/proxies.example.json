@@ -1,0 +1,28 @@
+{
+  "proxies": [
+    {
+      "id": "p1",
+      "label": "Webshare-01",
+      "host": "1.2.3.4",
+      "port": 1234,
+      "username": "CHANGE_ME",
+      "password": "CHANGE_ME",
+      "protocol": "http",
+      "enabled": true,
+      "addedAt": "2026-09-01T00:00:00.000Z",
+      "health": {
+        "status": "unknown",
+        "latencyMs": 0,
+        "lastCheck": null,
+        "consecFails": 0,
+        "totalChecks": 0,
+        "totalOk": 0,
+        "exitIp": null
+      },
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "city": "London",
+      "flag": "🇬🇧"
+    }
+  ]
+}
