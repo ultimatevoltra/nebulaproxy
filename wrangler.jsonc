@@ -1,10 +1,11 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "vortexproxy",
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "nebulaproxy",
   "main": "_worker.js",
   "compatibility_date": "2026-01-01",
   "assets": {
-    "directory": "./public",
-    "binding": "ASSETS"
+    "directory": ".",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
   }
 }
