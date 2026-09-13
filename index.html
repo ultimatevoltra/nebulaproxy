@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VortexProxy — Rotating Proxy API</title>
+<meta name="description" content="VortexProxy — a rotating proxy API gateway. Fresh egress IP on every request, multi-country rotation, sticky sessions, and live streaming." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%AA%3C/text%3E%3C/svg%3E" />
+<style>
+/* ==================== VortexProxy — "Ember" design system ==================== */
+:root{
+  --bg-0:#0a0305;
+  --bg-1:#120409;
+  --bg-2:#1a0710;
+  --bg-3:#220a14;
+  --panel:rgba(40,10,20,.55);
+  --panel-solid:#1c0a12;
+  --panel-raised:#260d18;
+  --border:#3a1420;
+  --border-soft:#2c0f1a;
+  --border-strong:#5c1f30;
+  --accent:#e11d3f;
+  --accent-hi:#ff2d55;
+  --accent-2:#ff6b1a;
+  --accent-3:#ffb020;
+  --accent-ok:#2dd4a0;
+  --accent-bad:#ff3b3b;
+  --accent-warn:#ffb020;
+  --text:#fff0f3;
+  --text-dim:#f0b6c4;
+  --text-faint:#a86b7a;
+  --text-invert:#16060a;
+  --radius:14px;
+  --radius-lg:20px;
+  --radius-xl:26px;
+  --radius-sm:9px;
+  --radius-pill:999px;
+  --shadow-glow:0 0 0 1px rgba(225,29,63,.22), 0 14px 50px -12px rgba(225,29,63,.42);
+  --shadow-panel:0 22px 60px -24px rgba(0,0,0,.8);
+  --grad:linear-gradient(120deg,#e11d3f 0%,#ff6b1a 60%,#ffb020 120%);
+  --grad-soft:linear-gradient(120deg,rgba(225,29,63,.22),rgba(255,107,26,.14));
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --ease-spring:cubic-bezier(.34,1.4,.44,1);
+  --dur-fast:.16s; --dur-med:.3s; --dur-slow:.6s;
+  --font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono','SFMono-Regular',ui-monospace,Consolas,monospace;
+  --container:1120px;
+  --nav-h:64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font);color:var(--text);background:var(--bg-0);
+  font-size:16px;line-height:1.65;min-height:100vh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(225,29,63,.16), transparent 60%),
+    radial-gradient(700px 500px at -10% 20%, rgba(255,107,26,.10), transparent 60%),
+    radial-gradient(800px 600px at 50% 120%, rgba(225,29,63,.08), transparent 55%);
+  background-attachment:fixed;
+}
+a{color:inherit;text-decoration:none}
+::selection{background:rgba(225,29,63,.45);color:#fff}
+.container{max-width:var(--container);margin:0 auto;padding:0 24px}
+
+/* scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg-1)}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent-2));border-radius:99px;border:2px solid var(--bg-1)}
+
+/* ==================== Nav ==================== */
+.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);
+  background:rgba(10,3,5,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border-soft)}
+.nav-inner{max-width:var(--container);margin:0 auto;height:100%;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:-.01em}
+.brand .logo{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(225,29,63,.6))}
+.brand b{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-links a{padding:8px 14px;border-radius:var(--radius-sm);font-size:14.5px;color:var(--text-dim);
+  transition:all var(--dur-fast) var(--ease-out)}
+.nav-links a:hover{color:var(--text);background:rgba(225,29,63,.10)}
+.lang{position:relative}
+.lang-btn{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--radius-sm);
+  background:var(--panel);border:1px solid var(--border);cursor:pointer;color:var(--text-dim);
+  font-family:var(--font);font-size:14px;transition:all var(--dur-fast) var(--ease-out)}
+.lang-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.lang-btn .globe{font-size:15px}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:170px;background:var(--panel-solid);
+  border:1px solid var(--border);border-radius:var(--radius);padding:6px;box-shadow:var(--shadow-panel);
+  opacity:0;visibility:hidden;transform:translateY(-6px);transition:all var(--dur-med) var(--ease-out);z-index:60}
+.lang.open .lang-menu{opacity:1;visibility:visible;transform:none}
+.lang-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 11px;
+  border-radius:var(--radius-sm);cursor:pointer;font-size:14px;color:var(--text-dim);
+  background:none;border:none;font-family:var(--font);transition:all var(--dur-fast)}
+.lang-item:hover{background:rgba(225,29,63,.12);color:var(--text)}
+.lang-item.active{color:var(--accent-hi);background:rgba(225,29,63,.14);font-weight:600}
+
+/* ==================== Hero ==================== */
+.hero{position:relative;padding:88px 0 56px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius-pill);
+  background:var(--grad-soft);border:1px solid var(--border);font-size:13.5px;color:var(--text-dim);
+  font-family:var(--mono);margin-bottom:26px}
+.dot-pulse{width:8px;height:8px;border-radius:50%;background:var(--accent-ok);
+  box-shadow:0 0 0 0 rgba(45,212,160,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(45,212,160,.55)}70%{box-shadow:0 0 0 9px rgba(45,212,160,0)}100%{box-shadow:0 0 0 0 rgba(45,212,160,0)}}
+.hero h1{font-size:clamp(34px,6vw,62px);line-height:1.05;letter-spacing:-.03em;font-weight:800;margin-bottom:20px}
+.hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{max-width:640px;margin:0 auto 30px;color:var(--text-dim);font-size:18px}
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:var(--radius);
+  font-weight:600;font-size:15px;cursor:pointer;border:1px solid transparent;font-family:var(--font);
+  transition:transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast), background var(--dur-fast)}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--grad);color:var(--text-invert);box-shadow:var(--shadow-glow)}
+.btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--border-strong)}
+.hero-meta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.meta-chip{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-pill);
+  background:var(--panel);border:1px solid var(--border-soft);font-size:13.5px;color:var(--text-dim);font-family:var(--mono)}
+.meta-chip b{color:var(--text);font-weight:600}
+
+/* ==================== Stats ==================== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin:16px 0 8px}
+.stat{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));
+  border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;text-align:center;
+  position:relative;overflow:hidden;transition:transform var(--dur-med) var(--ease-out), border-color var(--dur-med)}
+.stat:hover{transform:translateY(-3px);border-color:var(--border-strong)}
+.stat::after{content:"";position:absolute;inset:0;background:var(--grad-soft);opacity:0;transition:opacity var(--dur-med)}
+.stat:hover::after{opacity:1}
+.stat .num{font-size:30px;font-weight:800;font-family:var(--mono);background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1}
+.stat .lbl{font-size:13px;color:var(--text-faint);margin-top:6px;text-transform:uppercase;letter-spacing:.06em;position:relative;z-index:1}
+
+/* ==================== Sections ==================== */
+.section{padding:56px 0}
+.section-head{max-width:700px;margin:0 auto 40px;text-align:center}
+.eyebrow{display:inline-block;font-family:var(--mono);font-size:12.5px;color:var(--accent-hi);
+  letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
+.section-head h2{font-size:clamp(26px,4vw,40px);letter-spacing:-.02em;font-weight:800;margin-bottom:12px}
+.section-head p{color:var(--text-dim);font-size:16.5px}
+
+/* ==================== Request tester ==================== */
+.tester{border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--panel);
+  overflow:hidden;box-shadow:var(--shadow-panel)}
+.tester-bar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--border-soft);
+  background:var(--panel-solid)}
+.t-dot{width:11px;height:11px;border-radius:50%}
+.t-dot.r{background:#ff5f57}.t-dot.y{background:#febc2e}.t-dot.g{background:#28c840}
+.tester-title{margin-left:8px;font-family:var(--mono);font-size:13px;color:var(--text-faint)}
+.tester-body{padding:22px}
+.field-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--text-faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:11px 13px;color:var(--text);font-family:var(--mono);font-size:14px;
+  transition:border-color var(--dur-fast);outline:none;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{min-height:80px;resize:vertical}
+.field select{cursor:pointer}
+.method-seg{display:flex;gap:6px;flex-wrap:wrap}
+.method{flex:1;padding:9px 6px;text-align:center;font-family:var(--mono);font-size:12.5px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text-dim);cursor:pointer;transition:all var(--dur-fast)}
+.method:hover{border-color:var(--border-strong)}
+.method.active{background:var(--grad);color:var(--text-invert);border-color:transparent;font-weight:700}
+.send-btn{width:100%;padding:14px;font-size:16px;justify-content:center;margin-top:6px}
+.send-btn:disabled{opacity:.55;cursor:not-allowed}
+.response{background:var(--bg-0);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-top:16px;font-family:var(--mono);font-size:13px;min-height:90px;
+  overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:var(--text-dim);position:relative}
+.response .status-tag{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);
+  font-size:11px;font-weight:700;margin-bottom:10px;font-family:var(--mono)}
+.status-2xx{background:rgba(45,212,160,.15);color:var(--accent-ok)}
+.status-4xx,.status-5xx{background:rgba(255,59,59,.15);color:var(--accent-bad)}
+.status-idle{background:var(--panel);color:var(--text-faint)}
+
+/* ==================== Features ==================== */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.feature{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));
+  border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;position:relative;overflow:hidden;
+  transition:transform var(--dur-med) var(--ease-out), border-color var(--dur-med)}
+.feature:hover{transform:translateY(-4px);border-color:var(--border-strong)}
+.feature .ico{font-size:26px;margin-bottom:12px;display:inline-block}
+.feature h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.feature p{font-size:14px;color:var(--text-dim)}
+
+/* ==================== Code blocks ==================== */
+.code{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:14px 0}
+.code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;
+  border-bottom:1px solid var(--border-soft);font-family:var(--mono);font-size:12px;color:var(--text-faint)}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-sm);
+  padding:4px 11px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all var(--dur-fast)}
+.copy-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.code pre{padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text-dim)}
+.code code{font-family:var(--mono)}
+.code .k{color:var(--accent-hi)}.code .s{color:#7dd3a8}.code .c{color:#6b5560}.code .n{color:var(--accent-3)}
+
+/* ==================== API table ==================== */
+.api-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+.api-table th{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border-strong);
+  font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint)}
+.api-table td{padding:12px 14px;border-bottom:1px solid var(--border-soft);color:var(--text-dim);vertical-align:top}
+.api-table td.mono{font-family:var(--mono);font-size:13px;color:var(--text)}
+.api-table .pill{display:inline-block;padding:3px 9px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;font-family:var(--mono)}
+.pill-get{background:rgba(45,212,160,.15);color:var(--accent-ok)}
+.pill-post{background:rgba(225,29,63,.18);color:var(--accent-hi)}
+.wrap-table{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--panel)}
+
+/* ==================== Footer ==================== */
+.footer{border-top:1px solid var(--border-soft);padding:40px 0;margin-top:60px;text-align:center}
+.footer .brand{justify-content:center;margin-bottom:14px}
+.footer p{color:var(--text-faint);font-size:14px;max-width:520px;margin:0 auto}
+.footer .tag{font-family:var(--mono);font-size:12px;color:var(--text-faint);margin-top:14px}
+
+/* ==================== Animations ==================== */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s var(--ease-out), transform .7s var(--ease-out)}
+.reveal.in{opacity:1;transform:none}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.float{animation:float 5s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.lang-spinner{display:none;align-items:center;gap:10px;justify-content:center;padding:40px;color:var(--text-faint);font-family:var(--mono);font-size:14px}
+
+/* ==================== Responsive ==================== */
+@media(max-width:720px){
+  .nav-links{display:none}
+  .hero{padding:60px 0 40px}
+  .hero-actions .btn{width:100%;justify-content:center}
+  .section{padding:40px 0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#e11d3f"/><stop offset=".6" stop-color="#ff6b1a"/><stop offset="1" stop-color="#ffb020"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#lg)" stroke-width="7"/>
+        <path d="M50 14c6 20 6 26 0 46-6-20-6-26 0-46z" fill="url(#lg)"/>
+        <circle cx="50" cy="38" r="6" fill="#fff"/>
+      </svg>
+      <span><b>Vortex</b>Proxy</span>
+    </a>
+    <div class="nav-links">
+      <a href="#overview" data-i18n="nav.overview">Overview</a>
+      <a href="#playground" data-i18n="nav.playground">Playground</a>
+      <a href="#docs" data-i18n="nav.docs">Docs</a>
+    </div>
+    <div class="lang" id="lang">
+      <button class="lang-btn" id="langBtn"><span class="globe">🌐</span><span id="langLabel">English</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+  <!-- HERO -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-badge"><span class="dot-pulse"></span><span data-i18n="hero.badge">Gateway Online</span></div>
+      <h1 data-i18n="hero.title">Every request exits through a <span class="grad">fresh egress node</span>.</h1>
+      <p class="hero-sub" data-i18n="hero.sub">Rotated. Retried. Routed. A new IP, a new session, a new identity on every hop. One clean API, zero infrastructure to manage.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#playground" data-i18n="hero.play">Open Playground <span>→</span></a>
+        <a class="btn btn-ghost" href="#docs" data-i18n="hero.docs">Read the API</a>
+      </div>
+      <div class="hero-meta" id="heroMeta">
+        <span class="meta-chip">⚡ <b>—</b> <span data-i18n="hero.avgLatency">avg latency</span></span>
+        <span class="meta-chip">🌍 <b id="regionCount">8</b> <span data-i18n="hero.regions">regions</span></span>
+        <span class="meta-chip">🟢 <b data-i18n="hero.live">live</b> <span data-i18n="hero.gateway">gateway</span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- OVERVIEW / STATS -->
+  <section class="section" id="overview" style="padding-top:12px">
+    <div class="container">
+      <div class="stats">
+        <div class="stat"><div class="num" id="statRequests">0</div><div class="lbl" data-i18n="stat.requests">Requests</div></div>
+        <div class="stat"><div class="num" id="statSuccess">—</div><div class="lbl" data-i18n="stat.success">Success rate</div></div>
+        <div class="stat"><div class="num" id="statLatency">—</div><div class="lbl" data-i18n="stat.latency">Avg latency</div></div>
+        <div class="stat"><div class="num" id="statRegions">0</div><div class="lbl" data-i18n="stat.regions">Regions seen</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="feat.eyebrow">Capabilities</span>
+        <h2 data-i18n="feat.title">Built for serious rotation</h2>
+        <p data-i18n="feat.sub">A precious path — rotated, retried and routed. The upstream provider is never exposed to clients.</p>
+      </div>
+      <div class="features" id="featuresGrid"></div>
+    </div>
+  </section>
+
+  <!-- PLAYGROUND -->
+  <section class="section" id="playground">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="pg.eyebrow">Request Tester</span>
+        <h2 data-i18n="pg.title">Playground</h2>
+        <p data-i18n="pg.sub">Send a request through the rotating proxy and watch it exit through a fresh IP.</p>
+      </div>
+      <div class="tester reveal">
+        <div class="tester-bar"><span class="t-dot r"></span><span class="t-dot y"></span><span class="t-dot g"></span><span class="tester-title" data-i18n="pg.bar">vortex · request console</span></div>
+        <div class="tester-body">
+          <div class="field-row">
+            <div class="field" style="flex:2">
+              <label data-i18n="pg.target">Target URL</label>
+              <input type="text" id="pgUrl" value="https://api.ipify.org?format=json" />
+            </div>
+            <div class="field">
+              <label data-i18n="pg.country">Country</label>
+              <select id="pgCountry">
+                <option value="">auto</option>
+                <option>us</option><option>gb</option><option>de</option><option>pl</option><option>es</option><option>jp</option><option>br</option><option>fr</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:2">
+              <label data-i18n="pg.method">Method</label>
+              <div class="method-seg" id="pgMethod">
+                <div class="method active" data-m="GET">GET</div>
+                <div class="method" data-m="POST">POST</div>
+                <div class="method" data-m="PUT">PUT</div>
+                <div class="method" data-m="PATCH">PATCH</div>
+                <div class="method" data-m="DELETE">DELETE</div>
+              </div>
+            </div>
+            <div class="field">
+              <label data-i18n="pg.retries">Retries</label>
+              <select id="pgRetries"><option>1</option><option>2</option><option selected>4</option><option>6</option><option>8</option></select>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label data-i18n="pg.body">Body · JSON or raw (optional)</label>
+            <textarea id="pgBody" placeholder='{"key":"value"}'></textarea>
+          </div>
+          <button class="btn btn-primary send-btn" id="pgSend">⚡ <span data-i18n="pg.send">Send request</span></button>
+          <div class="response" id="pgResponse"><span class="status-tag status-idle" data-i18n="pg.idle">idle</span><div data-i18n="pg.hint">// response appears here — status, latency, country, attempt</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCS -->
+  <section class="section" id="docs">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="docs.eyebrow">API Reference</span>
+        <h2 data-i18n="docs.title">Rotating proxy API</h2>
+        <p data-i18n="docs.sub">One endpoint. Rotates IP on every attempt.</p>
+      </div>
+
+      <div class="reveal">
+        <div class="wrap-table">
+          <table class="api-table">
+            <thead><tr><th data-i18n="docs.tbl.endpoint">Endpoint</th><th data-i18n="docs.tbl.desc">Description</th></tr></thead>
+            <tbody>
+              <tr><td class="mono"><span class="pill pill-post">POST</span> /api/proxy</td><td data-i18n="docs.tbl.proxy">Rotate IP and fetch a target URL</td></tr>
+              <tr><td class="mono"><span class="pill pill-get">GET</span> /api/proxy/ip</td><td data-i18n="docs.tbl.ip">Get the current egress IP</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3 style="margin:34px 0 10px;font-size:18px" data-i18n="docs.params">Request fields</h3>
+      <div class="wrap-table reveal">
+        <table class="api-table">
+          <thead><tr><th data-i18n="docs.tbl.field">Field</th><th data-i18n="docs.tbl.type">Type</th><th data-i18n="docs.tbl.req">Required</th><th data-i18n="docs.tbl.desc2">Description</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">url</td><td class="mono">string</td><td data-i18n="yes">yes</td><td data-i18n="docs.f.url">Target URL to fetch through the proxy (https).</td></tr>
+            <tr><td class="mono">method</td><td class="mono">string</td><td data-i18n="no">no</td><td data-i18n="docs.f.method">GET, POST, PUT, PATCH, DELETE, HEAD (default GET).</td></tr>
+            <tr><td class="mono">proxy_country</td><td class="mono">string</td><td data-i18n="no">no</td><td data-i18n="docs.f.country">us · gb · de · pl · es · jp · br · fr (default random).</td></tr>
+            <tr><td class="mono">retries</td><td class="mono">number</td><td data-i18n="no">no</td><td data-i18n="docs.f.retries">Attempts (max 8, default 4). Each uses a fresh IP.</td></tr>
+            <tr><td class="mono">headers</td><td class="mono">object</td><td data-i18n="no">no</td><td data-i18n="docs.f.headers">Extra headers to forward.</td></tr>
+            <tr><td class="mono">body</td><td class="mono">any</td><td data-i18n="no">no</td><td data-i18n="docs.f.body">Request body (string or object).</td></tr>
+            <tr><td class="mono">bodyIsBase64</td><td class="mono">boolean</td><td data-i18n="no">no</td><td data-i18n="docs.f.b64">true when body is base64 (binary/file uploads).</td></tr>
+            <tr><td class="mono">sticky</td><td class="mono">boolean</td><td data-i18n="no">no</td><td data-i18n="docs.f.sticky">Keep one IP across steps for login flows.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin:34px 0 4px;font-size:18px" data-i18n="docs.curl">cURL example</h3>
+      <div class="code reveal">
+        <div class="code-head"><span>bash</span><button class="copy-btn" data-copy="1" data-i18n="docs.copy">copy</button></div>
+        <pre><code>curl -X POST <span class="n">/api/proxy</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "url": "https://api.ipify.org?format=json",
+    "method": "GET",
+    "proxy_country": "us",
+    "retries": 4
+  }'</span></code></pre>
+      </div>
+
+      <h3 style="margin:34px 0 4px;font-size:18px" data-i18n="docs.py">Python example</h3>
+      <div class="code reveal">
+        <div class="code-head"><span>python</span><button class="copy-btn" data-copy="2" data-i18n="docs.copy">copy</button></div>
+        <pre><code><span class="k">import</span> requests
+
+resp = requests.post(<span class="s">"/api/proxy"</span>, json={
+    <span class="s">"url"</span>: <span class="s">"https://api.ipify.org?format=json"</span>,
+    <span class="s">"proxy_country"</span>: <span class="s">"gb"</span>,
+    <span class="s">"retries"</span>: 4
+})
+<span class="k">print</span>(resp.json())</code></pre>
+      </div>
+
+      <h3 style="margin:34px 0 4px;font-size:18px" data-i18n="docs.node">Node.js example</h3>
+      <div class="code reveal">
+        <div class="code-head"><span>javascript</span><button class="copy-btn" data-copy="3" data-i18n="docs.copy">copy</button></div>
+        <pre><code><span class="k">const</span> res = <span class="k">await</span> fetch(<span class="s">"/api/proxy"</span>, {
+  method: <span class="s">"POST"</span>,
+  headers: { <span class="s">"Content-Type"</span>: <span class="s">"application/json"</span> },
+  body: <span class="n">JSON</span>.stringify({
+    url: <span class="s">"https://api.ipify.org?format=json"</span>,
+    proxy_country: <span class="s">"de"</span>
+  })
+});
+<span class="k">const</span> data = <span class="k">await</span> res.json();
+<span class="n">console</span>.log(data);</code></pre>
+      </div>
+
+      <h3 style="margin:34px 0 4px;font-size:18px" data-i18n="docs.res">Response</h3>
+      <div class="code reveal">
+        <div class="code-head"><span>json</span><button class="copy-btn" data-copy="4" data-i18n="docs.copy">copy</button></div>
+        <pre><code>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"status"</span>: <span class="n">200</span>,
+  <span class="s">"data"</span>: { ... },
+  <span class="s">"headers"</span>: { ... },        <span class="c">// real upstream headers</span>
+  <span class="s">"proxyCountry"</span>: <span class="s">"us"</span>,     <span class="c">// node used</span>
+  <span class="s">"attempt"</span>: <span class="n">1</span>,
+  <span class="s">"elapsed_ms"</span>: <span class="n">842</span>
+}</code></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:30px;height:30px">
+        <defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e11d3f"/><stop offset=".6" stop-color="#ff6b1a"/><stop offset="1" stop-color="#ffb020"/></linearGradient></defs>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#lg2)" stroke-width="7"/>
+        <path d="M50 14c6 20 6 26 0 46-6-20-6-26 0-46z" fill="url(#lg2)"/>
+        <circle cx="50" cy="38" r="6" fill="#fff"/>
+      </svg>
+      <span><b>Vortex</b>Proxy</span>
+    </div>
+    <p data-i18n="footer.note">Precious infrastructure. The upstream node provider and gateway internals are never disclosed to clients — responses only expose status, data and headers.</p>
+    <div class="tag" data-i18n="footer.tag">crafted · rotating proxy gateway · v1.0.0</div>
+  </div>
+</footer>
+
+<script>
+/* ==================== i18n ==================== */
+const I18N = {
+  en: { code:"en", label:"English", dir:"ltr" },
+  bn: { code:"bn", label:"বাংলা", dir:"ltr" },
+  hi: { code:"hi", label:"हिन्दी", dir:"ltr" },
+  es: { code:"es", label:"Español", dir:"ltr" },
+  fr: { code:"fr", label:"Français", dir:"ltr" },
+  ar: { code:"ar", label:"العربية", dir:"rtl" },
+  ru: { code:"ru", label:"Русский", dir:"ltr" }
+};
+const STRINGS = {
+  "nav.overview": { en:"Overview", bn:"সংক্ষিপ্ত", hi:"अवलोकन", es:"Resumen", fr:"Aperçu", ar:"نظرة عامة", ru:"Обзор" },
+  "nav.playground": { en:"Playground", bn:"প্লেগ্রাউন্ড", hi:"प्लेग्राउंड", es:"Consola", fr:"Console", ar:"الملعب", ru:"Песочница" },
+  "nav.docs": { en:"Docs", bn:"ডকুমেন্টেশন", hi:"डॉक्स", es:"Docs", fr:"Docs", ar:"المستندات", ru:"Документация" },
+  "hero.badge": { en:"Gateway Online", bn:"গেটওয়ে অনলাইন", hi:"गेटवे ऑनलाइन", es:"Puerta en línea", fr:"Passerelle en ligne", ar:"البوابة متصلة", ru:"Шлюз онлайн" },
+  "hero.title": { en:"Every request exits through a fresh egress node.", bn:"প্রতিটি অনুরোধ নতুন ইগ্রেস নোড দিয়ে বের হয়।", hi:"हर अनुरोध एक नए एग्रेस नोड से निकलता है।", es:"Cada solicitud sale por un nodo nuevo.", fr:"Chaque requête sort par un nouveau nœud.", ar:"كل طلب يخرج عبر عقدة خروج جديدة.", ru:"Каждый запрос выходит через свежий узел." },
+  "hero.sub": { en:"Rotated. Retried. Routed. A new IP, a new session, a new identity on every hop. One clean API, zero infrastructure to manage.", bn:"ঘোরানো। পুনরায় চেষ্টা। রাউটেড। প্রতি হপে নতুন আইপি, নতুন সেশন, নতুন পরিচয়।", hi:"रोटेटेड। रिट्राइड। रूटेड। हर हॉप पर नया IP, नया सत्र, नई पहचान।", es:"Rotado. Reintentado. Enrutado. Nueva IP en cada salto.", fr:"Pivoté. Réessayé. Routé. Nouvelle IP à chaque saut.", ar:"مدوّر. معاد المحاولة. موجّه. IP جديد في كل قفزة.", ru:"Ротация. Повтор. Маршрутизация. Новый IP на каждом шаге." },
+  "hero.play": { en:"Open Playground", bn:"প্লেগ্রাউন্ড খুলুন", hi:"प्लेग्राउंड खोलें", es:"Abrir consola", fr:"Ouvrir la console", ar:"افتح الملعب", ru:"Открыть песочницу" },
+  "hero.docs": { en:"Read the API", bn:"API পড়ুন", hi:"API पढ़ें", es:"Leer la API", fr:"Lire l'API", ar:"اقرأ الواجهة", ru:"Читать API" },
+  "hero.avgLatency": { en:"avg latency", bn:"গড় লেটেন্সি", hi:"औसत विलंब", es:"latencia media", fr:"latence moy.", ar:"متوسط الكمون", ru:"средняя задержка" },
+  "hero.regions": { en:"regions", bn:"অঞ্চল", hi:"क्षेत्र", es:"regiones", fr:"régions", ar:"مناطق", ru:"регионы" },
+  "hero.live": { en:"live", bn:"লাইভ", hi:"लाइव", es:"vivo", fr:"actif", ar:"مباشر", ru:"живой" },
+  "hero.gateway": { en:"gateway", bn:"গেটওয়ে", hi:"गेटवे", es:"puerta", fr:"passerelle", ar:"بوابة", ru:"шлюз" },
+  "stat.requests": { en:"Requests", bn:"অনুরোধ", hi:"अनुरोध", es:"Solicitudes", fr:"Requêtes", ar:"الطلبات", ru:"Запросы" },
+  "stat.success": { en:"Success rate", bn:"সাফল্যের হার", hi:"सफलता दर", es:"Tasa de éxito", fr:"Taux de succès", ar:"معدل النجاح", ru:"Успешность" },
+  "stat.latency": { en:"Avg latency", bn:"গড় লেটেন্সি", hi:"औसत विलंब", es:"Latencia media", fr:"Latence moy.", ar:"متوسط الكمون", ru:"Ср. задержка" },
+  "stat.regions": { en:"Regions seen", bn:"দেখা অঞ্চল", hi:"देखे क्षेत्र", es:"Regiones vistas", fr:"Régions vues", ar:"مناطق مرئية", ru:"Регионы" },
+  "feat.eyebrow": { en:"Capabilities", bn:"ক্ষমতা", hi:"क्षमताएँ", es:"Capacidades", fr:"Capacités", ar:"القدرات", ru:"Возможности" },
+  "feat.title": { en:"Built for serious rotation", bn:"গুরুতর রোটেশনের জন্য নির্মিত", hi:"गंभीर रोटेशन के लिए", es:"Hecho para rotación seria", fr:"Conçu pour la rotation", ar:"مصمم للتدوير الجاد", ru:"Для серьёзной ротации" },
+  "feat.sub": { en:"A precious path — rotated, retried and routed. The upstream provider is never exposed to clients.", bn:"একটি মূল্যবান পথ — ঘোরানো, পুনরায় চেষ্টা ও রাউটেড।", hi:"एक कीमती पथ — रोटेटेड, रिट्राइड और रूटेड।", es:"Una ruta preciosa, rotada y enrutada.", fr:"Un chemin précieux, pivoté et routé.", ar:"مسار ثمين — مدوّر ومعاد المحاولة.", ru:"Ценный путь — ротация, повторы, маршрутизация." },
+  "pg.eyebrow": { en:"Request Tester", bn:"অনুরোধ পরীক্ষক", hi:"अनुरोध परीक्षक", es:"Consola de prueba", fr:"Testeur de requête", ar:"مختبر الطلب", ru:"Тестер запросов" },
+  "pg.title": { en:"Playground", bn:"প্লেগ্রাউন্ড", hi:"प्लेग्राउंड", es:"Consola", fr:"Console", ar:"الملعب", ru:"Песочница" },
+  "pg.sub": { en:"Send a request through the rotating proxy and watch it exit through a fresh IP.", bn:"রোটেটিং প্রক্সির মাধ্যমে একটি অনুরোধ পাঠান।", hi:"रोटेटिंग प्रॉक्सी से अनुरोध भेजें।", es:"Envía una solicitud por el proxy rotativo.", fr:"Envoyez une requête via le proxy rotatif.", ar:"أرسل طلبًا عبر الوكيل الدوّار.", ru:"Отправьте запрос через ротацию." },
+  "pg.bar": { en:"vortex · request console", bn:"ভর্টেক্স · অনুরোধ কনসোল", hi:"वोर्टेक्स · अनुरोध कंसोल", es:"vortex · consola", fr:"vortex · console", ar:"فورتكس · وحدة الطلب", ru:"vortex · консоль" },
+  "pg.target": { en:"Target URL", bn:"টার্গেট URL", hi:"लक्ष्य URL", es:"URL objetivo", fr:"URL cible", ar:"رابط الهدف", ru:"Целевой URL" },
+  "pg.country": { en:"Country", bn:"দেশ", hi:"देश", es:"País", fr:"Pays", ar:"الدولة", ru:"Страна" },
+  "pg.method": { en:"Method", bn:"মেথড", hi:"विधि", es:"Método", fr:"Méthode", ar:"الطريقة", ru:"Метод" },
+  "pg.retries": { en:"Retries", bn:"পুনরায় চেষ্টা", hi:"पुनः प्रयास", es:"Reintentos", fr:"Tentatives", ar:"المحاولات", ru:"Повторы" },
+  "pg.body": { en:"Body · JSON or raw (optional)", bn:"বডি · JSON বা raw (ঐচ্ছিক)", hi:"बॉडी · JSON या raw", es:"Cuerpo · JSON", fr:"Corps · JSON", ar:"النص · JSON", ru:"Тело · JSON" },
+  "pg.send": { en:"Send request", bn:"অনুরোধ পাঠান", hi:"अनुरोध भेजें", es:"Enviar", fr:"Envoyer", ar:"أرسل", ru:"Отправить" },
+  "pg.idle": { en:"idle", bn:"নিষ্ক্রিয়", hi:"निष्क्रिय", es:"inactivo", fr:"inactif", ar:"خامل", ru:"ожидание" },
+  "pg.hint": { en:"// response appears here — status, latency, country, attempt", bn:"// প্রতিক্রিয়া এখানে আসবে", hi:"// प्रतिक्रिया यहाँ दिखेगी", es:"// la respuesta aparece aquí", fr:"// la réponse apparaît ici", ar:"// تظهر الاستجابة هنا", ru:"// ответ появится здесь" },
+  "docs.eyebrow": { en:"API Reference", bn:"API রেফারেন্স", hi:"API संदर्भ", es:"Referencia API", fr:"Référence API", ar:"مرجع الواجهة", ru:"Справка API" },
+  "docs.title": { en:"Rotating proxy API", bn:"রোটেটিং প্রক্সি API", hi:"रोटेटिंग प्रॉक्सी API", es:"API de proxy rotativo", fr:"API de proxy rotatif", ar:"واجهة الوكيل الدوار", ru:"Ротационный прокси API" },
+  "docs.sub": { en:"One endpoint. Rotates IP on every attempt.", bn:"একটি এন্ডপয়েন্ট। প্রতি প্রচেষ্টায় IP ঘোরে।", hi:"एक एंडपॉइंट। हर प्रयास पर IP घूमता है।", es:"Un endpoint. Rota IP en cada intento.", fr:"Un endpoint. Pivote l'IP.", ar:"نقطة واحدة. تدوير IP مع كل محاولة.", ru:"Один эндпоинт. Ротация IP." },
+  "docs.tbl.endpoint": { en:"Endpoint", bn:"এন্ডপয়েন্ট", hi:"एंडपॉइंट", es:"Endpoint", fr:"Endpoint", ar:"النقطة", ru:"Эндпоинт" },
+  "docs.tbl.desc": { en:"Description", bn:"বর্ণনা", hi:"विवरण", es:"Descripción", fr:"Description", ar:"الوصف", ru:"Описание" },
+  "docs.tbl.proxy": { en:"Rotate IP and fetch a target URL", bn:"IP ঘুরিয়ে টার্গেট URL ফেচ করুন", hi:"IP घुमाएँ और URL लाएँ", es:"Rota IP y obtén un URL", fr:"Pivote l'IP et fetch l'URL", ar:"دور IP وجلب رابط", ru:"Ротация IP и запрос URL" },
+  "docs.tbl.ip": { en:"Get the current egress IP", bn:"বর্তমান ইগ্রেস IP পান", hi:"वर्तमान एग्रेस IP लें", es:"Obtén la IP actual", fr:"Obtenir l'IP actuelle", ar:"احصل على IP الحالي", ru:"Получить текущий IP" },
+  "docs.params": { en:"Request fields", bn:"অনুরোধের ফিল্ড", hi:"अनुरोध फ़ील्ड", es:"Campos de solicitud", fr:"Champs de requête", ar:"حقول الطلب", ru:"Поля запроса" },
+  "docs.tbl.field": { en:"Field", bn:"ফিল্ড", hi:"फ़ील्ड", es:"Campo", fr:"Champ", ar:"الحقل", ru:"Поле" },
+  "docs.tbl.type": { en:"Type", bn:"ধরন", hi:"प्रकार", es:"Tipo", fr:"Type", ar:"النوع", ru:"Тип" },
+  "docs.tbl.req": { en:"Required", bn:"প্রয়োজনীয়", hi:"आवश्यक", es:"Obligatorio", fr:"Requis", ar:"مطلوب", ru:"Обязательно" },
+  "docs.tbl.desc2": { en:"Description", bn:"বর্ণনা", hi:"विवरण", es:"Descripción", fr:"Description", ar:"الوصف", ru:"Описание" },
+  "docs.f.url": { en:"Target URL to fetch through the proxy (https).", bn:"প্রক্সির মাধ্যমে ফেচ করার URL।", hi:"प्रॉक्सी से फेच करने का URL।", es:"URL a obtener por el proxy.", fr:"URL à récupérer via le proxy.", ar:"الرابط عبر الوكيل.", ru:"URL запроса через прокси." },
+  "docs.f.method": { en:"GET, POST, PUT, PATCH, DELETE, HEAD (default GET).", bn:"GET, POST, PUT, PATCH, DELETE, HEAD।", hi:"GET, POST, PUT, PATCH, DELETE, HEAD।", es:"GET, POST, PUT, PATCH, DELETE, HEAD.", fr:"GET, POST, PUT, PATCH, DELETE, HEAD.", ar:"GET, POST, PUT, PATCH, DELETE, HEAD.", ru:"GET, POST, PUT, PATCH, DELETE, HEAD." },
+  "docs.f.country": { en:"us · gb · de · pl · es · jp · br · fr (default random).", bn:"us · gb · de · pl · es · jp · br · fr।", hi:"us · gb · de · pl · es · jp · br · fr।", es:"us · gb · de · pl · es · jp · br · fr.", fr:"us · gb · de · pl · es · jp · br · fr.", ar:"us · gb · de · pl · es · jp · br · fr.", ru:"us · gb · de · pl · es · jp · br · fr." },
+  "docs.f.retries": { en:"Attempts (max 8, default 4). Each uses a fresh IP.", bn:"চেষ্টা (সর্বোচ্চ ৮, ডিফল্ট ৪)।", hi:"प्रयास (अधिकतम 8)।", es:"Intentos (máx 8).", fr:"Tentatives (max 8).", ar:"محاولات (كحد 8).", ru:"Повторы (макс 8)." },
+  "docs.f.headers": { en:"Extra headers to forward.", bn:"ফরওয়ার্ড করার অতিরিক্ত হেডার।", hi:"फॉरवर्ड करने हेतु हेडर।", es:"Cabeceras extra.", fr:"En-têtes extra.", ar:"ترويسات إضافية.", ru:"Доп. заголовки." },
+  "docs.f.body": { en:"Request body (string or object).", bn:"অনুরোধের বডি।", hi:"अनुरोध बॉडी।", es:"Cuerpo de la solicitud.", fr:"Corps de la requête.", ar:"نص الطلب.", ru:"Тело запроса." },
+  "docs.f.b64": { en:"true when body is base64 (binary/file uploads).", bn:"base64 হলে true।", hi:"base64 होने पर true।", es:"true si es base64.", fr:"true si base64.", ar:"true إذا كان base64.", ru:"true если base64." },
+  "docs.f.sticky": { en:"Keep one IP across steps for login flows.", bn:"লগইন ফ্লোতে একই IP রাখুন।", hi:"लॉगिन फ्लो में एक IP रखें।", es:"Mantén una IP para flujos.", fr:"Garder une IP pour les flux.", ar:"حافظ على IP للتدفقات.", ru:"Сохранить IP для сессий." },
+  "yes": { en:"yes", bn:"হ্যাঁ", hi:"हाँ", es:"sí", fr:"oui", ar:"نعم", ru:"да" },
+  "no": { en:"no", bn:"না", hi:"नहीं", es:"no", fr:"non", ar:"لا", ru:"нет" },
+  "docs.curl": { en:"cURL example", bn:"cURL উদাহরণ", hi:"cURL उदाहरण", es:"Ejemplo cURL", fr:"Exemple cURL", ar:"مثال cURL", ru:"Пример cURL" },
+  "docs.py": { en:"Python example", bn:"Python উদাহরণ", hi:"Python उदाहरण", es:"Ejemplo Python", fr:"Exemple Python", ar:"مثال Python", ru:"Пример Python" },
+  "docs.node": { en:"Node.js example", bn:"Node.js উদাহরণ", hi:"Node.js उदाहरण", es:"Ejemplo Node.js", fr:"Exemple Node.js", ar:"مثال Node.js", ru:"Пример Node.js" },
+  "docs.res": { en:"Response", bn:"প্রতিক্রিয়া", hi:"प्रतिक्रिया", es:"Respuesta", fr:"Réponse", ar:"الاستجابة", ru:"Ответ" },
+  "docs.copy": { en:"copy", bn:"কপি", hi:"कॉपी", es:"copiar", fr:"copier", ar:"نسخ", ru:"копировать" },
+  "footer.note": { en:"Precious infrastructure. The upstream node provider and gateway internals are never disclosed to clients — responses only expose status, data and headers.", bn:"মূল্যবান অবকাঠামো। আপস্ট্রিম প্রদানকারী কখনো প্রকাশ করা হয় না।", hi:"कीमती अवसंरचना। अपस्ट्रीम कभी उजागर नहीं।", es:"Infraestructura preciosa. El proveedor nunca se expone.", fr:"Infrastructure précieuse. Le fournisseur n'est jamais exposé.", ar:"بنية ثمينة. لا يُكشف المزوّد أبدًا.", ru:"Ценная инфраструктура. Провайдер не раскрывается." },
+  "footer.tag": { en:"crafted · rotating proxy gateway · v1.0.0", bn:"নির্মিত · রোটেটিং প্রক্সি গেটওয়ে", hi:"निर्मित · रोटेटिंग प्रॉक्सी गेटवे", es:"hecho · proxy rotativo", fr:"conçu · passerelle rotative", ar:"مصمم · بوابة دوّارة", ru:"создано · ротационный шлюз" }
+};
+const FEATURES = [
+  { icon:"🛡️", t:{en:"Multi-provider fallback",bn:"মাল্টি-প্রোভাইডার ফলব্যাক",hi:"मल्टी-प्रोवाइडर फॉलबैक",es:"Fallback multiproveedor",fr:"Basculer multi-fournisseur",ar:"احتياط متعدد المزودين",ru:"Фолбэк провайдеров"}, d:{en:"If a node pool gets blocked, the API auto-switches to a fresh provider. No more error 520.",bn:"একটি নোড ব্লক হলে স্বয়ংক্রিয়ভাবে নতুন প্রদানকারীতে সুইচ।",hi:"नोड ब्लॉक होने पर स्वतः नया प्रोवाइडर।",es:"Si un pool se bloquea, cambia solo.",fr:"Bascule automatique en cas de blocage.",ar:"تبديل تلقائي عند الحظر.",ru:"Автопереключение при блокировке."} },
+  { icon:"🍪", t:{en:"Cookies & headers",bn:"কুকিজ ও হেডার",hi:"कुकीज़ और हेडर",es:"Cookies y cabeceras",fr:"Cookies et en-têtes",ar:"الكوكيز والترويسات",ru:"Куки и заголовки"}, d:{en:"Real upstream headers + set-cookie support for login flows and sessions.",bn:"আসল হেডার + set-cookie সাপোর্ট।",hi:"वास्तविक हेडर + set-cookie।",es:"Cabeceras reales + set-cookie.",fr:"En-têtes réels + set-cookie.",ar:"ترويسات حقيقية + set-cookie.",ru:"Реальные заголовки + set-cookie."} },
+  { icon:"⚡", t:{en:"Live streaming",bn:"লাইভ স্ট্রিমিং",hi:"लाइव स्ट्रीमिंग",es:"Streaming en vivo",fr:"Streaming en direct",ar:"بث مباشر",ru:"Живой стриминг"}, d:{en:"SSE live streaming for zero-delay token output in AI chats.",bn:"AI চ্যাটে শূন্য-বিলম্ব টোকেন স্ট্রিমিং।",hi:"AI चैट के लिए शून्य-विलंब स्ट्रीमिंग।",es:"Streaming SSE sin retardo.",fr:"Streaming SSE sans délai.",ar:"بث SSE بدون تأخير.",ru:"SSE без задержки."} },
+  { icon:"🌍", t:{en:"8-country rotation",bn:"৮-দেশ রোটেশন",hi:"8-देश रोटेशन",es:"Rotación en 8 países",fr:"Rotation 8 pays",ar:"تدوير 8 دول",ru:"Ротация 8 стран"}, d:{en:"Fresh IP on every attempt with a random user-agent and geo targeting.",bn:"প্রতি চেষ্টায় নতুন IP + র্যান্ডম ইউজার-এজেন্ট।",hi:"हर प्रयास पर नया IP + यादृच्छिक UA।",es:"IP nueva + UA aleatorio.",fr:"IP fraîche + UA aléatoire.",ar:"IP جديد + وكيل عشوائي.",ru:"Новый IP + случайный UA."} },
+  { icon:"📁", t:{en:"Binary-safe",bn:"বাইনারি-নিরাপদ",hi:"बाइनरी-सुरक्षित",es:"Seguro para binarios",fr:"Compatible binaire",ar:"آمن ثنائيًا",ru:"Безопасно для бинарных"}, d:{en:"Images and files as base64, form-data uploads supported.",bn:"ছবি ও ফাইল base64, form-data আপলোড।",hi:"बेस64 + फॉर्म-डेटा अपलोड।",es:"base64 + form-data.",fr:"base64 + form-data.",ar:"base64 + form-data.",ru:"base64 + form-data."} },
+  { icon:"🐍", t:{en:"Python + curl_cffi",bn:"Python + curl_cffi",hi:"Python + curl_cffi",es:"Python + curl_cffi",fr:"Python + curl_cffi",ar:"Python + curl_cffi",ru:"Python + curl_cffi"}, d:{en:"Browser fingerprint impersonation for Cloudflare bypass, with smart fallback.",bn:"Cloudflare বাইপাসের জন্য ব্রাউজার ফিঙ্গারপ্রিন্ট।",hi:"Cloudflare बायपास हेतु फिंगरप्रिंट।",es:"Fingerprint para bypass de Cloudflare.",fr:"Fingerprint pour contourner Cloudflare.",ar:"بصمة لتجاوز Cloudflare.",ru:"Фингерпринт для обхода Cloudflare."} }
+];
+
+let CURRENT_LANG = "en";
+let sessionStats = { req:0, ok:0, latSum:0, regions:new Set() };
+
+/* ==================== i18n engine ==================== */
+function t(key){
+  const entry = STRINGS[key];
+  if(!entry) return key;
+  return entry[CURRENT_LANG] ?? entry.en ?? key;
+}
+function applyLang(){
+  document.documentElement.lang = CURRENT_LANG;
+  document.documentElement.dir = I18N[CURRENT_LANG].dir || "ltr";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    // translate direct text nodes only (not nested <b>/<span>)
+    el.childNodes.forEach(node=>{
+      if(node.nodeType === 3 && node.nodeValue.trim()) node.nodeValue = node.nodeValue.replace(/\S.*/, m => t(el.dataset.i18n));
+    });
+  });
+  document.getElementById("langLabel").textContent = I18N[CURRENT_LANG].label;
+  renderFeatures();
+  renderLangMenu();
+}
+function renderFeatures(){
+  const grid = document.getElementById("featuresGrid");
+  grid.innerHTML = FEATURES.map(f =>
+    `<div class="feature reveal in"><span class="ico">${f.icon}</span><h3>${f.t[CURRENT_LANG]||f.t.en}</h3><p>${f.d[CURRENT_LANG]||f.d.en}</p></div>`
+  ).join('');
+}
+function renderLangMenu(){
+  const menu = document.getElementById("langMenu");
+  menu.innerHTML = Object.entries(I18N).map(([code,info])=>
+    `<button class="lang-item ${code===CURRENT_LANG?'active':''}" data-code="${code}">${info.label}</button>`
+  ).join('');
+  menu.querySelectorAll(".lang-item").forEach(b=>{
+    b.onclick = ()=>{ CURRENT_LANG = b.dataset.code; localStorage.setItem("vpx_lang", CURRENT_LANG); applyLang(); document.getElementById("lang").classList.remove("open"); };
+  });
+}
+document.getElementById("langBtn").onclick = ()=>{
+  document.getElementById("lang").classList.toggle("open");
+};
+document.addEventListener("click", e=>{
+  if(!document.getElementById("lang").contains(e.target)) document.getElementById("lang").classList.remove("open");
+});
+
+/* ==================== reveal on scroll ==================== */
+const revealObserver = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); revealObserver.unobserve(en.target); } });
+},{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>revealObserver.observe(el));
+
+/* ==================== copy buttons ==================== */
+document.querySelectorAll(".copy-btn").forEach(btn=>{
+  btn.onclick = ()=>{
+    const idx = btn.dataset.copy;
+    const pres = document.querySelectorAll(".code pre code");
+    const text = pres[idx-1] ? pres[idx-1].innerText : "";
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent = "✓"; setTimeout(()=> btn.textContent = t("docs.copy"), 1200);
+    });
+  };
+});
+
+/* ==================== API client ==================== */
+function apiFetch(path, opts){
+  return fetch(path, Object.assign({ headers: { "Content-Type":"application/json" } }, opts));
+}
+function fmtLatency(ms){ return ms==null ? "—" : ms<1000 ? ms+" ms" : (ms/1000).toFixed(2)+" s"; }
+
+/* ==================== playground ==================== */
+(function initPlayground(){
+  const methodSeg = document.getElementById("pgMethod");
+  let method = "GET";
+  methodSeg.querySelectorAll(".method").forEach(m=>{
+    m.onclick = ()=>{ methodSeg.querySelectorAll(".method").forEach(x=>x.classList.remove("active")); m.classList.add("active"); method = m.dataset.m; };
+  });
+  document.getElementById("pgSend").onclick = async ()=>{
+    const btn = document.getElementById("pgSend");
+    const resp = document.getElementById("pgResponse");
+    const url = document.getElementById("pgUrl").value.trim();
+    const country = document.getElementById("pgCountry").value;
+    const retries = parseInt(document.getElementById("pgRetries").value,10);
+    const bodyRaw = document.getElementById("pgBody").value.trim();
+    if(!url){ resp.innerHTML = '<span class="status-tag status-4xx">400</span><div>Missing target URL</div>'; return; }
+
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+    resp.innerHTML = '<span class="status-tag status-idle">'+(t("pg.idle"))+'</span><div>…</div>';
+
+    const t0 = performance.now();
+    const payload = { url, method, retries };
+    if(country) payload.proxy_country = country;
+    if(bodyRaw){ try{ payload.body = JSON.parse(bodyRaw); }catch(e){ payload.body = bodyRaw; } }
+
+    try{
+      const res = await apiFetch("/api/proxy", { method:"POST", body: JSON.stringify(payload) });
+      const elapsed = Math.round(performance.now() - t0);
+      let text;
+      const ct = res.headers.get("content-type") || "";
+      text = ct.includes("json") ? await res.json() : await res.text();
+
+      sessionStats.req++; sessionStats.latSum += elapsed;
+      if(res.ok) sessionStats.ok++;
+      if(text && text.proxyCountry) sessionStats.regions.add(text.proxyCountry);
+      updateStats(elapsed);
+
+      const tagCls = res.ok ? "status-2xx" : (res.status>=400?"status-4xx":"status-idle");
+      let pretty = typeof text === "object" ? JSON.stringify(text, null, 2) : String(text);
+      resp.innerHTML = `<span class="status-tag ${tagCls}">${res.status} · ${fmtLatency(elapsed)}${text&&text.proxyCountry?' · '+text.proxyCountry:''}${text&&text.attempt?' · attempt '+text.attempt:''}</span><div>${escapeHtml(pretty)}</div>`;
+    }catch(e){
+      resp.innerHTML = '<span class="status-tag status-4xx">ERROR</span><div>' + escapeHtml(String(e.message||e)) + '</div>';
+    }finally{
+      btn.disabled = false; btn.innerHTML = '⚡ ' + t("pg.send");
+    }
+  };
+})();
+
+function updateStats(lastLatency){
+  document.getElementById("statRequests").textContent = sessionStats.req;
+  document.getElementById("statSuccess").textContent = sessionStats.req ? Math.round(sessionStats.ok/sessionStats.req*100)+"%" : "—";
+  if(lastLatency!=null && lastLatency>0) document.getElementById("statLatency").textContent = fmtLatency(Math.round(sessionStats.latSum/Math.max(sessionStats.ok,1)));
+  document.getElementById("statRegions").textContent = sessionStats.regions.size;
+}
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ==================== init ==================== */
+(function init(){
+  const saved = localStorage.getItem("vpx_lang");
+  if(saved && I18N[saved]) CURRENT_LANG = saved;
+  applyLang();
+})();
+</script>
+</body>
+</html>
