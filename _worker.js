@@ -1,5 +1,5 @@
 // ============================================================================
-// VortexProxy — Cloudflare Worker
+// NebulaProxy — Cloudflare Worker
 // Serves the static UI AND hides the real backend by forwarding /api/* server-side.
 // The upstream URL lives ONLY here (as a secret) — never exposed to the browser.
 // ============================================================================
@@ -39,7 +39,7 @@ export default {
           headers: {
             "Content-Type": request.headers.get("Content-Type") || "application/json",
             "User-Agent": request.headers.get("User-Agent") || "",
-            "X-Vortex-Forwarded": "1",
+            "X-Nebula-Forwarded": "1",
           },
           body: method !== "GET" && method !== "HEAD" ? body : undefined,
         });
