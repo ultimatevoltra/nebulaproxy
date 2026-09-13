@@ -17,7 +17,7 @@ The upstream provider and gateway internals are never exposed to clients — res
 
 ## Structure
 
-- `index.html` — the full site (UI + CSS + JS + i18n), fully self-contained.
+- `public/index.html` — the full site (UI + CSS + JS + i18n), fully self-contained.
 - `_worker.js` — Cloudflare Worker: serves the UI and forwards `/api/*` to your backend server-side, hiding the real URL.
 - `wrangler.jsonc` — Worker config (assets + worker entry).
 - `pollinations_report.md` — benchmark: timing to generate images via Pollinations through the rotating proxy.
