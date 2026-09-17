@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0305" />
+<title>NebulaProxy — Rotating Proxy API</title>
+<meta name="description" content="NebulaProxy — a rotating proxy API gateway. Fresh egress IP on every request, six-country rotation, sticky sessions, and live streaming." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e11d3f'/%3E%3Cstop offset='.5' stop-color='%23ff6b1a'/%3E%3Cstop offset='1' stop-color='%23ffb020'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='url(%23g)' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='14' fill='url(%23g)'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23fff'/%3E%3C/svg%3E" />
+<style>
+/* ============ NebulaProxy — "Ember" design system ============ */
+:root{
+  --bg-0:#0a0305; --bg-1:#120409; --bg-2:#1a0710; --bg-3:#220a14;
+  --panel:rgba(40,10,20,.55); --panel-solid:#1c0a12; --panel-raised:#260d18;
+  --border:#3a1420; --border-soft:#2c0f1a; --border-strong:#5c1f30;
+  --accent:#e11d3f; --accent-hi:#ff2d55; --accent-2:#ff6b1a; --accent-3:#ffb020;
+  --accent-ok:#2dd4a0; --accent-bad:#ff3b3b; --accent-warn:#ffb020;
+  --text:#fff0f3; --text-dim:#f0b6c4; --text-faint:#a86b7a; --text-invert:#16060a;
+  --radius:14px; --radius-lg:20px; --radius-xl:26px; --radius-sm:9px; --radius-pill:999px;
+  --shadow-glow:0 0 0 1px rgba(225,29,63,.22), 0 14px 50px -12px rgba(225,29,63,.42);
+  --shadow-panel:0 22px 60px -24px rgba(0,0,0,.8);
+  --grad:linear-gradient(120deg,#e11d3f 0%,#ff6b1a 60%,#ffb020 120%);
+  --grad-soft:linear-gradient(120deg,rgba(225,29,63,.22),rgba(255,107,26,.14));
+  --ease-out:cubic-bezier(.22,1,.36,1); --ease-spring:cubic-bezier(.34,1.4,.44,1);
+  --dur-fast:.16s; --dur-med:.3s; --dur-slow:.6s;
+  --font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono','SFMono-Regular',ui-monospace,Consolas,monospace;
+  --container:1120px; --nav-h:64px; --tabbar-h:64px;
+}
+/* ===== Light theme ===== */
+[data-theme="light"]{
+  --bg-0:#faf4f6; --bg-1:#f3e9ed; --bg-2:#ffffff; --bg-3:#fceef2;
+  --panel:rgba(255,255,255,.72); --panel-solid:#ffffff; --panel-raised:#fdf4f7;
+  --border:#f0d3dc; --border-soft:#f6e2e9; --border-strong:#e11d3f;
+  --accent:#e11d3f; --accent-hi:#d4103a; --accent-2:#ff6b1a; --accent-3:#e08a00;
+  --accent-ok:#0e9f6e; --accent-bad:#dc2626; --accent-warn:#b45309;
+  --text:#2a0a12; --text-dim:#6b3a47; --text-faint:#a06b7a; --text-invert:#ffffff;
+  --shadow-glow:0 0 0 1px rgba(225,29,63,.18), 0 10px 34px -12px rgba(225,29,63,.32);
+  --shadow-panel:0 18px 44px -22px rgba(120,30,50,.28);
+  --grad-soft:linear-gradient(120deg,rgba(225,29,63,.12),rgba(255,107,26,.10));
+}
+[data-theme="light"] body{
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(225,29,63,.08), transparent 60%),
+    radial-gradient(700px 500px at -10% 20%, rgba(255,107,26,.06), transparent 60%),
+    radial-gradient(800px 600px at 50% 120%, rgba(225,29,63,.05), transparent 55%);
+}
+[data-theme="light"] ::-webkit-scrollbar-track{background:var(--bg-1)}
+[data-theme="light"] ::-webkit-scrollbar-thumb{border:2px solid var(--bg-1)}
+[data-theme="light"] .nav{background:rgba(255,255,255,.82)}
+[data-theme="light"] .tabbar{background:rgba(255,255,255,.94)}
+[data-theme="light"] .code,[data-theme="light"] .response{background:var(--bg-1)}
+[data-theme="light"] .field input,[data-theme="light"] .field select,[data-theme="light"] .field textarea,[data-theme="light"] .input{background:var(--bg-2)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font);color:var(--text);background:var(--bg-0);font-size:16px;line-height:1.65;
+  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(225,29,63,.16), transparent 60%),
+    radial-gradient(700px 500px at -10% 20%, rgba(255,107,26,.10), transparent 60%),
+    radial-gradient(800px 600px at 50% 120%, rgba(225,29,63,.08), transparent 55%);
+  background-attachment:fixed;
+  padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+a{color:inherit;text-decoration:none}
+::selection{background:rgba(225,29,63,.45);color:#fff}
+.container{max-width:var(--container);margin:0 auto;padding:0 24px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg-1)}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent-2));border-radius:99px;border:2px solid var(--bg-1)}
+
+/* ===== Top nav ===== */
+.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);
+  background:rgba(10,3,5,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border-soft)}
+.nav-inner{max-width:var(--container);margin:0 auto;height:100%;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px;letter-spacing:-.01em}
+.brand .logo{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(225,29,63,.6))}
+.brand b{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.lang{position:relative}
+.lang-btn{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--radius-sm);
+  background:var(--panel);border:1px solid var(--border);cursor:pointer;color:var(--text-dim);
+  font-family:var(--font);font-size:14px;transition:all var(--dur-fast) var(--ease-out)}
+.lang-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:170px;background:var(--panel-solid);
+  border:1px solid var(--border);border-radius:var(--radius);padding:6px;box-shadow:var(--shadow-panel);
+  opacity:0;visibility:hidden;transform:translateY(-6px);transition:all var(--dur-med) var(--ease-out);z-index:60}
+.lang.open .lang-menu{opacity:1;visibility:visible;transform:none}
+.lang-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 11px;border-radius:var(--radius-sm);
+  cursor:pointer;font-size:14px;color:var(--text-dim);background:none;border:none;font-family:var(--font);transition:all var(--dur-fast)}
+.lang-item:hover{background:rgba(225,29,63,.12);color:var(--text)}
+.lang-item.active{color:var(--accent-hi);background:rgba(225,29,63,.14);font-weight:600}
+
+/* ===== Pages ===== */
+.page{display:none;animation:fadein var(--dur-med) var(--ease-out)}
+.page.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ===== Bottom tab bar ===== */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:55;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);background:rgba(12,4,7,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid var(--border);display:flex}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  cursor:pointer;color:var(--text-faint);font-size:11px;font-weight:600;border:none;background:none;
+  font-family:var(--font);transition:color var(--dur-fast);position:relative;-webkit-tap-highlight-color:transparent}
+.tab svg{width:22px;height:22px;transition:transform var(--dur-med) var(--ease-spring)}
+.tab .t-label{letter-spacing:.02em}
+.tab.active{color:var(--text)}
+.tab.active svg{transform:translateY(-2px);filter:drop-shadow(0 0 8px rgba(225,29,63,.7))}
+.tab.active .t-ico{color:var(--accent-hi)}
+.tab .t-dot{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--grad);opacity:0}
+.tab.active .t-dot{opacity:1}
+
+/* ===== Hero ===== */
+.hero{position:relative;padding:72px 0 40px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius-pill);
+  background:var(--grad-soft);border:1px solid var(--border);font-size:13.5px;color:var(--text-dim);font-family:var(--mono);margin-bottom:26px}
+.dot-pulse{width:8px;height:8px;border-radius:50%;background:var(--accent-ok);box-shadow:0 0 0 0 rgba(45,212,160,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(45,212,160,.55)}70%{box-shadow:0 0 0 9px rgba(45,212,160,0)}100%{box-shadow:0 0 0 0 rgba(45,212,160,0)}}
+.hero h1{font-size:clamp(34px,6vw,60px);line-height:1.05;letter-spacing:-.03em;font-weight:800;margin-bottom:20px}
+.hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{max-width:640px;margin:0 auto 30px;color:var(--text-dim);font-size:18px}
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:var(--radius);font-weight:600;font-size:15px;
+  cursor:pointer;border:1px solid transparent;font-family:var(--font);
+  transition:transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast), background var(--dur-fast)}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--grad);color:var(--text-invert);box-shadow:var(--shadow-glow)}
+.btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--border-strong)}
+.hero-meta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.meta-chip{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-pill);
+  background:var(--panel);border:1px solid var(--border-soft);font-size:13.5px;color:var(--text-dim);font-family:var(--mono)}
+.meta-chip b{color:var(--text);font-weight:600}
+
+/* ===== Stats ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin:16px 0 8px}
+.stat{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;text-align:center;position:relative;overflow:hidden;
+  transition:transform var(--dur-med) var(--ease-out), border-color var(--dur-med)}
+.stat:hover{transform:translateY(-3px);border-color:var(--border-strong)}
+.stat .num{font-size:27px;font-weight:800;font-family:var(--mono);background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat .lbl{font-size:12px;color:var(--text-faint);margin-top:5px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ===== Sections ===== */
+.section{padding:44px 0}
+.section-head{max-width:700px;margin:0 auto 36px;text-align:center}
+.eyebrow{display:inline-block;font-family:var(--mono);font-size:12.5px;color:var(--accent-hi);letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
+.section-head h2{font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;font-weight:800;margin-bottom:12px}
+.section-head p{color:var(--text-dim);font-size:16.5px}
+
+/* ===== Request tester ===== */
+.tester{border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--panel);overflow:hidden;box-shadow:var(--shadow-panel)}
+.tester-bar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--border-soft);background:var(--panel-solid)}
+.t-dot{width:11px;height:11px;border-radius:50%}
+.t-dot.r{background:#ff5f57}.t-dot.y{background:#febc2e}.t-dot.g{background:#28c840}
+.tester-title{margin-left:8px;font-family:var(--mono);font-size:13px;color:var(--text-faint)}
+.tester-body{padding:22px}
+.field-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--text-faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:11px 13px;color:var(--text);font-family:var(--mono);font-size:14px;transition:border-color var(--dur-fast);outline:none;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{min-height:80px;resize:vertical}
+.field select{cursor:pointer}
+.method-seg{display:flex;gap:6px;flex-wrap:wrap}
+.method{flex:1;padding:9px 6px;text-align:center;font-family:var(--mono);font-size:12.5px;background:var(--bg-2);
+  border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);cursor:pointer;transition:all var(--dur-fast)}
+.method:hover{border-color:var(--border-strong)}
+.method.active{background:var(--grad);color:var(--text-invert);border-color:transparent;font-weight:700}
+.send-btn{width:100%;padding:14px;font-size:16px;justify-content:center;margin-top:6px}
+.send-btn:disabled{opacity:.55;cursor:not-allowed}
+.response{background:var(--bg-0);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:16px;
+  font-family:var(--mono);font-size:13px;min-height:90px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:var(--text-dim);position:relative}
+.response .status-tag{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;margin-bottom:10px;font-family:var(--mono)}
+.status-2xx{background:rgba(45,212,160,.15);color:var(--accent-ok)}
+.status-4xx,.status-5xx{background:rgba(255,59,59,.15);color:var(--accent-bad)}
+.status-idle{background:var(--panel);color:var(--text-faint)}
+
+/* ===== Features ===== */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.feature{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:24px;position:relative;overflow:hidden;transition:transform var(--dur-med) var(--ease-out), border-color var(--dur-med)}
+.feature:hover{transform:translateY(-4px);border-color:var(--border-strong)}
+.feature .ico{font-size:26px;margin-bottom:12px;display:inline-block}
+.feature h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.feature p{font-size:14px;color:var(--text-dim)}
+
+/* ===== Code blocks ===== */
+.code{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:14px 0}
+.code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border-soft);font-family:var(--mono);font-size:12px;color:var(--text-faint)}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-sm);
+  padding:4px 11px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all var(--dur-fast)}
+.copy-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.code pre{padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text-dim)}
+.code code{font-family:var(--mono)}
+
+/* ===== Tables ===== */
+.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border-soft)}
+.tbl th{font-family:var(--mono);font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}
+.tbl td{color:var(--text-dim)}
+.tbl code,.tbl .mn{font-family:var(--mono);color:var(--accent-hi);font-size:13px}
+.tbl tr:hover td{background:rgba(225,29,63,.04)}
+
+/* ===== Settings ===== */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:24px}
+.card h3{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card p{font-size:13.5px;color:var(--text-dim);margin-bottom:16px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft)}
+.setting-row:last-child{border-bottom:none}
+.setting-row .s-label{font-size:14px;color:var(--text)}
+.setting-row .s-sub{font-size:12px;color:var(--text-faint)}
+.toggle{position:relative;width:46px;height:26px;flex:0 0 auto;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:all var(--dur-med)}
+.toggle .slider::before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:all var(--dur-med) var(--ease-spring)}
+.toggle input:checked + .slider{background:var(--grad)}
+.toggle input:checked + .slider::before{transform:translateX(20px)}
+.input{width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;
+  color:var(--text);font-family:var(--mono);font-size:14px;outline:none;transition:border-color var(--dur-fast)}
+.input:focus{border-color:var(--accent)}
+.login-form{display:flex;flex-direction:column;gap:12px}
+.toast{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel-solid);border:1px solid var(--border-strong);color:var(--text);padding:12px 20px;border-radius:var(--radius-pill);
+  font-size:14px;box-shadow:var(--shadow-panel);opacity:0;transition:all var(--dur-med) var(--ease-out);z-index:100;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-ok{border-color:rgba(45,212,160,.5);color:#c7f5e4}
+.toast-bad{border-color:rgba(255,59,59,.55);color:#ffd7d7}
+.toast-warn{border-color:rgba(255,176,32,.55);color:#ffe8c0}
+
+/* ===== Footer ===== */
+.footer{padding:40px 0 24px;text-align:center;border-top:1px solid var(--border-soft);margin-top:40px}
+.footer .brand{justify-content:center;margin-bottom:12px}
+.footer .f-links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:12px 0;font-size:13px;color:var(--text-dim)}
+.footer .f-note{font-size:12.5px;color:var(--text-faint);margin-top:10px}
+.footer .f-tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--text-faint);background:var(--panel);
+  border:1px solid var(--border-soft);padding:4px 10px;border-radius:var(--radius-pill);margin-top:14px}
+
+@media (min-width:768px){
+  .tabbar{left:50%;right:auto;width:480px;transform:translateX(-50%);border-radius:var(--radius-xl) var(--radius-xl) 0 0;overflow:hidden;border:1px solid var(--border);border-bottom:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== Top nav ===== -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#" data-nav="home">
+      <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#e11d3f"/><stop offset=".5" stop-color="#ff6b1a"/><stop offset="1" stop-color="#ffb020"/>
+        </linearGradient></defs>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="url(#lg)" stroke-width="9"/>
+        <circle cx="50" cy="50" r="14" fill="url(#lg)"/>
+        <circle cx="50" cy="50" r="6" fill="#fff"/>
+        <!-- satellite -->
+        <circle cx="72" cy="28" r="5" fill="#ff6b1a"/>
+      </svg>
+      <span>Nebula<b>Proxy</b></span>
+    </a>
+    <div class="nav-actions">
+      <div class="lang" id="langWrap">
+        <button class="lang-btn" id="langBtn"><span class="globe">🌐</span><span id="langLabel">English</span></button>
+        <div class="lang-menu" id="langMenu"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HOME ===== -->
+<main class="page active" id="page-home">
+  <section class="hero">
+    <div class="container">
+      <span class="hero-badge"><span class="dot-pulse"></span><span data-i18n="hero.badge">Gateway Online</span></span>
+      <h1><span data-i18n="hero.title">Rotate your</span> <span class="grad" data-i18n="hero.title2">egress IP</span><br><span data-i18n="hero.title3">on every request</span></h1>
+      <p class="hero-sub" data-i18n="hero.sub">NebulaProxy is a rotating proxy API gateway. Send a request, get a fresh IP from one of six countries, and stream the response back — all through a single endpoint.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" data-nav="playground"><span data-i18n="hero.play">Open Playground</span> →</button>
+        <button class="btn btn-ghost" data-nav="docs"><span data-i18n="hero.docs">Read Documentation</span></button>
+      </div>
+      <div class="hero-meta">
+        <span class="meta-chip">🌍 <b data-i18n="nav.regions">6 countries</b></span>
+        <span class="meta-chip">⚡ <b data-i18n="hero.live">Live streaming</b></span>
+        <span class="meta-chip">🍪 <b data-i18n="hero.cookies">Cookies & headers</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="stats">
+        <div class="stat"><div class="num" id="stat-req">0</div><div class="lbl" data-i18n="stat.requests">Requests</div></div>
+        <div class="stat"><div class="num" id="stat-ok">100%</div><div class="lbl" data-i18n="stat.success">Success rate</div></div>
+        <div class="stat"><div class="num" id="stat-lat">—</div><div class="lbl" data-i18n="stat.latency">Avg latency</div></div>
+        <div class="stat"><div class="num" id="stat-reg">0</div><div class="lbl" data-i18n="stat.regions">Regions seen</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="feat.eyebrow">Why NebulaProxy</span>
+        <h2 data-i18n="feat.title">Everything you need to rotate traffic</h2>
+        <p data-i18n="feat.sub">A single API endpoint that handles providers, IPs, headers, and streaming for you.</p>
+      </div>
+      <div class="features">
+        <div class="feature"><span class="ico">🛡️</span><h3 data-i18n="feat.f1.t">Multi-provider fallback</h3><p data-i18n="feat.f1.d">If one upstream proxy fails, NebulaProxy automatically retries through another — no downtime.</p></div>
+        <div class="feature"><span class="ico">🌍</span><h3 data-i18n="feat.f2.t">Six-country rotation</h3><p data-i18n="feat.f2.d">Rotate egress across the United States, United Kingdom, Germany, Poland, Spain, and Japan.</p></div>
+        <div class="feature"><span class="ico">🍪</span><h3 data-i18n="feat.f3.t">Cookies & headers</h3><p data-i18n="feat.f3.d">Pass custom cookies and headers straight through to the target — full control over the request.</p></div>
+        <div class="feature"><span class="ico">⚡</span><h3 data-i18n="feat.f4.t">Live streaming</h3><p data-i18n="feat.f4.d">Stream responses as they arrive with SSE, so long downloads don't block your client.</p></div>
+        <div class="feature"><span class="ico">📁</span><h3 data-i18n="feat.f5.t">Binary-safe</h3><p data-i18n="feat.f5.d">Images, files, and binary payloads pass through untouched with base64 support.</p></div>
+        <div class="feature"><span class="ico">🐍</span><h3 data-i18n="feat.f6.t">Any language</h3><p data-i18n="feat.f6.d">Use cURL, Python, Node.js, or anything that speaks HTTP. One endpoint, no SDK required.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><use href="#lg"/><circle cx="50" cy="50" r="34" fill="none" stroke="url(#lg)" stroke-width="9"/><circle cx="50" cy="50" r="14" fill="url(#lg)"/><circle cx="50" cy="50" r="6" fill="#fff"/><circle cx="72" cy="28" r="5" fill="#ff6b1a"/></svg>
+        <span>Nebula<b>Proxy</b></span>
+      </div>
+      <div class="f-links">
+        <a href="#" data-nav="home">Home</a>
+        <a href="#" data-nav="playground">Playground</a>
+        <a href="#" data-nav="docs">Documentation</a>
+        <a href="#" data-nav="settings">Settings</a>
+      </div>
+      <p class="f-note" data-i18n="footer.note">Built for developers who need a clean, rotating egress IP without the hassle.</p>
+      <span class="f-tag" data-i18n="footer.tag">NebulaProxy · v1.0.0</span>
+    </div>
+  </footer>
+</main>
+
+<!-- ===== PLAYGROUND ===== -->
+<main class="page" id="page-playground">
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="pg.eyebrow">Playground</span>
+        <h2 data-i18n="pg.title">Test the proxy live</h2>
+        <p data-i18n="pg.sub">Send a request through the gateway and inspect the full response.</p>
+      </div>
+      <div class="tester">
+        <div class="tester-bar"><span class="t-dot r"></span><span class="t-dot y"></span><span class="t-dot g"></span><span class="tester-title">request tester</span></div>
+        <div class="tester-body">
+          <div class="field-row">
+            <div class="field" style="flex:2 1 260px">
+              <label data-i18n="pg.target">Target URL</label>
+              <input type="url" id="pg-url" value="https://api.ipify.org?format=json" placeholder="https://example.com" />
+            </div>
+            <div class="field">
+              <label data-i18n="pg.country">Country</label>
+              <select id="pg-country">
+                <option value="auto" data-i18n="pg.auto">Auto (rotate)</option>
+                <option value="us">United States</option>
+                <option value="gb">United Kingdom</option>
+                <option value="de">Germany</option>
+                <option value="pl">Poland</option>
+                <option value="es">Spain</option>
+                <option value="jp">Japan</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="pg.retries">Retries</label>
+              <select id="pg-retries">
+                <option value="1">1</option><option value="2">2</option><option value="4" selected>4</option>
+                <option value="6">6</option><option value="8">8</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%">
+              <label data-i18n="pg.method">Method</label>
+              <div class="method-seg" id="pg-method">
+                <button class="method active" data-m="GET">GET</button>
+                <button class="method" data-m="POST">POST</button>
+                <button class="method" data-m="PUT">PUT</button>
+                <button class="method" data-m="PATCH">PATCH</button>
+                <button class="method" data-m="DELETE">DELETE</button>
+              </div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%">
+              <label data-i18n="pg.body">Request body (JSON)</label>
+              <textarea id="pg-body" placeholder='{"key":"value"}'></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary send-btn" id="pg-send"><span data-i18n="pg.send">Send Request</span></button>
+          <div class="response" id="pg-response"><span class="status-tag status-idle" data-i18n="pg.idle">Ready</span><br><span data-i18n="pg.hint">Fill the fields and press Send to see the response.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== DOCUMENTATION ===== -->
+<main class="page" id="page-docs">
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="docs.eyebrow">Documentation</span>
+        <h2 data-i18n="docs.title">API reference</h2>
+        <p data-i18n="docs.sub">Everything you need to integrate NebulaProxy into your app.</p>
+      </div>
+
+      <h3 style="margin:20px 0 8px" data-i18n="docs.endpoints">Endpoints</h3>
+      <div class="card" style="padding:8px 0">
+        <table class="tbl">
+          <thead><tr><th data-i18n="docs.method">Method</th><th data-i18n="docs.endpoint">Endpoint</th><th data-i18n="docs.description">Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="mn">POST</span></td><td><code>/api/proxy</code></td><td data-i18n="docs.proxy">Proxy a request through a rotating IP</td></tr>
+            <tr><td><span class="mn">GET</span></td><td><code>/api/proxy/ip</code></td><td data-i18n="docs.ip">Get your current egress IP</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin:24px 0 8px" data-i18n="docs.params">Request parameters</h3>
+      <div class="card" style="padding:8px 0">
+        <table class="tbl">
+          <thead><tr><th data-i18n="docs.field">Field</th><th data-i18n="docs.type">Type</th><th data-i18n="docs.req">Required</th><th data-i18n="docs.desc2">Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>url</code></td><td>string</td><td data-i18n="yes">yes</td><td data-i18n="docs.p.url">The target URL to fetch</td></tr>
+            <tr><td><code>method</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.method">HTTP method (default GET)</td></tr>
+            <tr><td><code>proxy_country</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.country">Two-letter country code (or "auto")</td></tr>
+            <tr><td><code>retries</code></td><td>number</td><td data-i18n="no">no</td><td data-i18n="docs.p.retries">Retry attempts on failure</td></tr>
+            <tr><td><code>headers</code></td><td>object</td><td data-i18n="no">no</td><td data-i18n="docs.p.headers">Custom headers to forward</td></tr>
+            <tr><td><code>cookies</code></td><td>object</td><td data-i18n="no">no</td><td data-i18n="docs.p.cookies">Cookies to attach</td></tr>
+            <tr><td><code>body</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.body">Request body (for POST/PUT/PATCH)</td></tr>
+            <tr><td><code>bodyIsBase64</code></td><td>boolean</td><td data-i18n="no">no</td><td data-i18n="docs.p.b64">Whether the body is base64-encoded</td></tr>
+            <tr><td><code>sticky</code></td><td>boolean</td><td data-i18n="no">no</td><td data-i18n="docs.p.sticky">Keep the same IP across requests</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin:24px 0 8px" data-i18n="docs.examples">Examples</h3>
+      <div class="code">
+        <div class="code-head"><span>cURL</span><button class="copy-btn" data-copy>Copy</button></div>
+        <pre><code>curl -X POST https://your-worker.dev/api/proxy \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://api.ipify.org?format=json","proxy_country":"us"}'</code></pre>
+      </div>
+      <div class="code">
+        <div class="code-head"><span>Python</span><button class="copy-btn" data-copy>Copy</button></div>
+        <pre><code>import requests
+
+r = requests.post("https://your-worker.dev/api/proxy", json={
+    "url": "https://api.ipify.org?format=json",
+    "proxy_country": "us"
+})
+print(r.json())</code></pre>
+      </div>
+      <div class="code">
+        <div class="code-head"><span>Node.js</span><button class="copy-btn" data-copy>Copy</button></div>
+        <pre><code>const res = await fetch("https://your-worker.dev/api/proxy", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: "https://api.ipify.org?format=json", proxy_country: "us" })
+});
+console.log(await res.json());</code></pre>
+      </div>
+
+      <h3 style="margin:24px 0 8px" data-i18n="docs.res">Response</h3>
+      <div class="code">
+        <div class="code-head"><span>JSON</span><button class="copy-btn" data-copy>Copy</button></div>
+        <pre><code>{
+  "status": 200,
+  "statusText": "OK",
+  "headers": { "content-type": "application/json" },
+  "data": { "ip": "198.105.121.200" },
+  "data_b64": null,
+  "binary": false,
+  "size": 24,
+  "proxyCountry": "us",
+  "attempt": 1,
+  "success": true,
+  "elapsed_ms": 812,
+  "elapsed_sec": 0.812
+}</code></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== SETTINGS ===== -->
+<main class="page" id="page-settings">
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="set.eyebrow">Settings</span>
+        <h2 data-i18n="set.title">Configuration</h2>
+        <p data-i18n="set.sub">Tune your gateway preferences and manage admin access.</p>
+      </div>
+      <div class="settings-grid">
+        <div class="card">
+          <h3>⚙️ <span data-i18n="set.general">General</span></h3>
+          <div class="setting-row">
+            <div><div class="s-label" data-i18n="set.sticky">Sticky sessions</div><div class="s-sub" data-i18n="set.sticky.d">Reuse the same IP across requests</div></div>
+            <label class="toggle"><input type="checkbox" id="set-sticky"><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="s-label" data-i18n="set.stream">Streaming (SSE)</div><div class="s-sub" data-i18n="set.stream.d">Stream responses as they arrive</div></div>
+            <label class="toggle"><input type="checkbox" id="set-stream" checked><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="s-label" data-i18n="set.dark">Dark theme</div><div class="s-sub" data-i18n="set.dark.d">Toggle between dark & light</div></div>
+            <label class="toggle"><input type="checkbox" id="set-dark" checked><span class="slider"></span></label>
+          </div>
+          <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+            <div><div class="s-label" data-i18n="set.country">Default country</div><div class="s-sub" data-i18n="set.country.d">Used when no country is specified</div></div>
+            <select class="input" id="set-country">
+              <option value="auto" data-i18n="pg.auto">Auto (rotate)</option>
+              <option value="us">United States</option>
+              <option value="gb">United Kingdom</option>
+              <option value="de">Germany</option>
+              <option value="pl">Poland</option>
+              <option value="es">Spain</option>
+              <option value="jp">Japan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🔐 <span data-i18n="set.admin">Admin login</span></h3>
+          <p data-i18n="set.admin.d">Sign in to manage proxies, view live stats, and rotate keys.</p>
+          <form class="login-form" id="login-form">
+            <div class="field">
+              <label data-i18n="set.username">Username</label>
+              <input class="input" type="text" id="login-user" autocomplete="username" data-i18n-ph="set.user.ph" placeholder="admin" />
+            </div>
+            <div class="field">
+              <label data-i18n="set.password">Password</label>
+              <input class="input" type="password" id="login-pass" autocomplete="current-password" data-i18n-ph="set.pass.ph" placeholder="••••••••" />
+            </div>
+            <button class="btn btn-primary" type="submit" style="justify-content:center"><span data-i18n="set.login">Sign in</span></button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>🔑 <span data-i18n="set.keys">API keys</span></h3>
+          <p data-i18n="set.keys.d">Rotate or revoke gateway keys. Admin access required.</p>
+          <button class="btn btn-ghost" id="btn-rotate" style="width:100%;justify-content:center"><span data-i18n="set.rotate">Rotate API key</span></button>
+          <button class="btn btn-ghost" id="btn-revoke" style="width:100%;justify-content:center;margin-top:10px"><span data-i18n="set.revoke">Revoke all keys</span></button>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:24px;font-size:12.5px;color:var(--text-faint)" data-i18n="set.demo">Demo build — admin features require a connected backend.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ===== Bottom tab bar ===== -->
+<nav class="tabbar" id="tabbar">
+  <button class="tab active" data-nav="home">
+    <span class="t-dot"></span>
+    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span class="t-label" data-i18n="nav.home">Home</span>
+  </button>
+  <button class="tab" data-nav="playground">
+    <span class="t-dot"></span>
+    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    <span class="t-label" data-i18n="nav.playground">Playground</span>
+  </button>
+  <button class="tab" data-nav="docs">
+    <span class="t-dot"></span>
+    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span class="t-label" data-i18n="nav.docs">Documentation</span>
+  </button>
+  <button class="tab" data-nav="settings">
+    <span class="t-dot"></span>
+    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span class="t-label" data-i18n="nav.settings">Settings</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== i18n ==================== */
+const I18N = [
+  { code:"en", label:"English", rtl:false },
+  { code:"bn", label:"বাংলা", rtl:false },
+  { code:"hi", label:"हिन्दी", rtl:false },
+  { code:"es", label:"Español", rtl:false },
+  { code:"fr", label:"Français", rtl:false },
+  { code:"ar", label:"العربية", rtl:true },
+  { code:"ru", label:"Русский", rtl:false },
+];
+const STRINGS = {
+  "en": { "hero.badge":"Gateway Online","hero.title":"Rotate your","hero.title2":"egress IP","hero.title3":"on every request",
+    "hero.sub":"NebulaProxy is a rotating proxy API gateway. Send a request, get a fresh IP from one of six countries, and stream the response back — all through a single endpoint.",
+    "hero.play":"Open Playground","hero.docs":"Read Documentation","hero.live":"Live streaming","hero.cookies":"Cookies & headers",
+    "nav.regions":"6 countries","nav.home":"Home","nav.playground":"Playground","nav.docs":"Documentation","nav.settings":"Settings",
+    "stat.requests":"Requests","stat.success":"Success rate","stat.latency":"Avg latency","stat.regions":"Regions seen",
+    "feat.eyebrow":"Why NebulaProxy","feat.title":"Everything you need to rotate traffic","feat.sub":"A single API endpoint that handles providers, IPs, headers, and streaming for you.",
+    "feat.f1.t":"Multi-provider fallback","feat.f1.d":"If one upstream proxy fails, NebulaProxy automatically retries through another — no downtime.",
+    "feat.f2.t":"Six-country rotation","feat.f2.d":"Rotate egress across the United States, United Kingdom, Germany, Poland, Spain, and Japan.",
+    "feat.f3.t":"Cookies & headers","feat.f3.d":"Pass custom cookies and headers straight through to the target — full control over the request.",
+    "feat.f4.t":"Live streaming","feat.f4.d":"Stream responses as they arrive with SSE, so long downloads don't block your client.",
+    "feat.f5.t":"Binary-safe","feat.f5.d":"Images, files, and binary payloads pass through untouched with base64 support.",
+    "feat.f6.t":"Any language","feat.f6.d":"Use cURL, Python, Node.js, or anything that speaks HTTP. One endpoint, no SDK required.",
+    "pg.eyebrow":"Playground","pg.title":"Test the proxy live","pg.sub":"Send a request through the gateway and inspect the full response.",
+    "pg.target":"Target URL","pg.country":"Country","pg.retries":"Retries","pg.method":"Method","pg.body":"Request body (JSON)",
+    "pg.send":"Send Request","pg.idle":"Ready","pg.hint":"Fill the fields and press Send to see the response.","pg.auto":"Auto (rotate)",
+    "docs.eyebrow":"Documentation","docs.title":"API reference","docs.sub":"Everything you need to integrate NebulaProxy into your app.",
+    "docs.endpoints":"Endpoints","docs.method":"Method","docs.endpoint":"Endpoint","docs.description":"Description",
+    "docs.proxy":"Proxy a request through a rotating IP","docs.ip":"Get your current egress IP",
+    "docs.params":"Request parameters","docs.field":"Field","docs.type":"Type","docs.req":"Required","docs.desc2":"Description",
+    "docs.p.url":"The target URL to fetch","docs.p.method":"HTTP method (default GET)","docs.p.country":"Two-letter country code (or \"auto\")",
+    "docs.p.retries":"Retry attempts on failure","docs.p.headers":"Custom headers to forward","docs.p.cookies":"Cookies to attach",
+    "docs.p.body":"Request body (for POST/PUT/PATCH)","docs.p.b64":"Whether the body is base64-encoded","docs.p.sticky":"Keep the same IP across requests",
+    "docs.examples":"Examples","docs.res":"Response","yes":"yes","no":"no",
+    "set.eyebrow":"Settings","set.title":"Configuration","set.sub":"Tune your gateway preferences and manage admin access.",
+    "set.general":"General","set.sticky":"Sticky sessions","set.sticky.d":"Reuse the same IP across requests",
+    "set.stream":"Streaming (SSE)","set.stream.d":"Stream responses as they arrive","set.dark":"Dark theme","set.dark.d":"Always enabled for Nebula",
+    "set.country":"Default country","set.country.d":"Used when no country is specified","set.admin":"Admin login",
+    "set.admin.d":"Sign in to manage proxies, view live stats, and rotate keys.","set.username":"Username","set.password":"Password",
+    "set.user.ph":"admin","set.pass.ph":"••••••••","set.login":"Sign in","set.keys":"API keys","set.keys.d":"Rotate or revoke gateway keys. Admin access required.",
+    "set.rotate":"Rotate API key","set.revoke":"Revoke all keys","set.demo":"Demo build — admin features require a connected backend.","set.needadmin":"Admin access required — sign in first.",
+    "footer.note":"Built for developers who need a clean, rotating egress IP without the hassle.","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"Invalid credentials — please check your username and password.","login.ok":"Signed in successfully."
+  },
+  "bn": { "hero.badge":"গেটওয়ে চালু আছে","hero.title":"প্রতিটি অনুরোধে","hero.title2":"আপনার IP","hero.title3":"ঘুরান",
+    "hero.sub":"NebulaProxy একটি রোটেটিং প্রক্সি API গেটওয়ে। একটি অনুরোধ পাঠান, ছয়টি দেশের যেকোনো একটি থেকে নতুন IP পান, এবং একটি মাত্র এন্ডপয়েন্ট দিয়ে উত্তর ফেরত পান।",
+    "hero.play":"প্লেগ্রাউন্ড খুলুন","hero.docs":"ডকুমেন্টেশন পড়ুন","hero.live":"লাইভ স্ট্রিমিং","hero.cookies":"কুকি ও হেডার",
+    "nav.regions":"৬টি দেশ","nav.home":"হোম","nav.playground":"প্লেগ্রাউন্ড","nav.docs":"ডকুমেন্টেশন","nav.settings":"সেটিংস",
+    "stat.requests":"অনুরোধ","stat.success":"সাফল্যের হার","stat.latency":"গড় লেটেন্সি","stat.regions":"দেখা অঞ্চল",
+    "feat.eyebrow":"কেন NebulaProxy","feat.title":"ট্রাফিক ঘোরাতে যা যা দরকার","feat.sub":"একটি মাত্র API এন্ডপয়েন্ট যা আপনার জন্য প্রোভাইডার, IP, হেডার ও স্ট্রিমিং সামলায়।",
+    "feat.f1.t":"মাল্টি-প্রোভাইডার ফলব্যাক","feat.f1.d":"একটি আপস্ট্রিম প্রক্সি ব্যর্থ হলে NebulaProxy স্বয়ংক্রিয়ভাবে অন্যটি ব্যবহার করে — কোনো ডাউনটাইম নেই।",
+    "feat.f2.t":"ছয়-দেশ রোটেশন","feat.f2.d":"যুক্তরাষ্ট্র, যুক্তরাজ্য, জার্মানি, পোল্যান্ড, স্পেন ও জাপান জুড়ে egress ঘোরান।",
+    "feat.f3.t":"কুকি ও হেডার","feat.f3.d":"কাস্টম কুকি ও হেডার সরাসরি টার্গেটে পাঠান — অনুরোধের ওপর সম্পূর্ণ নিয়ন্ত্রণ।",
+    "feat.f4.t":"লাইভ স্ট্রিমিং","feat.f4.d":"SSE দিয়ে উত্তর আসার সাথে সাথে স্ট্রিম করুন, দীর্ঘ ডাউনলোড ক্লায়েন্টকে আটকাবে না।",
+    "feat.f5.t":"বাইনারি-নিরাপদ","feat.f5.d":"ছবি, ফাইল ও বাইনারি পেলোড অক্ষত অবস্থায় পার হয় base64 সাপোর্টসহ।",
+    "feat.f6.t":"যেকোনো ভাষা","feat.f6.d":"cURL, Python, Node.js বা যেকোনো HTTP ক্লায়েন্ট ব্যবহার করুন। এক এন্ডপয়েন্ট, কোনো SDK লাগবে না।",
+    "pg.eyebrow":"প্লেগ্রাউন্ড","pg.title":"প্রক্সি লাইভ টেস্ট করুন","pg.sub":"গেটওয়ে দিয়ে একটি অনুরোধ পাঠান এবং পুরো উত্তর পরীক্ষা করুন।",
+    "pg.target":"টার্গেট URL","pg.country":"দেশ","pg.retries":"পুনঃপ্রচেষ্টা","pg.method":"মেথড","pg.body":"অনুরোধ বডি (JSON)",
+    "pg.send":"অনুরোধ পাঠান","pg.idle":"প্রস্তুত","pg.hint":"উত্তর দেখতে ফর্ম পূরণ করে পাঠান চাপুন।","pg.auto":"স্বয়ংক্রিয় (ঘোরান)",
+    "docs.eyebrow":"ডকুমেন্টেশন","docs.title":"API রেফারেন্স","docs.sub":"আপনার অ্যাপে NebulaProxy যুক্ত করতে যা যা দরকার।",
+    "docs.endpoints":"এন্ডপয়েন্ট","docs.method":"মেথড","docs.endpoint":"এন্ডপয়েন্ট","docs.description":"বর্ণনা",
+    "docs.proxy":"রোটেটিং IP দিয়ে একটি অনুরোধ প্রক্সি করুন","docs.ip":"আপনার বর্তমান egress IP দেখুন",
+    "docs.params":"অনুরোধ প্যারামিটার","docs.field":"ফিল্ড","docs.type":"টাইপ","docs.req":"আবশ্যক","docs.desc2":"বর্ণনা",
+    "docs.p.url":"যে URL ফেচ করতে হবে","docs.p.method":"HTTP মেথড (ডিফল্ট GET)","docs.p.country":"দুই-অক্ষরের দেশ কোড (বা \"auto\")",
+    "docs.p.retries":"ব্যর্থ হলে পুনঃপ্রচেষ্টা","docs.p.headers":"ফরোয়ার্ড করতে কাস্টম হেডার","docs.p.cookies":"সংযুক্ত করতে কুকি",
+    "docs.p.body":"অনুরোধ বডি (POST/PUT/PATCH এর জন্য)","docs.p.b64":"বডি base64-এনকোডেড কিনা","docs.p.sticky":"অনুরোধজুড়ে একই IP রাখুন",
+    "docs.examples":"উদাহরণ","docs.res":"উত্তর","yes":"হ্যাঁ","no":"না",
+    "set.eyebrow":"সেটিংস","set.title":"কনফিগারেশন","set.sub":"আপনার গেটওয়ে পছন্দ ঠিক করুন ও অ্যাডমিন অ্যাক্সেস পরিচালনা করুন।",
+    "set.general":"সাধারণ","set.sticky":"স্টিকি সেশন","set.sticky.d":"অনুরোধজুড়ে একই IP পুনঃব্যবহার করুন",
+    "set.stream":"স্ট্রিমিং (SSE)","set.stream.d":"আসার সাথে সাথে উত্তর স্ট্রিম করুন","set.dark":"ডার্ক থিম","set.dark.d":"Nebula-এর জন্য সবসময় চালু",
+    "set.country":"ডিফল্ট দেশ","set.country.d":"কোনো দেশ নির্দিষ্ট না থাকলে ব্যবহৃত হবে","set.admin":"অ্যাডমিন লগইন",
+    "set.admin.d":"প্রক্সি পরিচালনা, লাইভ পরিসংখ্যান দেখতে ও কি ঘোরাতে সাইন ইন করুন।","set.username":"ইউজারনেম","set.password":"পাসওয়ার্ড",
+    "set.user.ph":"অ্যাডমিন","set.pass.ph":"••••••••","set.login":"সাইন ইন","set.keys":"API কি","set.keys.d":"গেটওয়ে কি ঘোরান বা প্রত্যাহার করুন। অ্যাডমিন অ্যাক্সেস আবশ্যক।",
+    "set.rotate":"API কি ঘোরান","set.revoke":"সব কি প্রত্যাহার করুন","set.demo":"ডেমো বিল্ড — অ্যাডমিন ফিচারের জন্য সংযুক্ত ব্যাকএন্ড প্রয়োজন।","set.needadmin":"অ্যাডমিন অ্যাক্সেস প্রয়োজন — আগে সাইন ইন করুন।",
+    "footer.note":"ডেভেলপারদের জন্য নির্মিত যাদের ঝামেলাহীন, ঘূর্ণায়মান egress IP দরকার।","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"ভুল তথ্য — ইউজারনেম ও পাসওয়ার্ড যাচাই করুন।","login.ok":"সফলভাবে সাইন ইন হয়েছে।"
+  },
+  "hi": { "hero.badge":"गेटवे ऑनलाइन","hero.title":"हर अनुरोध पर","hero.title2":"अपना IP","hero.title3":"घुमाएँ",
+    "hero.sub":"NebulaProxy एक रोटेटिंग प्रॉक्सी API गेटवे है। अनुरोध भेजें, छह देशों में से किसी एक से नया IP पाएँ, और एक ही एंडपॉइंट से उत्तर पाएँ।",
+    "hero.play":"प्लेग्राउंड खोलें","hero.docs":"दस्तावेज़ पढ़ें","hero.live":"लाइव स्ट्रीमिंग","hero.cookies":"कुकीज़ और हेडर",
+    "nav.regions":"6 देश","nav.home":"होम","nav.playground":"प्लेग्राउंड","nav.docs":"दस्तावेज़","nav.settings":"सेटिंग्स",
+    "stat.requests":"अनुरोध","stat.success":"सफलता दर","stat.latency":"औसत विलंब","stat.regions":"देखे गए क्षेत्र",
+    "feat.eyebrow":"NebulaProxy क्यों","feat.title":"ट्रैफ़िक घुमाने के लिए सबकुछ","feat.sub":"एक ही API एंडपॉइंट जो प्रोवाइडर, IP, हेडर और स्ट्रीमिंग संभालता है।",
+    "feat.f1.t":"मल्टी-प्रोवाइडर फ़ॉलबैक","feat.f1.d":"अगर एक अपस्ट्रीम प्रॉक्सी विफल हो, NebulaProxy अपने आप दूसरे से फिर कोशिश करता है — कोई डाउनटाइम नहीं।",
+    "feat.f2.t":"छह-देश रोटेशन","feat.f2.d":"अमेरिका, यूके, जर्मनी, पोलैंड, स्पेन और जापान में egress घुमाएँ।",
+    "feat.f3.t":"कुकीज़ और हेडर","feat.f3.d":"कस्टम कुकीज़ और हेडर सीधे लक्ष्य तक भेजें — अनुरोध पर पूरा नियंत्रण।",
+    "feat.f4.t":"लाइव स्ट्रीमिंग","feat.f4.d":"SSE से उत्तर आते ही स्ट्रीम करें, लंबे डाउनलोड क्लाइंट को रोकेंगे नहीं।",
+    "feat.f5.t":"बाइनरी-सुरक्षित","feat.f5.d":"छवियाँ, फ़ाइलें और बाइनरी पेलोड base64 सपोर्ट के साथ बिना बदले गुज़रते हैं।",
+    "feat.f6.t":"कोई भी भाषा","feat.f6.d":"cURL, Python, Node.js या कुछ भी जो HTTP बोले। एक एंडपॉइंट, कोई SDK नहीं।",
+    "pg.eyebrow":"प्लेग्राउंड","pg.title":"प्रॉक्सी लाइव टेस्ट करें","pg.sub":"गेटवे से अनुरोध भेजें और पूरा उत्तर देखें।",
+    "pg.target":"लक्ष्य URL","pg.country":"देश","pg.retries":"पुनः प्रयास","pg.method":"विधि","pg.body":"अनुरोध बॉडी (JSON)",
+    "pg.send":"अनुरोध भेजें","pg.idle":"तैयार","pg.hint":"उत्तर देखने के लिए फ़ॉर्म भरकर Send दबाएँ।","pg.auto":"स्वचालित (घुमाएँ)",
+    "docs.eyebrow":"दस्तावेज़","docs.title":"API संदर्भ","docs.sub":"NebulaProxy को अपने ऐप में जोड़ने के लिए सबकुछ।",
+    "docs.endpoints":"एंडपॉइंट","docs.method":"विधि","docs.endpoint":"एंडपॉइंट","docs.description":"विवरण",
+    "docs.proxy":"रोटेटिंग IP से अनुरोध प्रॉक्सी करें","docs.ip":"अपना वर्तमान egress IP देखें",
+    "docs.params":"अनुरोध पैरामीटर","docs.field":"फ़ील्ड","docs.type":"प्रकार","docs.req":"आवश्यक","docs.desc2":"विवरण",
+    "docs.p.url":"फ़ेच करने हेतु URL","docs.p.method":"HTTP विधि (डिफ़ॉल्ट GET)","docs.p.country":"दो-अक्षर देश कोड (या \"auto\")",
+    "docs.p.retries":"विफलता पर पुनः प्रयास","docs.p.headers":"अग्रेषित करने हेतु कस्टम हेडर","docs.p.cookies":"जोड़ने हेतु कुकीज़",
+    "docs.p.body":"अनुरोध बॉडी (POST/PUT/PATCH हेतु)","docs.p.b64":"क्या बॉडी base64-एन्कोडेड है","docs.p.sticky":"अनुरोधों में एक ही IP रखें",
+    "docs.examples":"उदाहरण","docs.res":"उत्तर","yes":"हाँ","no":"नहीं",
+    "set.eyebrow":"सेटिंग्स","set.title":"कॉन्फ़िगरेशन","set.sub":"अपने गेटवे वरीयताएँ सेट करें और व्यवस्थापक पहुँच प्रबंधित करें।",
+    "set.general":"सामान्य","set.sticky":"स्टिकी सेशन","set.sticky.d":"अनुरोधों में एक ही IP फिर उपयोग करें",
+    "set.stream":"स्ट्रीमिंग (SSE)","set.stream.d":"उत्तर आते ही स्ट्रीम करें","set.dark":"डार्क थीम","set.dark.d":"Nebula के लिए हमेशा चालू",
+    "set.country":"डिफ़ॉल्ट देश","set.country.d":"कोई देश न बताए जाने पर उपयोग होगा","set.admin":"व्यवस्थापक लॉगिन",
+    "set.admin.d":"प्रॉक्सी प्रबंधित करने, लाइव आँकड़े देखने और कुंजियाँ घुमाने हेतु साइन इन करें।","set.username":"उपयोगकर्ता नाम","set.password":"पासवर्ड",
+    "set.user.ph":"एडमिन","set.pass.ph":"••••••••","set.login":"साइन इन","set.keys":"API कुंजियाँ","set.keys.d":"गेटवे कुंजियाँ घुमाएँ या रद्द करें। व्यवस्थापक पहुँच आवश्यक।",
+    "set.rotate":"API कुंजी घुमाएँ","set.revoke":"सभी कुंजियाँ रद्द करें","set.demo":"डेमो बिल्ड — व्यवस्थापक सुविधाओं हेतु जुड़ा बैकएंड आवश्यक।","set.needadmin":"व्यवस्थापक पहुँच आवश्यक — पहले साइन इन करें।",
+    "footer.note":"उन डेवलपर्स हेतु बना जिन्हें साफ़, रोटेटिंग egress IP चाहिए बिना झंझट के।","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"अमान्य जानकारी — उपयोगकर्ता नाम और पासवर्ड जाँचें।","login.ok":"सफलतापूर्वक साइन इन हुआ।"
+  },
+  "es": { "hero.badge":"Gateway en línea","hero.title":"Rota tu","hero.title2":"IP de salida","hero.title3":"en cada solicitud",
+    "hero.sub":"NebulaProxy es una puerta de enlace de API de proxy rotativo. Envía una solicitud, obtén una IP nueva de uno de seis países y recibe la respuesta — todo por un solo endpoint.",
+    "hero.play":"Abrir Playground","hero.docs":"Leer documentación","hero.live":"Transmisión en vivo","hero.cookies":"Cookies y encabezados",
+    "nav.regions":"6 países","nav.home":"Inicio","nav.playground":"Playground","nav.docs":"Documentación","nav.settings":"Ajustes",
+    "stat.requests":"Solicitudes","stat.success":"Tasa de éxito","stat.latency":"Latencia media","stat.regions":"Regiones vistas",
+    "feat.eyebrow":"Por qué NebulaProxy","feat.title":"Todo para rotar tráfico","feat.sub":"Un solo endpoint que gestiona proveedores, IPs, encabezados y streaming por ti.",
+    "feat.f1.t":"Respaldo multiproveedor","feat.f1.d":"Si un proxy falla, NebulaProxy reintenta con otro automáticamente — sin caídas.",
+    "feat.f2.t":"Rotación de seis países","feat.f2.d":"Rota la salida entre EE. UU., Reino Unido, Alemania, Polonia, España y Japón.",
+    "feat.f3.t":"Cookies y encabezados","feat.f3.d":"Envía cookies y encabezados personalizados al destino — control total de la solicitud.",
+    "feat.f4.t":"Transmisión en vivo","feat.f4.d":"Transmite respuestas con SSE para que descargas largas no bloqueen tu cliente.",
+    "feat.f5.t":"Binario seguro","feat.f5.d":"Imágenes, archivos y payloads binarios pasan intactos con soporte base64.",
+    "feat.f6.t":"Cualquier lenguaje","feat.f6.d":"Usa cURL, Python, Node.js o cualquier cosa que hable HTTP. Un endpoint, sin SDK.",
+    "pg.eyebrow":"Playground","pg.title":"Prueba el proxy en vivo","pg.sub":"Envía una solicitud por la puerta de enlace e inspecciona la respuesta completa.",
+    "pg.target":"URL de destino","pg.country":"País","pg.retries":"Reintentos","pg.method":"Método","pg.body":"Cuerpo (JSON)",
+    "pg.send":"Enviar solicitud","pg.idle":"Listo","pg.hint":"Llena los campos y presiona Enviar para ver la respuesta.","pg.auto":"Automático (rotar)",
+    "docs.eyebrow":"Documentación","docs.title":"Referencia de API","docs.sub":"Todo lo que necesitas para integrar NebulaProxy.",
+    "docs.endpoints":"Endpoints","docs.method":"Método","docs.endpoint":"Endpoint","docs.description":"Descripción",
+    "docs.proxy":"Proxy de una solicitud por una IP rotativa","docs.ip":"Obtén tu IP de salida actual",
+    "docs.params":"Parámetros de solicitud","docs.field":"Campo","docs.type":"Tipo","docs.req":"Requerido","docs.desc2":"Descripción",
+    "docs.p.url":"La URL de destino","docs.p.method":"Método HTTP (GET por defecto)","docs.p.country":"Código de país de dos letras (o \"auto\")",
+    "docs.p.retries":"Reintentos ante fallo","docs.p.headers":"Encabezados personalizados a reenviar","docs.p.cookies":"Cookies a adjuntar",
+    "docs.p.body":"Cuerpo (para POST/PUT/PATCH)","docs.p.b64":"Si el cuerpo está en base64","docs.p.sticky":"Mantener la misma IP",
+    "docs.examples":"Ejemplos","docs.res":"Respuesta","yes":"sí","no":"no",
+    "set.eyebrow":"Ajustes","set.title":"Configuración","set.sub":"Ajusta tus preferencias y gestiona el acceso de administrador.",
+    "set.general":"General","set.sticky":"Sesiones fijas","set.sticky.d":"Reutilizar la misma IP entre solicitudes",
+    "set.stream":"Streaming (SSE)","set.stream.d":"Transmitir respuestas al llegar","set.dark":"Tema oscuro","set.dark.d":"Siempre activo en Nebula",
+    "set.country":"País por defecto","set.country.d":"Se usa cuando no se especifica país","set.admin":"Inicio de administrador",
+    "set.admin.d":"Inicia sesión para gestionar proxies y ver estadísticas.","set.username":"Usuario","set.password":"Contraseña",
+    "set.user.ph":"admin","set.pass.ph":"••••••••","set.login":"Iniciar sesión","set.keys":"Claves API","set.keys.d":"Rota o revoca claves de la puerta de enlace.",
+    "set.rotate":"Rotar clave API","set.revoke":"Revocar todas","set.demo":"Demo — las funciones de admin requieren backend.","set.needadmin":"Se requiere acceso de administrador — inicia sesión primero.",
+    "footer.note":"Hecho para desarrolladores que necesitan una IP de salida rotativa sin complicaciones.","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"Credenciales inválidas.","login.ok":"Sesión iniciada."
+  },
+  "fr": { "hero.badge":"Passerelle en ligne","hero.title":"Faites tourner","hero.title2":"votre IP","hero.title3":"à chaque requête",
+    "hero.sub":"NebulaProxy est une passerelle de proxy rotatif. Envoyez une requête, obtenez une nouvelle IP parmi six pays et recevez la réponse — via un seul endpoint.",
+    "hero.play":"Ouvrir Playground","hero.docs":"Lire la documentation","hero.live":"Streaming en direct","hero.cookies":"Cookies et en-têtes",
+    "nav.regions":"6 pays","nav.home":"Accueil","nav.playground":"Playground","nav.docs":"Documentation","nav.settings":"Paramètres",
+    "stat.requests":"Requêtes","stat.success":"Taux de succès","stat.latency":"Latence moyenne","stat.regions":"Régions vues",
+    "feat.eyebrow":"Pourquoi NebulaProxy","feat.title":"Tout pour faire tourner le trafic","feat.sub":"Un seul endpoint qui gère fournisseurs, IP, en-têtes et streaming pour vous.",
+    "feat.f1.t":"Bascule multi-fournisseurs","feat.f1.d":"Si un proxy échoue, NebulaProxy réessaie via un autre — aucun temps d'arrêt.",
+    "feat.f2.t":"Rotation sur six pays","feat.f2.d":"Faites tourner la sortie entre les États-Unis, le Royaume-Uni, l'Allemagne, la Pologne, l'Espagne et le Japon.",
+    "feat.f3.t":"Cookies et en-têtes","feat.f3.d":"Transmettez cookies et en-têtes personnalisés à la cible.",
+    "feat.f4.t":"Streaming en direct","feat.f4.d":"Diffusez les réponses avec SSE pour ne pas bloquer votre client.",
+    "feat.f5.t":"Binaire sûr","feat.f5.d":"Images, fichiers et payloads binaires passent intacts avec le support base64.",
+    "feat.f6.t":"Tout langage","feat.f6.d":"Utilisez cURL, Python, Node.js ou tout client HTTP. Un endpoint, zéro SDK.",
+    "pg.eyebrow":"Playground","pg.title":"Testez le proxy en direct","pg.sub":"Envoyez une requête via la passerelle et inspectez la réponse.",
+    "pg.target":"URL cible","pg.country":"Pays","pg.retries":"Tentatives","pg.method":"Méthode","pg.body":"Corps (JSON)",
+    "pg.send":"Envoyer","pg.idle":"Prêt","pg.hint":"Remplissez le formulaire et cliquez Envoyer.","pg.auto":"Auto (rotation)",
+    "docs.eyebrow":"Documentation","docs.title":"Référence API","docs.sub":"Tout pour intégrer NebulaProxy.",
+    "docs.endpoints":"Endpoints","docs.method":"Méthode","docs.endpoint":"Endpoint","docs.description":"Description",
+    "docs.proxy":"Proxy d'une requête via IP rotative","docs.ip":"Obtenir votre IP de sortie actuelle",
+    "docs.params":"Paramètres","docs.field":"Champ","docs.type":"Type","docs.req":"Requis","docs.desc2":"Description",
+    "docs.p.url":"L'URL à récupérer","docs.p.method":"Méthode HTTP (GET par défaut)","docs.p.country":"Code pays (ou \"auto\")",
+    "docs.p.retries":"Tentatives en cas d'échec","docs.p.headers":"En-têtes à transmettre","docs.p.cookies":"Cookies à joindre",
+    "docs.p.body":"Corps (POST/PUT/PATCH)","docs.p.b64":"Corps encodé en base64","docs.p.sticky":"Garder la même IP",
+    "docs.examples":"Exemples","docs.res":"Réponse","yes":"oui","no":"non",
+    "set.eyebrow":"Paramètres","set.title":"Configuration","set.sub":"Ajustez vos préférences et gérez l'accès admin.",
+    "set.general":"Général","set.sticky":"Sessions persistantes","set.sticky.d":"Réutiliser la même IP",
+    "set.stream":"Streaming (SSE)","set.stream.d":"Diffuser les réponses","set.dark":"Thème sombre","set.dark.d":"Toujours actif",
+    "set.country":"Pays par défaut","set.country.d":"Utilisé si aucun pays n'est précisé","set.admin":"Connexion admin",
+    "set.admin.d":"Connectez-vous pour gérer les proxies.","set.username":"Utilisateur","set.password":"Mot de passe",
+    "set.user.ph":"admin","set.pass.ph":"••••••••","set.login":"Se connecter","set.keys":"Clés API","set.keys.d":"Rotez ou révoquez les clés.",
+    "set.rotate":"Roter la clé","set.revoke":"Tout révoquer","set.demo":"Démo — fonctions admin nécessitant un backend.","set.needadmin":"Accès administrateur requis — connectez-vous d'abord.",
+    "footer.note":"Conçu pour les développeurs qui veulent une IP de sortie rotative sans tracas.","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"Identifiants invalides.","login.ok":"Connexion réussie."
+  },
+  "ar": { "hero.badge":"البوابة متصلة","hero.title":"قم بتدوير","hero.title2":"عنوان IP","hero.title3":"في كل طلب",
+    "hero.sub":"NebulaProxy هو بوابة وكيل دوّارة. أرسل طلبًا، واحصل على عنوان IP جديد من ستّ دول، واستلم الرد — من نقطة نهاية واحدة.",
+    "hero.play":"افتح الملعب","hero.docs":"اقرأ التوثيق","hero.live":"بث مباشر","hero.cookies":"ملفات تعريف وترويسات",
+    "nav.regions":"6 دول","nav.home":"الرئيسية","nav.playground":"الملعب","nav.docs":"التوثيق","nav.settings":"الإعدادات",
+    "stat.requests":"الطلبات","stat.success":"نسبة النجاح","stat.latency":"متوسط التأخير","stat.regions":"المناطق المرصودة",
+    "feat.eyebrow":"لماذا NebulaProxy","feat.title":"كل ما تحتاجه لتدوير الحركة","feat.sub":"نقطة نهاية واحدة تدير المزوّدين والعناوين والترويسات والبث.",
+    "feat.f1.t":"بديل متعدد المزوّدين","feat.f1.d":"إذا فشل وكيل، يعيد NebulaProxy المحاولة عبر آخر — بلا توقف.",
+    "feat.f2.t":"تدوير ست دول","feat.f2.d":"در الحركة بين أمريكا وبريطانيا وألمانيا وبولندا وإسبانيا واليابان.",
+    "feat.f3.t":"ملفات تعريف وترويسات","feat.f3.d":"مرر الترويسات وملفات التعريف إلى الهدف.",
+    "feat.f4.t":"بث مباشر","feat.f4.d":"بث الردود عبر SSE حتى لا يحجب التحميل الطويل عميلك.",
+    "feat.f5.t":"آمن ثنائيًا","feat.f5.d":"تمر الصور والملفات سليمة مع دعم base64.",
+    "feat.f6.t":"أي لغة","feat.f6.d":"استخدم cURL أو Python أو Node.js. نقطة نهاية واحدة بلا SDK.",
+    "pg.eyebrow":"الملعب","pg.title":"اختبر الوكيل مباشرة","pg.sub":"أرسل طلبًا عبر البوابة وافحص الرد كاملًا.",
+    "pg.target":"العنوان الهدف","pg.country":"الدولة","pg.retries":"المحاولات","pg.method":"الطريقة","pg.body":"جسم الطلب (JSON)",
+    "pg.send":"إرسال","pg.idle":"جاهز","pg.hint":"املأ الحقول ثم اضغط إرسال.","pg.auto":"تلقائي (تدوير)",
+    "docs.eyebrow":"التوثيق","docs.title":"مرجع API","docs.sub":"كل ما تحتاجه لدمج NebulaProxy.",
+    "docs.endpoints":"النقاط","docs.method":"الطريقة","docs.endpoint":"النقطة","docs.description":"الوصف",
+    "docs.proxy":"وكيل طلب عبر عنوان IP دوّار","docs.ip":"الحصول على عنوان IP الحالي",
+    "docs.params":"معاملات الطلب","docs.field":"الحقل","docs.type":"النوع","docs.req":"مطلوب","docs.desc2":"الوصف",
+    "docs.p.url":"العنوان المطلوب جلبه","docs.p.method":"طريقة HTTP (GET افتراضيًا)","docs.p.country":"رمز الدولة بحرفين",
+    "docs.p.retries":"محاولات عند الفشل","docs.p.headers":"ترويسات المرور","docs.p.cookies":"ملفات التعريف",
+    "docs.p.body":"جسم الطلب","docs.p.b64":"هل الجسم بترميز base64","docs.p.sticky":"الحفاظ على نفس IP",
+    "docs.examples":"أمثلة","docs.res":"الرد","yes":"نعم","no":"لا",
+    "set.eyebrow":"الإعدادات","set.title":"التهيئة","set.sub":"اضبط تفضيلاتك وأدر وصول المشرف.",
+    "set.general":"عام","set.sticky":"جلسات ثابتة","set.sticky.d":"إعادة استخدام نفس IP",
+    "set.stream":"البث (SSE)","set.stream.d":"بث الردود فور وصولها","set.dark":"ثيم داكن","set.dark.d":"مفعّل دائمًا",
+    "set.country":"الدولة الافتراضية","set.country.d":"تُستخدم إن لم تحدد دولة","set.admin":"دخول المشرف",
+    "set.admin.d":"سجّل الدخول لإدارة البروكسيات.","set.username":"اسم المستخدم","set.password":"كلمة المرور",
+    "set.user.ph":"مدير","set.pass.ph":"••••••••","set.login":"تسجيل الدخول","set.keys":"مفاتيح API","set.keys.d":"در أو ألغِ المفاتيح.",
+    "set.rotate":"تدوير المفتاح","set.revoke":"إلغاء الكل","set.demo":"نسخة تجريبية — تحتاج خلفية متصلة.","set.needadmin":"مطلوب وصول المشرف — سجّل الدخول أولاً.",
+    "footer.note":"صُنع للمطورين الذين يحتاجون عنوان IP دوّارًا بلا عناء.","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"بيانات غير صحيحة.","login.ok":"تم تسجيل الدخول."
+  },
+  "ru": { "hero.badge":"Шлюз онлайн","hero.title":"Меняйте","hero.title2":"исходящий IP","hero.title3":"на каждый запрос",
+    "hero.sub":"NebulaProxy — это ротационный прокси-шлюз. Отправьте запрос, получите свежий IP из шести стран и примите ответ — через один эндпоинт.",
+    "hero.play":"Открыть Playground","hero.docs":"Читать документацию","hero.live":"Потоковая передача","hero.cookies":"Cookies и заголовки",
+    "nav.regions":"6 стран","nav.home":"Главная","nav.playground":"Playground","nav.docs":"Документация","nav.settings":"Настройки",
+    "stat.requests":"Запросы","stat.success":"Успешность","stat.latency":"Средняя задержка","stat.regions":"Регионы",
+    "feat.eyebrow":"Почему NebulaProxy","feat.title":"Всё для ротации трафика","feat.sub":"Один эндпоинт, который управляет провайдерами, IP, заголовками и стримингом.",
+    "feat.f1.t":"Фолбэк нескольких провайдеров","feat.f1.d":"Если прокси сбоит, NebulaProxy повторит через другой — без простоя.",
+    "feat.f2.t":"Ротация шести стран","feat.f2.d":"США, Великобритания, Германия, Польша, Испания и Япония.",
+    "feat.f3.t":"Cookies и заголовки","feat.f3.d":"Передавайте свои cookies и заголовки цели.",
+    "feat.f4.t":"Потоковая передача","feat.f4.d":"Стримьте ответы по SSE.",
+    "feat.f5.t":"Бинарная безопасность","feat.f5.d":"Изображения и файлы проходят без изменений с поддержкой base64.",
+    "feat.f6.t":"Любой язык","feat.f6.d":"cURL, Python, Node.js — один эндпоинт, без SDK.",
+    "pg.eyebrow":"Playground","pg.title":"Проверьте прокси","pg.sub":"Отправьте запрос через шлюз.",
+    "pg.target":"Целевой URL","pg.country":"Страна","pg.retries":"Повторы","pg.method":"Метод","pg.body":"Тело (JSON)",
+    "pg.send":"Отправить","pg.idle":"Готово","pg.hint":"Заполните форму и нажмите Отправить.","pg.auto":"Авто (ротация)",
+    "docs.eyebrow":"Документация","docs.title":"Справочник API","docs.sub":"Всё для интеграции NebulaProxy.",
+    "docs.endpoints":"Эндпоинты","docs.method":"Метод","docs.endpoint":"Эндпоинт","docs.description":"Описание",
+    "docs.proxy":"Прокси запроса через ротационный IP","docs.ip":"Текущий исходящий IP",
+    "docs.params":"Параметры","docs.field":"Поле","docs.type":"Тип","docs.req":"Обязательно","docs.desc2":"Описание",
+    "docs.p.url":"URL для запроса","docs.p.method":"HTTP метод (GET по умолчанию)","docs.p.country":"Код страны (или \"auto\")",
+    "docs.p.retries":"Повторы при сбое","docs.p.headers":"Заголовки","docs.p.cookies":"Cookies",
+    "docs.p.body":"Тело (POST/PUT/PATCH)","docs.p.b64":"Тело в base64","docs.p.sticky":"Держать тот же IP",
+    "docs.examples":"Примеры","docs.res":"Ответ","yes":"да","no":"нет",
+    "set.eyebrow":"Настройки","set.title":"Конфигурация","set.sub":"Настройте предпочтения и управляйте доступом администратора.",
+    "set.general":"Общие","set.sticky":"Постоянные сессии","set.sticky.d":"Использовать тот же IP",
+    "set.stream":"Стриминг (SSE)","set.stream.d":"Поток ответов","set.dark":"Тёмная тема","set.dark.d":"Всегда включена",
+    "set.country":"Страна по умолчанию","set.country.d":"Если страна не указана","set.admin":"Вход администратора",
+    "set.admin.d":"Войдите для управления прокси.","set.username":"Логин","set.password":"Пароль",
+    "set.user.ph":"admin","set.pass.ph":"••••••••","set.login":"Войти","set.keys":"Ключи API","set.keys.d":"Ротация или отзыв ключей.",
+    "set.rotate":"Ротировать ключ","set.revoke":"Отозвать все","set.demo":"Демо — нужен подключённый бэкенд.","set.needadmin":"Требуется доступ администратора — сначала войдите.",
+    "footer.note":"Создан для разработчиков, которым нужен чистый ротационный IP без хлопот.","footer.tag":"NebulaProxy · v1.0.0",
+    "login.err":"Неверные данные.","login.ok":"Вход выполнен."
+  }
+};
+
+let CURRENT_LANG = localStorage.getItem("npx_lang") || "en";
+const $ = (s,r)=>(r||document).querySelector(s);
+const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
+
+function applyLang(){
+  const L = STRINGS[CURRENT_LANG] || STRINGS.en;
+  const rtl = I18N.find(i=>i.code===CURRENT_LANG)?.rtl;
+  document.documentElement.lang = CURRENT_LANG;
+  document.documentElement.dir = rtl ? "rtl" : "ltr";
+  document.getElementById("langLabel").textContent = I18N.find(i=>i.code===CURRENT_LANG).label;
+  $$("[data-i18n]").forEach(el=>{
+    const k = el.getAttribute("data-i18n");
+    if(L[k]!==undefined) el.textContent = L[k];
+  });
+  $$("[data-i18n-ph]").forEach(el=>{
+    const k = el.getAttribute("data-i18n-ph");
+    if(L[k]!==undefined) el.setAttribute("placeholder", L[k]);
+  });
+}
+
+function renderLangMenu(){
+  const menu = document.getElementById("langMenu");
+  menu.innerHTML = "";
+  I18N.forEach(l=>{
+    const b = document.createElement("button");
+    b.className = "lang-item" + (l.code===CURRENT_LANG?" active":"");
+    b.textContent = l.label;
+    b.addEventListener("click",()=>{
+      CURRENT_LANG = l.code;
+      localStorage.setItem("npx_lang", l.code);
+      applyLang(); renderLangMenu();
+      document.getElementById("langWrap").classList.remove("open");
+    });
+    menu.appendChild(b);
+  });
+}
+document.getElementById("langBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  document.getElementById("langWrap").classList.toggle("open");
+});
+document.addEventListener("click",()=>document.getElementById("langWrap").classList.remove("open"));
+
+/* ==================== Tab navigation ==================== */
+function navigate(tab){
+  $$(".page").forEach(p=>p.classList.remove("active"));
+  const page = document.getElementById("page-"+tab);
+  if(page) page.classList.add("active");
+  $$(".tab").forEach(t=>t.classList.toggle("active", t.getAttribute("data-nav")===tab));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$$("[data-nav]").forEach(el=>{
+  el.addEventListener("click",e=>{
+    e.preventDefault();
+    navigate(el.getAttribute("data-nav"));
+  });
+});
+
+/* ==================== Playground ==================== */
+let sessionStats = { req:0, ok:0, latSum:0, regions:new Set() };
+let currentMethod = "GET";
+$$("#pg-method .method").forEach(m=>{
+  m.addEventListener("click",()=>{
+    $$("#pg-method .method").forEach(x=>x.classList.remove("active"));
+    m.classList.add("active");
+    currentMethod = m.getAttribute("data-m");
+  });
+});
+
+async function apiFetch(path, opts){
+  const res = await fetch(path, opts);
+  const ct = res.headers.get("content-type")||"";
+  let data;
+  if(ct.includes("application/json")) data = await res.json();
+  else data = await res.text();
+  return { status:res.status, data };
+}
+
+function fmtLatency(ms){
+  if(ms < 1000) return ms + " ms";
+  return (ms/1000).toFixed(2) + " s";
+}
+
+function updateStats(lastLatency){
+  sessionStats.req++;
+  if(lastLatency!==undefined){
+    sessionStats.latSum += lastLatency;
+    $("#stat-lat").textContent = fmtLatency(Math.round(sessionStats.latSum/sessionStats.req));
+  }
+  $("#stat-req").textContent = sessionStats.req;
+}
+
+document.getElementById("pg-send").addEventListener("click", async()=>{
+  const btn = document.getElementById("pg-send");
+  const resp = document.getElementById("pg-response");
+  const url = document.getElementById("pg-url").value.trim();
+  const country = document.getElementById("pg-country").value;
+  const retries = parseInt(document.getElementById("pg-retries").value,10);
+  const bodyRaw = document.getElementById("pg-body").value;
+
+  if(!url){ resp.innerHTML = '<span class="status-tag status-4xx">400</span><br>Please enter a target URL.'; return; }
+
+  const payload = { url, method: currentMethod, retries, proxy_country: country };
+  let body = bodyRaw;
+  if(bodyRaw){
+    try{ body = JSON.parse(bodyRaw); }catch(e){ /* keep as string */ }
+    payload.body = body;
+  }
+
+  btn.disabled = true;
+  resp.innerHTML = '<span class="status-tag status-idle">···</span><br>Sending request…';
+  const t0 = performance.now();
+
+  try{
+    const out = await apiFetch("/api/proxy", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const lat = Math.round(performance.now()-t0);
+    const sc = out.status;
+    const cls = sc>=200&&sc<300 ? "status-2xx" : (sc>=400 ? (sc>=500?"status-5xx":"status-4xx") : "");
+    const data = out.data;
+    const extra = [];
+    if(data && data.elapsed_ms!==undefined) extra.push("⏱ "+fmtLatency(data.elapsed_ms));
+    if(data && data.proxyCountry) extra.push("🌍 "+data.proxyCountry.toUpperCase());
+    if(data && data.attempt!==undefined) extra.push("attempt #"+data.attempt);
+    resp.innerHTML = '<span class="status-tag '+cls+'">'+sc+'</span>' + (extra.length?" "+extra.join(" · "):"") +
+      '<br><pre style="margin-top:8px;white-space:pre-wrap;word-break:break-word">'+escapeHtml(typeof data==="string"?data:JSON.stringify(data,null,2))+'</pre>';
+    updateStats(lat);
+    if(data && data.proxyCountry){ sessionStats.regions.add(data.proxyCountry); $("#stat-reg").textContent = sessionStats.regions.size; }
+    if(sc>=200&&sc<300) sessionStats.ok++;
+    $("#stat-ok").textContent = Math.round(sessionStats.ok/sessionStats.req*100) + "%";
+  }catch(e){
+    resp.innerHTML = '<span class="status-tag status-5xx">ERR</span><br>'+escapeHtml(e.message)+'<br><br><em>Note: this demo runs on a static host. Connect the Cloudflare Worker to reach the real gateway.</em>';
+    updateStats(undefined);
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+function escapeHtml(s){ return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ==================== Settings ==================== */
+function applyTheme(theme){
+  const dark = theme !== "light";
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  const el = document.getElementById("set-dark");
+  if(el) el.checked = dark;
+}
+function persistSettings(){
+  const s = {
+    sticky: document.getElementById("set-sticky").checked,
+    stream: document.getElementById("set-stream").checked,
+    country: document.getElementById("set-country").value,
+    theme: document.getElementById("set-dark").checked ? "dark" : "light"
+  };
+  localStorage.setItem("npx_settings", JSON.stringify(s));
+  applyTheme(s.theme);
+}
+function loadSettings(){
+  try{
+    const s = JSON.parse(localStorage.getItem("npx_settings")||"{}");
+    $("#set-sticky").checked = !!s.sticky;
+    $("#set-stream").checked = s.stream!==false;
+    $("#set-country").value = s.country || "auto";
+    applyTheme(s.theme || "dark");
+  }catch(e){ applyTheme("dark"); }
+}
+document.getElementById("set-sticky").addEventListener("change",persistSettings);
+document.getElementById("set-stream").addEventListener("change",persistSettings);
+document.getElementById("set-country").addEventListener("change",persistSettings);
+document.getElementById("set-dark").addEventListener("change",persistSettings);
+
+document.getElementById("login-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const u = document.getElementById("login-user").value.trim();
+  const p = document.getElementById("login-pass").value;
+  if(u && p){
+    localStorage.setItem("npx_admin", u);
+    showToast(STRINGS[CURRENT_LANG]["login.ok"], "ok");
+  }else{
+    showToast(STRINGS[CURRENT_LANG]["login.err"], "bad");
+  }
+});
+document.getElementById("btn-rotate").addEventListener("click",()=>showToast(STRINGS[CURRENT_LANG]["set.needadmin"], "warn"));
+document.getElementById("btn-revoke").addEventListener("click",()=>showToast(STRINGS[CURRENT_LANG]["set.needadmin"], "warn"));
+
+let toastTimer;
+function showToast(msg, type){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (type ? " toast-" + type : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.className = "toast", 2600);
+}
+
+/* ==================== Copy buttons ==================== */
+$$("[data-copy]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    const code = b.closest(".code").querySelector("code").innerText;
+    navigator.clipboard.writeText(code).then(()=>{
+      const old = b.textContent; b.textContent = "Copied!";
+      setTimeout(()=>b.textContent=old, 1500);
+    });
+  });
+});
+
+/* ==================== Init ==================== */
+loadSettings();
+applyLang();
+renderLangMenu();
+
+/* headline count-up for stats */
+function countUp(el, target, suffix){
+  let cur = 0;
+  const step = Math.max(1, Math.round(target/40));
+  const t = setInterval(()=>{
+    cur += step;
+    if(cur>=target){ cur=target; clearInterval(t); }
+    el.textContent = cur.toLocaleString() + (suffix||"");
+  }, 20);
+}
+countUp(document.getElementById("stat-req"), 12480);
+</script>
+</body>
+</html>
