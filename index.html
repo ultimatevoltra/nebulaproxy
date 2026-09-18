@@ -1,1057 +1,13 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0a0305" />
-<title>NebulaProxy â€” Rotating Proxy API</title>
-<meta name="description" content="NebulaProxy â€” a rotating proxy API gateway. Fresh egress IP on every request, six-country rotation, sticky sessions, and live streaming." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e11d3f'/%3E%3Cstop offset='.5' stop-color='%23ff6b1a'/%3E%3Cstop offset='1' stop-color='%23ffb020'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='url(%23g)' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='14' fill='url(%23g)'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23fff'/%3E%3C/svg%3E" />
-<style>
-/* ============ NebulaProxy â€” "Ember" design system ============ */
-:root{
-  --bg-0:#0a0305; --bg-1:#120409; --bg-2:#1a0710; --bg-3:#220a14;
-  --panel:rgba(40,10,20,.55); --panel-solid:#1c0a12; --panel-raised:#260d18;
-  --border:#3a1420; --border-soft:#2c0f1a; --border-strong:#5c1f30;
-  --accent:#e11d3f; --accent-hi:#ff2d55; --accent-2:#ff6b1a; --accent-3:#ffb020;
-  --accent-ok:#2dd4a0; --accent-bad:#ff3b3b; --accent-warn:#ffb020;
-  --text:#fff0f3; --text-dim:#f0b6c4; --text-faint:#a86b7a; --text-invert:#16060a;
-  --radius:14px; --radius-lg:20px; --radius-xl:26px; --radius-sm:9px; --radius-pill:999px;
-  --shadow-glow:0 0 0 1px rgba(225,29,63,.22), 0 14px 50px -12px rgba(225,29,63,.42);
-  --shadow-panel:0 22px 60px -24px rgba(0,0,0,.8);
-  --grad:linear-gradient(120deg,#e11d3f 0%,#ff6b1a 60%,#ffb020 120%);
-  --grad-soft:linear-gradient(120deg,rgba(225,29,63,.22),rgba(255,107,26,.14));
-  --ease-out:cubic-bezier(.22,1,.36,1); --ease-spring:cubic-bezier(.34,1.4,.44,1);
-  --dur-fast:.16s; --dur-med:.3s; --dur-slow:.6s;
-  --font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
-  --mono:'JetBrains Mono','SFMono-Regular',ui-monospace,Consolas,monospace;
-  --container:1120px; --nav-h:64px; --tabbar-h:64px;
-}
-/* ===== Light theme ===== */
-[data-theme="light"]{
-  --bg-0:#faf4f6; --bg-1:#f3e9ed; --bg-2:#ffffff; --bg-3:#fceef2;
-  --panel:rgba(255,255,255,.72); --panel-solid:#ffffff; --panel-raised:#fdf4f7;
-  --border:#f0d3dc; --border-soft:#f6e2e9; --border-strong:#e11d3f;
-  --accent:#e11d3f; --accent-hi:#d4103a; --accent-2:#ff6b1a; --accent-3:#e08a00;
-  --accent-ok:#0e9f6e; --accent-bad:#dc2626; --accent-warn:#b45309;
-  --text:#2a0a12; --text-dim:#6b3a47; --text-faint:#a06b7a; --text-invert:#ffffff;
-  --shadow-glow:0 0 0 1px rgba(225,29,63,.18), 0 10px 34px -12px rgba(225,29,63,.32);
-  --shadow-panel:0 18px 44px -22px rgba(120,30,50,.28);
-  --grad-soft:linear-gradient(120deg,rgba(225,29,63,.12),rgba(255,107,26,.10));
-}
-[data-theme="light"] body{
-  background-image:
-    radial-gradient(900px 500px at 85% -10%, rgba(225,29,63,.08), transparent 60%),
-    radial-gradient(700px 500px at -10% 20%, rgba(255,107,26,.06), transparent 60%),
-    radial-gradient(800px 600px at 50% 120%, rgba(225,29,63,.05), transparent 55%);
-}
-[data-theme="light"] ::-webkit-scrollbar-track{background:var(--bg-1)}
-[data-theme="light"] ::-webkit-scrollbar-thumb{border:2px solid var(--bg-1)}
-[data-theme="light"] .nav{background:rgba(255,255,255,.82)}
-[data-theme="light"] .tabbar{background:rgba(255,255,255,.94)}
-[data-theme="light"] .code,[data-theme="light"] .response{background:var(--bg-1)}
-[data-theme="light"] .field input,[data-theme="light"] .field select,[data-theme="light"] .field textarea,[data-theme="light"] .input{background:var(--bg-2)}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{
-  font-family:var(--font);color:var(--text);background:var(--bg-0);font-size:16px;line-height:1.65;
-  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  background-image:
-    radial-gradient(900px 500px at 85% -10%, rgba(225,29,63,.16), transparent 60%),
-    radial-gradient(700px 500px at -10% 20%, rgba(255,107,26,.10), transparent 60%),
-    radial-gradient(800px 600px at 50% 120%, rgba(225,29,63,.08), transparent 55%);
-  background-attachment:fixed;
-  padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-}
-a{color:inherit;text-decoration:none}
-::selection{background:rgba(225,29,63,.45);color:#fff}
-.container{max-width:var(--container);margin:0 auto;padding:0 24px}
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-track{background:var(--bg-1)}
-::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent-2));border-radius:99px;border:2px solid var(--bg-1)}
-
-/* ===== Top nav ===== */
-.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);
-  background:rgba(10,3,5,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border-soft)}
-.nav-inner{max-width:var(--container);margin:0 auto;height:100%;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px;letter-spacing:-.01em}
-.brand .logo{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(225,29,63,.6))}
-.brand b{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.nav-actions{display:flex;align-items:center;gap:8px}
-.lang{position:relative}
-.lang-btn{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--radius-sm);
-  background:var(--panel);border:1px solid var(--border);cursor:pointer;color:var(--text-dim);
-  font-family:var(--font);font-size:14px;transition:all var(--dur-fast) var(--ease-out)}
-.lang-btn:hover{border-color:var(--border-strong);color:var(--text)}
-.lang-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:170px;background:var(--panel-solid);
-  border:1px solid var(--border);border-radius:var(--radius);padding:6px;box-shadow:var(--shadow-panel);
-  opacity:0;visibility:hidden;transform:translateY(-6px);transition:all var(--dur-med) var(--ease-out);z-index:60}
-.lang.open .lang-menu{opacity:1;visibility:visible;transform:none}
-.lang-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 11px;border-radius:var(--radius-sm);
-  cursor:pointer;font-size:14px;color:var(--text-dim);background:none;border:none;font-family:var(--font);transition:all var(--dur-fast)}
-.lang-item:hover{background:rgba(225,29,63,.12);color:var(--text)}
-.lang-item.active{color:var(--accent-hi);background:rgba(225,29,63,.14);font-weight:600}
-
-/* ===== Pages ===== */
-.page{display:none;animation:fadein var(--dur-med) var(--ease-out)}
-.page.active{display:block}
-@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
-/* ===== Bottom tab bar ===== */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:55;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-  padding-bottom:env(safe-area-inset-bottom);background:rgba(12,4,7,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-top:1px solid var(--border);display:flex}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  cursor:pointer;color:var(--text-faint);font-size:11px;font-weight:600;border:none;background:none;
-  font-family:var(--font);transition:color var(--dur-fast);position:relative;-webkit-tap-highlight-color:transparent}
-.tab svg{width:22px;height:22px;transition:transform var(--dur-med) var(--ease-spring)}
-.tab .t-label{letter-spacing:.02em}
-.tab.active{color:var(--text)}
-.tab.active svg{transform:translateY(-2px);filter:drop-shadow(0 0 8px rgba(225,29,63,.7))}
-.tab.active .t-ico{color:var(--accent-hi)}
-.tab .t-dot{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--grad);opacity:0}
-.tab.active .t-dot{opacity:1}
-
-/* ===== Hero ===== */
-.hero{position:relative;padding:72px 0 40px;text-align:center}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius-pill);
-  background:var(--grad-soft);border:1px solid var(--border);font-size:13.5px;color:var(--text-dim);font-family:var(--mono);margin-bottom:26px}
-.dot-pulse{width:8px;height:8px;border-radius:50%;background:var(--accent-ok);box-shadow:0 0 0 0 rgba(45,212,160,.6);animation:pulse 1.8s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(45,212,160,.55)}70%{box-shadow:0 0 0 9px rgba(45,212,160,0)}100%{box-shadow:0 0 0 0 rgba(45,212,160,0)}}
-.hero h1{font-size:clamp(34px,6vw,60px);line-height:1.05;letter-spacing:-.03em;font-weight:800;margin-bottom:20px}
-.hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{max-width:640px;margin:0 auto 30px;color:var(--text-dim);font-size:18px}
-.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:var(--radius);font-weight:600;font-size:15px;
-  cursor:pointer;border:1px solid transparent;font-family:var(--font);
-  transition:transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast), background var(--dur-fast)}
-.btn:hover{transform:translateY(-2px)}
-.btn-primary{background:var(--grad);color:var(--text-invert);box-shadow:var(--shadow-glow)}
-.btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text)}
-.btn-ghost:hover{border-color:var(--border-strong)}
-.hero-meta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
-.meta-chip{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-pill);
-  background:var(--panel);border:1px solid var(--border-soft);font-size:13.5px;color:var(--text-dim);font-family:var(--mono)}
-.meta-chip b{color:var(--text);font-weight:600}
-
-/* ===== Stats ===== */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin:16px 0 8px}
-.stat{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);
-  border-radius:var(--radius-lg);padding:20px;text-align:center;position:relative;overflow:hidden;
-  transition:transform var(--dur-med) var(--ease-out), border-color var(--dur-med)}
-.stat:hover{transform:translateY(-3px);border-color:var(--border-strong)}
-.stat .num{font-size:27px;font-weight:800;font-family:var(--mono);background:var(--grad);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.stat .lbl{font-size:12px;color:var(--text-faint);margin-top:5px;text-transform:uppercase;letter-spacing:.06em}
-
-/* ===== Sections ===== */
-.section{padding:44px 0}
-.section-head{max-width:700px;margin:0 auto 36px;text-align:center}
-.eyebrow{display:inline-block;font-family:var(--mono);font-size:12.5px;color:var(--accent-hi);letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
-.section-head h2{font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;font-weight:800;margin-bottom:12px}
-.section-head p{color:var(--text-dim);font-size:16.5px}
-
-/* ===== Request tester ===== */
-.tester{border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--panel);overflow:hidden;box-shadow:var(--shadow-panel)}
-.tester-bar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--border-soft);background:var(--panel-solid)}
-.t-dot{width:11px;height:11px;border-radius:50%}
-.t-dot.r{background:#ff5f57}.t-dot.y{background:#febc2e}.t-dot.g{background:#28c840}
-.tester-title{margin-left:8px;font-family:var(--mono);font-size:13px;color:var(--text-faint)}
-.tester-body{padding:22px}
-.field-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
-.field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;color:var(--text-faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
-.field input,.field select,.field textarea{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:11px 13px;color:var(--text);font-family:var(--mono);font-size:14px;transition:border-color var(--dur-fast);outline:none;width:100%}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
-.field textarea{min-height:80px;resize:vertical}
-.field select{cursor:pointer}
-.method-seg{display:flex;gap:6px;flex-wrap:wrap}
-.method{flex:1;padding:9px 6px;text-align:center;font-family:var(--mono);font-size:12.5px;background:var(--bg-2);
-  border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);cursor:pointer;transition:all var(--dur-fast)}
-.method:hover{border-color:var(--border-strong)}
-.method.active{background:var(--grad);color:var(--text-invert);border-color:transparent;font-weight:700}
-.send-btn{width:100%;padding:14px;font-size:16px;justify-content:center;margin-top:6px}
-.send-btn:disabled{opacity:.55;cursor:not-allowed}
-.response{background:var(--bg-0);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:16px;
-  font-family:var(--mono);font-size:13px;min-height:90px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:var(--text-dim);position:relative}
-.response .status-tag{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;margin-bottom:10px;font-family:var(--mono)}
-.status-2xx{background:rgba(45,212,160,.15);color:var(--accent-ok)}
-.status-4xx,.status-5xx{background:rgba(255,59,59,.15);color:var(--accent-bad)}
-.status-idle{background:var(--panel);color:var(--text-faint)}
-
-/* ===== Features ===== */
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.feature{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);
-  border-radius:var(--radius-lg);padding:24px;position:relative;overflow:hidden;transition:transform var(--dur-med) var(--ease-out), border-color var(--dur-med)}
-.feature:hover{transform:translateY(-4px);border-color:var(--border-strong)}
-.feature .ico{font-size:26px;margin-bottom:12px;display:inline-block}
-.feature h3{font-size:17px;font-weight:700;margin-bottom:8px}
-.feature p{font-size:14px;color:var(--text-dim)}
-
-/* ===== Code blocks ===== */
-.code{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:14px 0}
-.code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border-soft);font-family:var(--mono);font-size:12px;color:var(--text-faint)}
-.copy-btn{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-sm);
-  padding:4px 11px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all var(--dur-fast)}
-.copy-btn:hover{border-color:var(--border-strong);color:var(--text)}
-.code pre{padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text-dim)}
-.code code{font-family:var(--mono)}
-
-/* ===== Tables ===== */
-.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
-.tbl th,.tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border-soft)}
-.tbl th{font-family:var(--mono);font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}
-.tbl td{color:var(--text-dim)}
-.tbl code,.tbl .mn{font-family:var(--mono);color:var(--accent-hi);font-size:13px}
-.tbl tr:hover td{background:rgba(225,29,63,.04)}
-
-/* ===== Settings ===== */
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.card{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);
-  border-radius:var(--radius-lg);padding:24px}
-.card h3{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.card p{font-size:13.5px;color:var(--text-dim);margin-bottom:16px}
-.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft)}
-.setting-row:last-child{border-bottom:none}
-.setting-row .s-label{font-size:14px;color:var(--text)}
-.setting-row .s-sub{font-size:12px;color:var(--text-faint)}
-.toggle{position:relative;width:46px;height:26px;flex:0 0 auto;cursor:pointer}
-.toggle input{opacity:0;width:0;height:0}
-.toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:all var(--dur-med)}
-.toggle .slider::before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:all var(--dur-med) var(--ease-spring)}
-.toggle input:checked + .slider{background:var(--grad)}
-.toggle input:checked + .slider::before{transform:translateX(20px)}
-.input{width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;
-  color:var(--text);font-family:var(--mono);font-size:14px;outline:none;transition:border-color var(--dur-fast)}
-.input:focus{border-color:var(--accent)}
-.login-form{display:flex;flex-direction:column;gap:12px}
-.toast{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--panel-solid);border:1px solid var(--border-strong);color:var(--text);padding:12px 20px;border-radius:var(--radius-pill);
-  font-size:14px;box-shadow:var(--shadow-panel);opacity:0;transition:all var(--dur-med) var(--ease-out);z-index:100;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast-ok{border-color:rgba(45,212,160,.5);color:#c7f5e4}
-.toast-bad{border-color:rgba(255,59,59,.55);color:#ffd7d7}
-.toast-warn{border-color:rgba(255,176,32,.55);color:#ffe8c0}
-
-/* ===== Footer ===== */
-.footer{padding:40px 0 24px;text-align:center;border-top:1px solid var(--border-soft);margin-top:40px}
-.footer .brand{justify-content:center;margin-bottom:12px}
-.footer .f-links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:12px 0;font-size:13px;color:var(--text-dim)}
-.footer .f-note{font-size:12.5px;color:var(--text-faint);margin-top:10px}
-.footer .f-tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--text-faint);background:var(--panel);
-  border:1px solid var(--border-soft);padding:4px 10px;border-radius:var(--radius-pill);margin-top:14px}
-
-@media (min-width:768px){
-  .tabbar{left:50%;right:auto;width:480px;transform:translateX(-50%);border-radius:var(--radius-xl) var(--radius-xl) 0 0;overflow:hidden;border:1px solid var(--border);border-bottom:none}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
-</head>
-<body>
-
-<!-- ===== Top nav ===== -->
-<header class="nav">
-  <div class="nav-inner">
-    <a class="brand" href="#" data-nav="home">
-      <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
-        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#e11d3f"/><stop offset=".5" stop-color="#ff6b1a"/><stop offset="1" stop-color="#ffb020"/>
-        </linearGradient></defs>
-        <circle cx="50" cy="50" r="34" fill="none" stroke="url(#lg)" stroke-width="9"/>
-        <circle cx="50" cy="50" r="14" fill="url(#lg)"/>
-        <circle cx="50" cy="50" r="6" fill="#fff"/>
-        <!-- satellite -->
-        <circle cx="72" cy="28" r="5" fill="#ff6b1a"/>
-      </svg>
-      <span>Nebula<b>Proxy</b></span>
-    </a>
-    <div class="nav-actions">
-      <div class="lang" id="langWrap">
-        <button class="lang-btn" id="langBtn"><span class="globe">ğŸŒ</span><span id="langLabel">English</span></button>
-        <div class="lang-menu" id="langMenu"></div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- ===== HOME ===== -->
-<main class="page active" id="page-home">
-  <section class="hero">
-    <div class="container">
-      <span class="hero-badge"><span class="dot-pulse"></span><span data-i18n="hero.badge">Gateway Online</span></span>
-      <h1><span data-i18n="hero.title">Rotate your</span> <span class="grad" data-i18n="hero.title2">egress IP</span><br><span data-i18n="hero.title3">on every request</span></h1>
-      <p class="hero-sub" data-i18n="hero.sub">NebulaProxy is a rotating proxy API gateway. Send a request, get a fresh IP from one of six countries, and stream the response back â€” all through a single endpoint.</p>
-      <div class="hero-actions">
-        <button class="btn btn-primary" data-nav="playground"><span data-i18n="hero.play">Open Playground</span> â†’</button>
-        <button class="btn btn-ghost" data-nav="docs"><span data-i18n="hero.docs">Read Documentation</span></button>
-      </div>
-      <div class="hero-meta">
-        <span class="meta-chip">ğŸŒ <b data-i18n="nav.regions">6 countries</b></span>
-        <span class="meta-chip">âš¡ <b data-i18n="hero.live">Live streaming</b></span>
-        <span class="meta-chip">ğŸª <b data-i18n="hero.cookies">Cookies & headers</b></span>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="stats">
-        <div class="stat"><div class="num" id="stat-req">0</div><div class="lbl" data-i18n="stat.requests">Requests</div></div>
-        <div class="stat"><div class="num" id="stat-ok">100%</div><div class="lbl" data-i18n="stat.success">Success rate</div></div>
-        <div class="stat"><div class="num" id="stat-lat">â€”</div><div class="lbl" data-i18n="stat.latency">Avg latency</div></div>
-        <div class="stat"><div class="num" id="stat-reg">0</div><div class="lbl" data-i18n="stat.regions">Regions seen</div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow" data-i18n="feat.eyebrow">Why NebulaProxy</span>
-        <h2 data-i18n="feat.title">Everything you need to rotate traffic</h2>
-        <p data-i18n="feat.sub">A single API endpoint that handles providers, IPs, headers, and streaming for you.</p>
-      </div>
-      <div class="features">
-        <div class="feature"><span class="ico">ğŸ›¡ï¸</span><h3 data-i18n="feat.f1.t">Multi-provider fallback</h3><p data-i18n="feat.f1.d">If one upstream proxy fails, NebulaProxy automatically retries through another â€” no downtime.</p></div>
-        <div class="feature"><span class="ico">ğŸŒ</span><h3 data-i18n="feat.f2.t">Six-country rotation</h3><p data-i18n="feat.f2.d">Rotate egress across the United States, United Kingdom, Germany, Poland, Spain, and Japan.</p></div>
-        <div class="feature"><span class="ico">ğŸª</span><h3 data-i18n="feat.f3.t">Cookies & headers</h3><p data-i18n="feat.f3.d">Pass custom cookies and headers straight through to the target â€” full control over the request.</p></div>
-        <div class="feature"><span class="ico">âš¡</span><h3 data-i18n="feat.f4.t">Live streaming</h3><p data-i18n="feat.f4.d">Stream responses as they arrive with SSE, so long downloads don't block your client.</p></div>
-        <div class="feature"><span class="ico">ğŸ“</span><h3 data-i18n="feat.f5.t">Binary-safe</h3><p data-i18n="feat.f5.d">Images, files, and binary payloads pass through untouched with base64 support.</p></div>
-        <div class="feature"><span class="ico">ğŸ</span><h3 data-i18n="feat.f6.t">Any language</h3><p data-i18n="feat.f6.d">Use cURL, Python, Node.js, or anything that speaks HTTP. One endpoint, no SDK required.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="container">
-      <div class="brand">
-        <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><use href="#lg"/><circle cx="50" cy="50" r="34" fill="none" stroke="url(#lg)" stroke-width="9"/><circle cx="50" cy="50" r="14" fill="url(#lg)"/><circle cx="50" cy="50" r="6" fill="#fff"/><circle cx="72" cy="28" r="5" fill="#ff6b1a"/></svg>
-        <span>Nebula<b>Proxy</b></span>
-      </div>
-      <div class="f-links">
-        <a href="#" data-nav="home">Home</a>
-        <a href="#" data-nav="playground">Playground</a>
-        <a href="#" data-nav="docs">Documentation</a>
-        <a href="#" data-nav="settings">Settings</a>
-      </div>
-      <p class="f-note" data-i18n="footer.note">Built for developers who need a clean, rotating egress IP without the hassle.</p>
-      <span class="f-tag" data-i18n="footer.tag">NebulaProxy Â· v1.0.0</span>
-    </div>
-  </footer>
-</main>
-
-<!-- ===== PLAYGROUND ===== -->
-<main class="page" id="page-playground">
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow" data-i18n="pg.eyebrow">Playground</span>
-        <h2 data-i18n="pg.title">Test the proxy live</h2>
-        <p data-i18n="pg.sub">Send a request through the gateway and inspect the full response.</p>
-      </div>
-      <div class="tester">
-        <div class="tester-bar"><span class="t-dot r"></span><span class="t-dot y"></span><span class="t-dot g"></span><span class="tester-title">request tester</span></div>
-        <div class="tester-body">
-          <div class="field-row">
-            <div class="field" style="flex:2 1 260px">
-              <label data-i18n="pg.target">Target URL</label>
-              <input type="url" id="pg-url" value="https://api.ipify.org?format=json" placeholder="https://example.com" />
-            </div>
-            <div class="field">
-              <label data-i18n="pg.country">Country</label>
-              <select id="pg-country">
-                <option value="auto" data-i18n="pg.auto">Auto (rotate)</option>
-                <option value="us">United States</option>
-                <option value="gb">United Kingdom</option>
-                <option value="de">Germany</option>
-                <option value="pl">Poland</option>
-                <option value="es">Spain</option>
-                <option value="jp">Japan</option>
-              </select>
-            </div>
-            <div class="field">
-              <label data-i18n="pg.retries">Retries</label>
-              <select id="pg-retries">
-                <option value="1">1</option><option value="2">2</option><option value="4" selected>4</option>
-                <option value="6">6</option><option value="8">8</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field" style="flex:1 1 100%">
-              <label data-i18n="pg.method">Method</label>
-              <div class="method-seg" id="pg-method">
-                <button class="method active" data-m="GET">GET</button>
-                <button class="method" data-m="POST">POST</button>
-                <button class="method" data-m="PUT">PUT</button>
-                <button class="method" data-m="PATCH">PATCH</button>
-                <button class="method" data-m="DELETE">DELETE</button>
-              </div>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field" style="flex:1 1 100%">
-              <label data-i18n="pg.body">Request body (JSON)</label>
-              <textarea id="pg-body" placeholder='{"key":"value"}'></textarea>
-            </div>
-          </div>
-          <button class="btn btn-primary send-btn" id="pg-send"><span data-i18n="pg.send">Send Request</span></button>
-          <div class="response" id="pg-response"><span class="status-tag status-idle" data-i18n="pg.idle">Ready</span><br><span data-i18n="pg.hint">Fill the fields and press Send to see the response.</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- ===== DOCUMENTATION ===== -->
-<main class="page" id="page-docs">
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow" data-i18n="docs.eyebrow">Documentation</span>
-        <h2 data-i18n="docs.title">API reference</h2>
-        <p data-i18n="docs.sub">Everything you need to integrate NebulaProxy into your app.</p>
-      </div>
-
-      <h3 style="margin:20px 0 8px" data-i18n="docs.endpoints">Endpoints</h3>
-      <div class="card" style="padding:8px 0">
-        <table class="tbl">
-          <thead><tr><th data-i18n="docs.method">Method</th><th data-i18n="docs.endpoint">Endpoint</th><th data-i18n="docs.description">Description</th></tr></thead>
-          <tbody>
-            <tr><td><span class="mn">POST</span></td><td><code>/api/proxy</code></td><td data-i18n="docs.proxy">Proxy a request through a rotating IP</td></tr>
-            <tr><td><span class="mn">GET</span></td><td><code>/api/proxy/ip</code></td><td data-i18n="docs.ip">Get your current egress IP</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin:24px 0 8px" data-i18n="docs.params">Request parameters</h3>
-      <div class="card" style="padding:8px 0">
-        <table class="tbl">
-          <thead><tr><th data-i18n="docs.field">Field</th><th data-i18n="docs.type">Type</th><th data-i18n="docs.req">Required</th><th data-i18n="docs.desc2">Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>url</code></td><td>string</td><td data-i18n="yes">yes</td><td data-i18n="docs.p.url">The target URL to fetch</td></tr>
-            <tr><td><code>method</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.method">HTTP method (default GET)</td></tr>
-            <tr><td><code>proxy_country</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.country">Two-letter country code (or "auto")</td></tr>
-            <tr><td><code>retries</code></td><td>number</td><td data-i18n="no">no</td><td data-i18n="docs.p.retries">Retry attempts on failure</td></tr>
-            <tr><td><code>headers</code></td><td>object</td><td data-i18n="no">no</td><td data-i18n="docs.p.headers">Custom headers to forward</td></tr>
-            <tr><td><code>cookies</code></td><td>object</td><td data-i18n="no">no</td><td data-i18n="docs.p.cookies">Cookies to attach</td></tr>
-            <tr><td><code>body</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.body">Request body (for POST/PUT/PATCH)</td></tr>
-            <tr><td><code>bodyIsBase64</code></td><td>boolean</td><td data-i18n="no">no</td><td data-i18n="docs.p.b64">Whether the body is base64-encoded</td></tr>
-            <tr><td><code>sticky</code></td><td>boolean</td><td data-i18n="no">no</td><td data-i18n="docs.p.sticky">Keep the same IP across requests</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin:24px 0 8px" data-i18n="docs.examples">Examples</h3>
-      <div class="code">
-        <div class="code-head"><span>cURL</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>curl -X POST https://your-worker.dev/api/proxy \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://api.ipify.org?format=json","proxy_country":"us"}'</code></pre>
-      </div>
-      <div class="code">
-        <div class="code-head"><span>Python</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>import requests
-
-r = requests.post("https://your-worker.dev/api/proxy", json={
-    "url": "https://api.ipify.org?format=json",
-    "proxy_country": "us"
-})
-print(r.json())</code></pre>
-      </div>
-      <div class="code">
-        <div class="code-head"><span>Node.js</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>const res = await fetch("https://your-worker.dev/api/proxy", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ url: "https://api.ipify.org?format=json", proxy_country: "us" })
-});
-console.log(await res.json());</code></pre>
-      </div>
-
-      <h3 style="margin:24px 0 8px" data-i18n="docs.res">Response</h3>
-      <div class="code">
-        <div class="code-head"><span>JSON</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>{
-  "status": 200,
-  "statusText": "OK",
-  "headers": { "content-type": "application/json" },
-  "data": { "ip": "198.105.121.200" },
-  "data_b64": null,
-  "binary": false,
-  "size": 24,
-  "proxyCountry": "us",
-  "attempt": 1,
-  "success": true,
-  "elapsed_ms": 812,
-  "elapsed_sec": 0.812
-}</code></pre>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- ===== SETTINGS ===== -->
-<main class="page" id="page-settings">
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow" data-i18n="set.eyebrow">Settings</span>
-        <h2 data-i18n="set.title">Configuration</h2>
-        <p data-i18n="set.sub">Tune your gateway preferences and manage admin access.</p>
-      </div>
-      <div class="settings-grid">
-        <div class="card">
-          <h3>âš™ï¸ <span data-i18n="set.general">General</span></h3>
-          <div class="setting-row">
-            <div><div class="s-label" data-i18n="set.sticky">Sticky sessions</div><div class="s-sub" data-i18n="set.sticky.d">Reuse the same IP across requests</div></div>
-            <label class="toggle"><input type="checkbox" id="set-sticky"><span class="slider"></span></label>
-          </div>
-          <div class="setting-row">
-            <div><div class="s-label" data-i18n="set.stream">Streaming (SSE)</div><div class="s-sub" data-i18n="set.stream.d">Stream responses as they arrive</div></div>
-            <label class="toggle"><input type="checkbox" id="set-stream" checked><span class="slider"></span></label>
-          </div>
-          <div class="setting-row">
-            <div><div class="s-label" data-i18n="set.dark">Dark theme</div><div class="s-sub" data-i18n="set.dark.d">Toggle between dark & light</div></div>
-            <label class="toggle"><input type="checkbox" id="set-dark" checked><span class="slider"></span></label>
-          </div>
-          <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
-            <div><div class="s-label" data-i18n="set.country">Default country</div><div class="s-sub" data-i18n="set.country.d">Used when no country is specified</div></div>
-            <select class="input" id="set-country">
-              <option value="auto" data-i18n="pg.auto">Auto (rotate)</option>
-              <option value="us">United States</option>
-              <option value="gb">United Kingdom</option>
-              <option value="de">Germany</option>
-              <option value="pl">Poland</option>
-              <option value="es">Spain</option>
-              <option value="jp">Japan</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>ğŸ” <span data-i18n="set.admin">Admin login</span></h3>
-          <p data-i18n="set.admin.d">Sign in to manage proxies, view live stats, and rotate keys.</p>
-          <form class="login-form" id="login-form">
-            <div class="field">
-              <label data-i18n="set.username">Username</label>
-              <input class="input" type="text" id="login-user" autocomplete="username" data-i18n-ph="set.user.ph" placeholder="admin" />
-            </div>
-            <div class="field">
-              <label data-i18n="set.password">Password</label>
-              <input class="input" type="password" id="login-pass" autocomplete="current-password" data-i18n-ph="set.pass.ph" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
-            </div>
-            <button class="btn btn-primary" type="submit" style="justify-content:center"><span data-i18n="set.login">Sign in</span></button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h3>ğŸ”‘ <span data-i18n="set.keys">API keys</span></h3>
-          <p data-i18n="set.keys.d">Rotate or revoke gateway keys. Admin access required.</p>
-          <button class="btn btn-ghost" id="btn-rotate" style="width:100%;justify-content:center"><span data-i18n="set.rotate">Rotate API key</span></button>
-          <button class="btn btn-ghost" id="btn-revoke" style="width:100%;justify-content:center;margin-top:10px"><span data-i18n="set.revoke">Revoke all keys</span></button>
-        </div>
-      </div>
-      <p style="text-align:center;margin-top:24px;font-size:12.5px;color:var(--text-faint)" data-i18n="set.demo">Demo build â€” admin features require a connected backend.</p>
-    </div>
-  </section>
-</main>
-
-<!-- ===== Bottom tab bar ===== -->
-<nav class="tabbar" id="tabbar">
-  <button class="tab active" data-nav="home">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span class="t-label" data-i18n="nav.home">Home</span>
-  </button>
-  <button class="tab" data-nav="playground">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-    <span class="t-label" data-i18n="nav.playground">Playground</span>
-  </button>
-  <button class="tab" data-nav="docs">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    <span class="t-label" data-i18n="nav.docs">Documentation</span>
-  </button>
-  <button class="tab" data-nav="settings">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    <span class="t-label" data-i18n="nav.settings">Settings</span>
-  </button>
-</nav>
-
-<div class="toast" id="toast"></div>
-
-<script>
-/* ==================== i18n ==================== */
-const I18N = [
-  { code:"en", label:"English", rtl:false },
-  { code:"bn", label:"à¦¬à¦¾à¦‚à¦²à¦¾", rtl:false },
-  { code:"hi", label:"à¤¹à¤¿à¤¨à¥à¤¦à¥€", rtl:false },
-  { code:"es", label:"EspaÃ±ol", rtl:false },
-  { code:"fr", label:"FranÃ§ais", rtl:false },
-  { code:"ar", label:"Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©", rtl:true },
-  { code:"ru", label:"Ğ ÑƒÑÑĞºĞ¸Ğ¹", rtl:false },
-];
-const STRINGS = {
-  "en": { "hero.badge":"Gateway Online","hero.title":"Rotate your","hero.title2":"egress IP","hero.title3":"on every request",
-    "hero.sub":"NebulaProxy is a rotating proxy API gateway. Send a request, get a fresh IP from one of six countries, and stream the response back â€” all through a single endpoint.",
-    "hero.play":"Open Playground","hero.docs":"Read Documentation","hero.live":"Live streaming","hero.cookies":"Cookies & headers",
-    "nav.regions":"6 countries","nav.home":"Home","nav.playground":"Playground","nav.docs":"Documentation","nav.settings":"Settings",
-    "stat.requests":"Requests","stat.success":"Success rate","stat.latency":"Avg latency","stat.regions":"Regions seen",
-    "feat.eyebrow":"Why NebulaProxy","feat.title":"Everything you need to rotate traffic","feat.sub":"A single API endpoint that handles providers, IPs, headers, and streaming for you.",
-    "feat.f1.t":"Multi-provider fallback","feat.f1.d":"If one upstream proxy fails, NebulaProxy automatically retries through another â€” no downtime.",
-    "feat.f2.t":"Six-country rotation","feat.f2.d":"Rotate egress across the United States, United Kingdom, Germany, Poland, Spain, and Japan.",
-    "feat.f3.t":"Cookies & headers","feat.f3.d":"Pass custom cookies and headers straight through to the target â€” full control over the request.",
-    "feat.f4.t":"Live streaming","feat.f4.d":"Stream responses as they arrive with SSE, so long downloads don't block your client.",
-    "feat.f5.t":"Binary-safe","feat.f5.d":"Images, files, and binary payloads pass through untouched with base64 support.",
-    "feat.f6.t":"Any language","feat.f6.d":"Use cURL, Python, Node.js, or anything that speaks HTTP. One endpoint, no SDK required.",
-    "pg.eyebrow":"Playground","pg.title":"Test the proxy live","pg.sub":"Send a request through the gateway and inspect the full response.",
-    "pg.target":"Target URL","pg.country":"Country","pg.retries":"Retries","pg.method":"Method","pg.body":"Request body (JSON)",
-    "pg.send":"Send Request","pg.idle":"Ready","pg.hint":"Fill the fields and press Send to see the response.","pg.auto":"Auto (rotate)",
-    "docs.eyebrow":"Documentation","docs.title":"API reference","docs.sub":"Everything you need to integrate NebulaProxy into your app.",
-    "docs.endpoints":"Endpoints","docs.method":"Method","docs.endpoint":"Endpoint","docs.description":"Description",
-    "docs.proxy":"Proxy a request through a rotating IP","docs.ip":"Get your current egress IP",
-    "docs.params":"Request parameters","docs.field":"Field","docs.type":"Type","docs.req":"Required","docs.desc2":"Description",
-    "docs.p.url":"The target URL to fetch","docs.p.method":"HTTP method (default GET)","docs.p.country":"Two-letter country code (or \"auto\")",
-    "docs.p.retries":"Retry attempts on failure","docs.p.headers":"Custom headers to forward","docs.p.cookies":"Cookies to attach",
-    "docs.p.body":"Request body (for POST/PUT/PATCH)","docs.p.b64":"Whether the body is base64-encoded","docs.p.sticky":"Keep the same IP across requests",
-    "docs.examples":"Examples","docs.res":"Response","yes":"yes","no":"no",
-    "set.eyebrow":"Settings","set.title":"Configuration","set.sub":"Tune your gateway preferences and manage admin access.",
-    "set.general":"General","set.sticky":"Sticky sessions","set.sticky.d":"Reuse the same IP across requests",
-    "set.stream":"Streaming (SSE)","set.stream.d":"Stream responses as they arrive","set.dark":"Dark theme","set.dark.d":"Always enabled for Nebula",
-    "set.country":"Default country","set.country.d":"Used when no country is specified","set.admin":"Admin login",
-    "set.admin.d":"Sign in to manage proxies, view live stats, and rotate keys.","set.username":"Username","set.password":"Password",
-    "set.user.ph":"admin","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"Sign in","set.keys":"API keys","set.keys.d":"Rotate or revoke gateway keys. Admin access required.",
-    "set.rotate":"Rotate API key","set.revoke":"Revoke all keys","set.demo":"Demo build â€” admin features require a connected backend.","set.needadmin":"Admin access required â€” sign in first.",
-    "footer.note":"Built for developers who need a clean, rotating egress IP without the hassle.","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"Invalid credentials â€” please check your username and password.","login.ok":"Signed in successfully."
-  },
-  "bn": { "hero.badge":"à¦—à§‡à¦Ÿà¦“à¦¯à¦¼à§‡ à¦šà¦¾à¦²à§ à¦†à¦›à§‡","hero.title":"à¦ªà§à¦°à¦¤à¦¿à¦Ÿà¦¿ à¦…à¦¨à§à¦°à§‹à¦§à§‡","hero.title2":"à¦†à¦ªà¦¨à¦¾à¦° IP","hero.title3":"à¦˜à§à¦°à¦¾à¦¨",
-    "hero.sub":"NebulaProxy à¦à¦•à¦Ÿà¦¿ à¦°à§‹à¦Ÿà§‡à¦Ÿà¦¿à¦‚ à¦ªà§à¦°à¦•à§à¦¸à¦¿ API à¦—à§‡à¦Ÿà¦“à¦¯à¦¼à§‡à¥¤ à¦à¦•à¦Ÿà¦¿ à¦…à¦¨à§à¦°à§‹à¦§ à¦ªà¦¾à¦ à¦¾à¦¨, à¦›à¦¯à¦¼à¦Ÿà¦¿ à¦¦à§‡à¦¶à§‡à¦° à¦¯à§‡à¦•à§‹à¦¨à§‹ à¦à¦•à¦Ÿà¦¿ à¦¥à§‡à¦•à§‡ à¦¨à¦¤à§à¦¨ IP à¦ªà¦¾à¦¨, à¦à¦¬à¦‚ à¦à¦•à¦Ÿà¦¿ à¦®à¦¾à¦¤à§à¦° à¦à¦¨à§à¦¡à¦ªà¦¯à¦¼à§‡à¦¨à§à¦Ÿ à¦¦à¦¿à¦¯à¦¼à§‡ à¦‰à¦¤à§à¦¤à¦° à¦«à§‡à¦°à¦¤ à¦ªà¦¾à¦¨à¥¤",
-    "hero.play":"à¦ªà§à¦²à§‡à¦—à§à¦°à¦¾à¦‰à¦¨à§à¦¡ à¦–à§à¦²à§à¦¨","hero.docs":"à¦¡à¦•à§à¦®à§‡à¦¨à§à¦Ÿà§‡à¦¶à¦¨ à¦ªà¦¡à¦¼à§à¦¨","hero.live":"à¦²à¦¾à¦‡à¦­ à¦¸à§à¦Ÿà§à¦°à¦¿à¦®à¦¿à¦‚","hero.cookies":"à¦•à§à¦•à¦¿ à¦“ à¦¹à§‡à¦¡à¦¾à¦°",
-    "nav.regions":"à§¬à¦Ÿà¦¿ à¦¦à§‡à¦¶","nav.home":"à¦¹à§‹à¦®","nav.playground":"à¦ªà§à¦²à§‡à¦—à§à¦°à¦¾à¦‰à¦¨à§à¦¡","nav.docs":"à¦¡à¦•à§à¦®à§‡à¦¨à§à¦Ÿà§‡à¦¶à¦¨","nav.settings":"à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸",
-    "stat.requests":"à¦…à¦¨à§à¦°à§‹à¦§","stat.success":"à¦¸à¦¾à¦«à¦²à§à¦¯à§‡à¦° à¦¹à¦¾à¦°","stat.latency":"à¦—à¦¡à¦¼ à¦²à§‡à¦Ÿà§‡à¦¨à§à¦¸à¦¿","stat.regions":"à¦¦à§‡à¦–à¦¾ à¦…à¦à§à¦šà¦²",
-    "feat.eyebrow":"à¦•à§‡à¦¨ NebulaProxy","feat.title":"à¦Ÿà§à¦°à¦¾à¦«à¦¿à¦• à¦˜à§‹à¦°à¦¾à¦¤à§‡ à¦¯à¦¾ à¦¯à¦¾ à¦¦à¦°à¦•à¦¾à¦°","feat.sub":"à¦à¦•à¦Ÿà¦¿ à¦®à¦¾à¦¤à§à¦° API à¦à¦¨à§à¦¡à¦ªà¦¯à¦¼à§‡à¦¨à§à¦Ÿ à¦¯à¦¾ à¦†à¦ªà¦¨à¦¾à¦° à¦œà¦¨à§à¦¯ à¦ªà§à¦°à§‹à¦­à¦¾à¦‡à¦¡à¦¾à¦°, IP, à¦¹à§‡à¦¡à¦¾à¦° à¦“ à¦¸à§à¦Ÿà§à¦°à¦¿à¦®à¦¿à¦‚ à¦¸à¦¾à¦®à¦²à¦¾à¦¯à¦¼à¥¤",
-    "feat.f1.t":"à¦®à¦¾à¦²à§à¦Ÿà¦¿-à¦ªà§à¦°à§‹à¦­à¦¾à¦‡à¦¡à¦¾à¦° à¦«à¦²à¦¬à§à¦¯à¦¾à¦•","feat.f1.d":"à¦à¦•à¦Ÿà¦¿ à¦†à¦ªà¦¸à§à¦Ÿà§à¦°à¦¿à¦® à¦ªà§à¦°à¦•à§à¦¸à¦¿ à¦¬à§à¦¯à¦°à§à¦¥ à¦¹à¦²à§‡ NebulaProxy à¦¸à§à¦¬à¦¯à¦¼à¦‚à¦•à§à¦°à¦¿à¦¯à¦¼à¦­à¦¾à¦¬à§‡ à¦…à¦¨à§à¦¯à¦Ÿà¦¿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à§‡ â€” à¦•à§‹à¦¨à§‹ à¦¡à¦¾à¦‰à¦¨à¦Ÿà¦¾à¦‡à¦® à¦¨à§‡à¦‡à¥¤",
-    "feat.f2.t":"à¦›à¦¯à¦¼-à¦¦à§‡à¦¶ à¦°à§‹à¦Ÿà§‡à¦¶à¦¨","feat.f2.d":"à¦¯à§à¦•à§à¦¤à¦°à¦¾à¦·à§à¦Ÿà§à¦°, à¦¯à§à¦•à§à¦¤à¦°à¦¾à¦œà§à¦¯, à¦œà¦¾à¦°à§à¦®à¦¾à¦¨à¦¿, à¦ªà§‹à¦²à§à¦¯à¦¾à¦¨à§à¦¡, à¦¸à§à¦ªà§‡à¦¨ à¦“ à¦œà¦¾à¦ªà¦¾à¦¨ à¦œà§à¦¡à¦¼à§‡ egress à¦˜à§‹à¦°à¦¾à¦¨à¥¤",
-    "feat.f3.t":"à¦•à§à¦•à¦¿ à¦“ à¦¹à§‡à¦¡à¦¾à¦°","feat.f3.d":"à¦•à¦¾à¦¸à§à¦Ÿà¦® à¦•à§à¦•à¦¿ à¦“ à¦¹à§‡à¦¡à¦¾à¦° à¦¸à¦°à¦¾à¦¸à¦°à¦¿ à¦Ÿà¦¾à¦°à§à¦—à§‡à¦Ÿà§‡ à¦ªà¦¾à¦ à¦¾à¦¨ â€” à¦…à¦¨à§à¦°à§‹à¦§à§‡à¦° à¦“à¦ªà¦° à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¨à¦¿à¦¯à¦¼à¦¨à§à¦¤à§à¦°à¦£à¥¤",
-    "feat.f4.t":"à¦²à¦¾à¦‡à¦­ à¦¸à§à¦Ÿà§à¦°à¦¿à¦®à¦¿à¦‚","feat.f4.d":"SSE à¦¦à¦¿à¦¯à¦¼à§‡ à¦‰à¦¤à§à¦¤à¦° à¦†à¦¸à¦¾à¦° à¦¸à¦¾à¦¥à§‡ à¦¸à¦¾à¦¥à§‡ à¦¸à§à¦Ÿà§à¦°à¦¿à¦® à¦•à¦°à§à¦¨, à¦¦à§€à¦°à§à¦˜ à¦¡à¦¾à¦‰à¦¨à¦²à§‹à¦¡ à¦•à§à¦²à¦¾à¦¯à¦¼à§‡à¦¨à§à¦Ÿà¦•à§‡ à¦†à¦Ÿà¦•à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤",
-    "feat.f5.t":"à¦¬à¦¾à¦‡à¦¨à¦¾à¦°à¦¿-à¦¨à¦¿à¦°à¦¾à¦ªà¦¦","feat.f5.d":"à¦›à¦¬à¦¿, à¦«à¦¾à¦‡à¦² à¦“ à¦¬à¦¾à¦‡à¦¨à¦¾à¦°à¦¿ à¦ªà§‡à¦²à§‹à¦¡ à¦…à¦•à§à¦·à¦¤ à¦…à¦¬à¦¸à§à¦¥à¦¾à¦¯à¦¼ à¦ªà¦¾à¦° à¦¹à¦¯à¦¼ base64 à¦¸à¦¾à¦ªà§‹à¦°à§à¦Ÿà¦¸à¦¹à¥¤",
-    "feat.f6.t":"à¦¯à§‡à¦•à§‹à¦¨à§‹ à¦­à¦¾à¦·à¦¾","feat.f6.d":"cURL, Python, Node.js à¦¬à¦¾ à¦¯à§‡à¦•à§‹à¦¨à§‹ HTTP à¦•à§à¦²à¦¾à¦¯à¦¼à§‡à¦¨à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à§à¦¨à¥¤ à¦à¦• à¦à¦¨à§à¦¡à¦ªà¦¯à¦¼à§‡à¦¨à§à¦Ÿ, à¦•à§‹à¦¨à§‹ SDK à¦²à¦¾à¦—à¦¬à§‡ à¦¨à¦¾à¥¤",
-    "pg.eyebrow":"à¦ªà§à¦²à§‡à¦—à§à¦°à¦¾à¦‰à¦¨à§à¦¡","pg.title":"à¦ªà§à¦°à¦•à§à¦¸à¦¿ à¦²à¦¾à¦‡à¦­ à¦Ÿà§‡à¦¸à§à¦Ÿ à¦•à¦°à§à¦¨","pg.sub":"à¦—à§‡à¦Ÿà¦“à¦¯à¦¼à§‡ à¦¦à¦¿à¦¯à¦¼à§‡ à¦à¦•à¦Ÿà¦¿ à¦…à¦¨à§à¦°à§‹à¦§ à¦ªà¦¾à¦ à¦¾à¦¨ à¦à¦¬à¦‚ à¦ªà§à¦°à§‹ à¦‰à¦¤à§à¦¤à¦° à¦ªà¦°à§€à¦•à§à¦·à¦¾ à¦•à¦°à§à¦¨à¥¤",
-    "pg.target":"à¦Ÿà¦¾à¦°à§à¦—à§‡à¦Ÿ URL","pg.country":"à¦¦à§‡à¦¶","pg.retries":"à¦ªà§à¦¨à¦ƒà¦ªà§à¦°à¦šà§‡à¦·à§à¦Ÿà¦¾","pg.method":"à¦®à§‡à¦¥à¦¡","pg.body":"à¦…à¦¨à§à¦°à§‹à¦§ à¦¬à¦¡à¦¿ (JSON)",
-    "pg.send":"à¦…à¦¨à§à¦°à§‹à¦§ à¦ªà¦¾à¦ à¦¾à¦¨","pg.idle":"à¦ªà§à¦°à¦¸à§à¦¤à§à¦¤","pg.hint":"à¦‰à¦¤à§à¦¤à¦° à¦¦à§‡à¦–à¦¤à§‡ à¦«à¦°à§à¦® à¦ªà§‚à¦°à¦£ à¦•à¦°à§‡ à¦ªà¦¾à¦ à¦¾à¦¨ à¦šà¦¾à¦ªà§à¦¨à¥¤","pg.auto":"à¦¸à§à¦¬à¦¯à¦¼à¦‚à¦•à§à¦°à¦¿à¦¯à¦¼ (à¦˜à§‹à¦°à¦¾à¦¨)",
-    "docs.eyebrow":"à¦¡à¦•à§à¦®à§‡à¦¨à§à¦Ÿà§‡à¦¶à¦¨","docs.title":"API à¦°à§‡à¦«à¦¾à¦°à§‡à¦¨à§à¦¸","docs.sub":"à¦†à¦ªà¦¨à¦¾à¦° à¦…à§à¦¯à¦¾à¦ªà§‡ NebulaProxy à¦¯à§à¦•à§à¦¤ à¦•à¦°à¦¤à§‡ à¦¯à¦¾ à¦¯à¦¾ à¦¦à¦°à¦•à¦¾à¦°à¥¤",
-    "docs.endpoints":"à¦à¦¨à§à¦¡à¦ªà¦¯à¦¼à§‡à¦¨à§à¦Ÿ","docs.method":"à¦®à§‡à¦¥à¦¡","docs.endpoint":"à¦à¦¨à§à¦¡à¦ªà¦¯à¦¼à§‡à¦¨à§à¦Ÿ","docs.description":"à¦¬à¦°à§à¦£à¦¨à¦¾",
-    "docs.proxy":"à¦°à§‹à¦Ÿà§‡à¦Ÿà¦¿à¦‚ IP à¦¦à¦¿à¦¯à¦¼à§‡ à¦à¦•à¦Ÿà¦¿ à¦…à¦¨à§à¦°à§‹à¦§ à¦ªà§à¦°à¦•à§à¦¸à¦¿ à¦•à¦°à§à¦¨","docs.ip":"à¦†à¦ªà¦¨à¦¾à¦° à¦¬à¦°à§à¦¤à¦®à¦¾à¦¨ egress IP à¦¦à§‡à¦–à§à¦¨",
-    "docs.params":"à¦…à¦¨à§à¦°à§‹à¦§ à¦ªà§à¦¯à¦¾à¦°à¦¾à¦®à¦¿à¦Ÿà¦¾à¦°","docs.field":"à¦«à¦¿à¦²à§à¦¡","docs.type":"à¦Ÿà¦¾à¦‡à¦ª","docs.req":"à¦†à¦¬à¦¶à§à¦¯à¦•","docs.desc2":"à¦¬à¦°à§à¦£à¦¨à¦¾",
-    "docs.p.url":"à¦¯à§‡ URL à¦«à§‡à¦š à¦•à¦°à¦¤à§‡ à¦¹à¦¬à§‡","docs.p.method":"HTTP à¦®à§‡à¦¥à¦¡ (à¦¡à¦¿à¦«à¦²à§à¦Ÿ GET)","docs.p.country":"à¦¦à§à¦‡-à¦…à¦•à§à¦·à¦°à§‡à¦° à¦¦à§‡à¦¶ à¦•à§‹à¦¡ (à¦¬à¦¾ \"auto\")",
-    "docs.p.retries":"à¦¬à§à¦¯à¦°à§à¦¥ à¦¹à¦²à§‡ à¦ªà§à¦¨à¦ƒà¦ªà§à¦°à¦šà§‡à¦·à§à¦Ÿà¦¾","docs.p.headers":"à¦«à¦°à§‹à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦•à¦°à¦¤à§‡ à¦•à¦¾à¦¸à§à¦Ÿà¦® à¦¹à§‡à¦¡à¦¾à¦°","docs.p.cookies":"à¦¸à¦‚à¦¯à§à¦•à§à¦¤ à¦•à¦°à¦¤à§‡ à¦•à§à¦•à¦¿",
-    "docs.p.body":"à¦…à¦¨à§à¦°à§‹à¦§ à¦¬à¦¡à¦¿ (POST/PUT/PATCH à¦à¦° à¦œà¦¨à§à¦¯)","docs.p.b64":"à¦¬à¦¡à¦¿ base64-à¦à¦¨à¦•à§‹à¦¡à§‡à¦¡ à¦•à¦¿à¦¨à¦¾","docs.p.sticky":"à¦…à¦¨à§à¦°à§‹à¦§à¦œà§à¦¡à¦¼à§‡ à¦à¦•à¦‡ IP à¦°à¦¾à¦–à§à¦¨",
-    "docs.examples":"à¦‰à¦¦à¦¾à¦¹à¦°à¦£","docs.res":"à¦‰à¦¤à§à¦¤à¦°","yes":"à¦¹à§à¦¯à¦¾à¦","no":"à¦¨à¦¾",
-    "set.eyebrow":"à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸","set.title":"à¦•à¦¨à¦«à¦¿à¦—à¦¾à¦°à§‡à¦¶à¦¨","set.sub":"à¦†à¦ªà¦¨à¦¾à¦° à¦—à§‡à¦Ÿà¦“à¦¯à¦¼à§‡ à¦ªà¦›à¦¨à§à¦¦ à¦ à¦¿à¦• à¦•à¦°à§à¦¨ à¦“ à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦…à§à¦¯à¦¾à¦•à§à¦¸à§‡à¦¸ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾ à¦•à¦°à§à¦¨à¥¤",
-    "set.general":"à¦¸à¦¾à¦§à¦¾à¦°à¦£","set.sticky":"à¦¸à§à¦Ÿà¦¿à¦•à¦¿ à¦¸à§‡à¦¶à¦¨","set.sticky.d":"à¦…à¦¨à§à¦°à§‹à¦§à¦œà§à¦¡à¦¼à§‡ à¦à¦•à¦‡ IP à¦ªà§à¦¨à¦ƒà¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à§à¦¨",
-    "set.stream":"à¦¸à§à¦Ÿà§à¦°à¦¿à¦®à¦¿à¦‚ (SSE)","set.stream.d":"à¦†à¦¸à¦¾à¦° à¦¸à¦¾à¦¥à§‡ à¦¸à¦¾à¦¥à§‡ à¦‰à¦¤à§à¦¤à¦° à¦¸à§à¦Ÿà§à¦°à¦¿à¦® à¦•à¦°à§à¦¨","set.dark":"à¦¡à¦¾à¦°à§à¦• à¦¥à¦¿à¦®","set.dark.d":"Nebula-à¦à¦° à¦œà¦¨à§à¦¯ à¦¸à¦¬à¦¸à¦®à¦¯à¦¼ à¦šà¦¾à¦²à§",
-    "set.country":"à¦¡à¦¿à¦«à¦²à§à¦Ÿ à¦¦à§‡à¦¶","set.country.d":"à¦•à§‹à¦¨à§‹ à¦¦à§‡à¦¶ à¦¨à¦¿à¦°à§à¦¦à¦¿à¦·à§à¦Ÿ à¦¨à¦¾ à¦¥à¦¾à¦•à¦²à§‡ à¦¬à§à¦¯à¦¬à¦¹à§ƒà¦¤ à¦¹à¦¬à§‡","set.admin":"à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦²à¦—à¦‡à¦¨",
-    "set.admin.d":"à¦ªà§à¦°à¦•à§à¦¸à¦¿ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾, à¦²à¦¾à¦‡à¦­ à¦ªà¦°à¦¿à¦¸à¦‚à¦–à§à¦¯à¦¾à¦¨ à¦¦à§‡à¦–à¦¤à§‡ à¦“ à¦•à¦¿ à¦˜à§‹à¦°à¦¾à¦¤à§‡ à¦¸à¦¾à¦‡à¦¨ à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤","set.username":"à¦‡à¦‰à¦œà¦¾à¦°à¦¨à§‡à¦®","set.password":"à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡",
-    "set.user.ph":"à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"à¦¸à¦¾à¦‡à¦¨ à¦‡à¦¨","set.keys":"API à¦•à¦¿","set.keys.d":"à¦—à§‡à¦Ÿà¦“à¦¯à¦¼à§‡ à¦•à¦¿ à¦˜à§‹à¦°à¦¾à¦¨ à¦¬à¦¾ à¦ªà§à¦°à¦¤à§à¦¯à¦¾à¦¹à¦¾à¦° à¦•à¦°à§à¦¨à¥¤ à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦…à§à¦¯à¦¾à¦•à§à¦¸à§‡à¦¸ à¦†à¦¬à¦¶à§à¦¯à¦•à¥¤",
-    "set.rotate":"API à¦•à¦¿ à¦˜à§‹à¦°à¦¾à¦¨","set.revoke":"à¦¸à¦¬ à¦•à¦¿ à¦ªà§à¦°à¦¤à§à¦¯à¦¾à¦¹à¦¾à¦° à¦•à¦°à§à¦¨","set.demo":"à¦¡à§‡à¦®à§‹ à¦¬à¦¿à¦²à§à¦¡ â€” à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦«à¦¿à¦šà¦¾à¦°à§‡à¦° à¦œà¦¨à§à¦¯ à¦¸à¦‚à¦¯à§à¦•à§à¦¤ à¦¬à§à¦¯à¦¾à¦•à¦à¦¨à§à¦¡ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨à¥¤","set.needadmin":"à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦…à§à¦¯à¦¾à¦•à§à¦¸à§‡à¦¸ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨ â€” à¦†à¦—à§‡ à¦¸à¦¾à¦‡à¦¨ à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤",
-    "footer.note":"à¦¡à§‡à¦­à§‡à¦²à¦ªà¦¾à¦°à¦¦à§‡à¦° à¦œà¦¨à§à¦¯ à¦¨à¦¿à¦°à§à¦®à¦¿à¦¤ à¦¯à¦¾à¦¦à§‡à¦° à¦à¦¾à¦®à§‡à¦²à¦¾à¦¹à§€à¦¨, à¦˜à§‚à¦°à§à¦£à¦¾à¦¯à¦¼à¦®à¦¾à¦¨ egress IP à¦¦à¦°à¦•à¦¾à¦°à¥¤","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"à¦­à§à¦² à¦¤à¦¥à§à¦¯ â€” à¦‡à¦‰à¦œà¦¾à¦°à¦¨à§‡à¦® à¦“ à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨à¥¤","login.ok":"à¦¸à¦«à¦²à¦­à¦¾à¦¬à§‡ à¦¸à¦¾à¦‡à¦¨ à¦‡à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
-  },
-  "hi": { "hero.badge":"à¤—à¥‡à¤Ÿà¤µà¥‡ à¤‘à¤¨à¤²à¤¾à¤‡à¤¨","hero.title":"à¤¹à¤° à¤…à¤¨à¥à¤°à¥‹à¤§ à¤ªà¤°","hero.title2":"à¤…à¤ªà¤¨à¤¾ IP","hero.title3":"à¤˜à¥à¤®à¤¾à¤à¤",
-    "hero.sub":"NebulaProxy à¤à¤• à¤°à¥‹à¤Ÿà¥‡à¤Ÿà¤¿à¤‚à¤— à¤ªà¥à¤°à¥‰à¤•à¥à¤¸à¥€ API à¤—à¥‡à¤Ÿà¤µà¥‡ à¤¹à¥ˆà¥¤ à¤…à¤¨à¥à¤°à¥‹à¤§ à¤­à¥‡à¤œà¥‡à¤‚, à¤›à¤¹ à¤¦à¥‡à¤¶à¥‹à¤‚ à¤®à¥‡à¤‚ à¤¸à¥‡ à¤•à¤¿à¤¸à¥€ à¤à¤• à¤¸à¥‡ à¤¨à¤¯à¤¾ IP à¤ªà¤¾à¤à¤, à¤”à¤° à¤à¤• à¤¹à¥€ à¤à¤‚à¤¡à¤ªà¥‰à¤‡à¤‚à¤Ÿ à¤¸à¥‡ à¤‰à¤¤à¥à¤¤à¤° à¤ªà¤¾à¤à¤à¥¤",
-    "hero.play":"à¤ªà¥à¤²à¥‡à¤—à¥à¤°à¤¾à¤‰à¤‚à¤¡ à¤–à¥‹à¤²à¥‡à¤‚","hero.docs":"à¤¦à¤¸à¥à¤¤à¤¾à¤µà¥‡à¤œà¤¼ à¤ªà¤¢à¤¼à¥‡à¤‚","hero.live":"à¤²à¤¾à¤‡à¤µ à¤¸à¥à¤Ÿà¥à¤°à¥€à¤®à¤¿à¤‚à¤—","hero.cookies":"à¤•à¥à¤•à¥€à¤œà¤¼ à¤”à¤° à¤¹à¥‡à¤¡à¤°",
-    "nav.regions":"6 à¤¦à¥‡à¤¶","nav.home":"à¤¹à¥‹à¤®","nav.playground":"à¤ªà¥à¤²à¥‡à¤—à¥à¤°à¤¾à¤‰à¤‚à¤¡","nav.docs":"à¤¦à¤¸à¥à¤¤à¤¾à¤µà¥‡à¤œà¤¼","nav.settings":"à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸",
-    "stat.requests":"à¤…à¤¨à¥à¤°à¥‹à¤§","stat.success":"à¤¸à¤«à¤²à¤¤à¤¾ à¤¦à¤°","stat.latency":"à¤”à¤¸à¤¤ à¤µà¤¿à¤²à¤‚à¤¬","stat.regions":"à¤¦à¥‡à¤–à¥‡ à¤—à¤ à¤•à¥à¤·à¥‡à¤¤à¥à¤°",
-    "feat.eyebrow":"NebulaProxy à¤•à¥à¤¯à¥‹à¤‚","feat.title":"à¤Ÿà¥à¤°à¥ˆà¤«à¤¼à¤¿à¤• à¤˜à¥à¤®à¤¾à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¬à¤•à¥à¤›","feat.sub":"à¤à¤• à¤¹à¥€ API à¤à¤‚à¤¡à¤ªà¥‰à¤‡à¤‚à¤Ÿ à¤œà¥‹ à¤ªà¥à¤°à¥‹à¤µà¤¾à¤‡à¤¡à¤°, IP, à¤¹à¥‡à¤¡à¤° à¤”à¤° à¤¸à¥à¤Ÿà¥à¤°à¥€à¤®à¤¿à¤‚à¤— à¤¸à¤‚à¤­à¤¾à¤²à¤¤à¤¾ à¤¹à¥ˆà¥¤",
-    "feat.f1.t":"à¤®à¤²à¥à¤Ÿà¥€-à¤ªà¥à¤°à¥‹à¤µà¤¾à¤‡à¤¡à¤° à¤«à¤¼à¥‰à¤²à¤¬à¥ˆà¤•","feat.f1.d":"à¤…à¤—à¤° à¤à¤• à¤…à¤ªà¤¸à¥à¤Ÿà¥à¤°à¥€à¤® à¤ªà¥à¤°à¥‰à¤•à¥à¤¸à¥€ à¤µà¤¿à¤«à¤² à¤¹à¥‹, NebulaProxy à¤…à¤ªà¤¨à¥‡ à¤†à¤ª à¤¦à¥‚à¤¸à¤°à¥‡ à¤¸à¥‡ à¤«à¤¿à¤° à¤•à¥‹à¤¶à¤¿à¤¶ à¤•à¤°à¤¤à¤¾ à¤¹à¥ˆ â€” à¤•à¥‹à¤ˆ à¤¡à¤¾à¤‰à¤¨à¤Ÿà¤¾à¤‡à¤® à¤¨à¤¹à¥€à¤‚à¥¤",
-    "feat.f2.t":"à¤›à¤¹-à¤¦à¥‡à¤¶ à¤°à¥‹à¤Ÿà¥‡à¤¶à¤¨","feat.f2.d":"à¤…à¤®à¥‡à¤°à¤¿à¤•à¤¾, à¤¯à¥‚à¤•à¥‡, à¤œà¤°à¥à¤®à¤¨à¥€, à¤ªà¥‹à¤²à¥ˆà¤‚à¤¡, à¤¸à¥à¤ªà¥‡à¤¨ à¤”à¤° à¤œà¤¾à¤ªà¤¾à¤¨ à¤®à¥‡à¤‚ egress à¤˜à¥à¤®à¤¾à¤à¤à¥¤",
-    "feat.f3.t":"à¤•à¥à¤•à¥€à¤œà¤¼ à¤”à¤° à¤¹à¥‡à¤¡à¤°","feat.f3.d":"à¤•à¤¸à¥à¤Ÿà¤® à¤•à¥à¤•à¥€à¤œà¤¼ à¤”à¤° à¤¹à¥‡à¤¡à¤° à¤¸à¥€à¤§à¥‡ à¤²à¤•à¥à¤·à¥à¤¯ à¤¤à¤• à¤­à¥‡à¤œà¥‡à¤‚ â€” à¤…à¤¨à¥à¤°à¥‹à¤§ à¤ªà¤° à¤ªà¥‚à¤°à¤¾ à¤¨à¤¿à¤¯à¤‚à¤¤à¥à¤°à¤£à¥¤",
-    "feat.f4.t":"à¤²à¤¾à¤‡à¤µ à¤¸à¥à¤Ÿà¥à¤°à¥€à¤®à¤¿à¤‚à¤—","feat.f4.d":"SSE à¤¸à¥‡ à¤‰à¤¤à¥à¤¤à¤° à¤†à¤¤à¥‡ à¤¹à¥€ à¤¸à¥à¤Ÿà¥à¤°à¥€à¤® à¤•à¤°à¥‡à¤‚, à¤²à¤‚à¤¬à¥‡ à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤•à¥à¤²à¤¾à¤‡à¤‚à¤Ÿ à¤•à¥‹ à¤°à¥‹à¤•à¥‡à¤‚à¤—à¥‡ à¤¨à¤¹à¥€à¤‚à¥¤",
-    "feat.f5.t":"à¤¬à¤¾à¤‡à¤¨à¤°à¥€-à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤","feat.f5.d":"à¤›à¤µà¤¿à¤¯à¤¾à¤, à¤«à¤¼à¤¾à¤‡à¤²à¥‡à¤‚ à¤”à¤° à¤¬à¤¾à¤‡à¤¨à¤°à¥€ à¤ªà¥‡à¤²à¥‹à¤¡ base64 à¤¸à¤ªà¥‹à¤°à¥à¤Ÿ à¤•à¥‡ à¤¸à¤¾à¤¥ à¤¬à¤¿à¤¨à¤¾ à¤¬à¤¦à¤²à¥‡ à¤—à¥à¤œà¤¼à¤°à¤¤à¥‡ à¤¹à¥ˆà¤‚à¥¤",
-    "feat.f6.t":"à¤•à¥‹à¤ˆ à¤­à¥€ à¤­à¤¾à¤·à¤¾","feat.f6.d":"cURL, Python, Node.js à¤¯à¤¾ à¤•à¥à¤› à¤­à¥€ à¤œà¥‹ HTTP à¤¬à¥‹à¤²à¥‡à¥¤ à¤à¤• à¤à¤‚à¤¡à¤ªà¥‰à¤‡à¤‚à¤Ÿ, à¤•à¥‹à¤ˆ SDK à¤¨à¤¹à¥€à¤‚à¥¤",
-    "pg.eyebrow":"à¤ªà¥à¤²à¥‡à¤—à¥à¤°à¤¾à¤‰à¤‚à¤¡","pg.title":"à¤ªà¥à¤°à¥‰à¤•à¥à¤¸à¥€ à¤²à¤¾à¤‡à¤µ à¤Ÿà¥‡à¤¸à¥à¤Ÿ à¤•à¤°à¥‡à¤‚","pg.sub":"à¤—à¥‡à¤Ÿà¤µà¥‡ à¤¸à¥‡ à¤…à¤¨à¥à¤°à¥‹à¤§ à¤­à¥‡à¤œà¥‡à¤‚ à¤”à¤° à¤ªà¥‚à¤°à¤¾ à¤‰à¤¤à¥à¤¤à¤° à¤¦à¥‡à¤–à¥‡à¤‚à¥¤",
-    "pg.target":"à¤²à¤•à¥à¤·à¥à¤¯ URL","pg.country":"à¤¦à¥‡à¤¶","pg.retries":"à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¯à¤¾à¤¸","pg.method":"à¤µà¤¿à¤§à¤¿","pg.body":"à¤…à¤¨à¥à¤°à¥‹à¤§ à¤¬à¥‰à¤¡à¥€ (JSON)",
-    "pg.send":"à¤…à¤¨à¥à¤°à¥‹à¤§ à¤­à¥‡à¤œà¥‡à¤‚","pg.idle":"à¤¤à¥ˆà¤¯à¤¾à¤°","pg.hint":"à¤‰à¤¤à¥à¤¤à¤° à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤«à¤¼à¥‰à¤°à¥à¤® à¤­à¤°à¤•à¤° Send à¤¦à¤¬à¤¾à¤à¤à¥¤","pg.auto":"à¤¸à¥à¤µà¤šà¤¾à¤²à¤¿à¤¤ (à¤˜à¥à¤®à¤¾à¤à¤)",
-    "docs.eyebrow":"à¤¦à¤¸à¥à¤¤à¤¾à¤µà¥‡à¤œà¤¼","docs.title":"API à¤¸à¤‚à¤¦à¤°à¥à¤­","docs.sub":"NebulaProxy à¤•à¥‹ à¤…à¤ªà¤¨à¥‡ à¤à¤ª à¤®à¥‡à¤‚ à¤œà¥‹à¤¡à¤¼à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¬à¤•à¥à¤›à¥¤",
-    "docs.endpoints":"à¤à¤‚à¤¡à¤ªà¥‰à¤‡à¤‚à¤Ÿ","docs.method":"à¤µà¤¿à¤§à¤¿","docs.endpoint":"à¤à¤‚à¤¡à¤ªà¥‰à¤‡à¤‚à¤Ÿ","docs.description":"à¤µà¤¿à¤µà¤°à¤£",
-    "docs.proxy":"à¤°à¥‹à¤Ÿà¥‡à¤Ÿà¤¿à¤‚à¤— IP à¤¸à¥‡ à¤…à¤¨à¥à¤°à¥‹à¤§ à¤ªà¥à¤°à¥‰à¤•à¥à¤¸à¥€ à¤•à¤°à¥‡à¤‚","docs.ip":"à¤…à¤ªà¤¨à¤¾ à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ egress IP à¤¦à¥‡à¤–à¥‡à¤‚",
-    "docs.params":"à¤…à¤¨à¥à¤°à¥‹à¤§ à¤ªà¥ˆà¤°à¤¾à¤®à¥€à¤Ÿà¤°","docs.field":"à¤«à¤¼à¥€à¤²à¥à¤¡","docs.type":"à¤ªà¥à¤°à¤•à¤¾à¤°","docs.req":"à¤†à¤µà¤¶à¥à¤¯à¤•","docs.desc2":"à¤µà¤¿à¤µà¤°à¤£",
-    "docs.p.url":"à¤«à¤¼à¥‡à¤š à¤•à¤°à¤¨à¥‡ à¤¹à¥‡à¤¤à¥ URL","docs.p.method":"HTTP à¤µà¤¿à¤§à¤¿ (à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ GET)","docs.p.country":"à¤¦à¥‹-à¤…à¤•à¥à¤·à¤° à¤¦à¥‡à¤¶ à¤•à¥‹à¤¡ (à¤¯à¤¾ \"auto\")",
-    "docs.p.retries":"à¤µà¤¿à¤«à¤²à¤¤à¤¾ à¤ªà¤° à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¯à¤¾à¤¸","docs.p.headers":"à¤…à¤—à¥à¤°à¥‡à¤·à¤¿à¤¤ à¤•à¤°à¤¨à¥‡ à¤¹à¥‡à¤¤à¥ à¤•à¤¸à¥à¤Ÿà¤® à¤¹à¥‡à¤¡à¤°","docs.p.cookies":"à¤œà¥‹à¤¡à¤¼à¤¨à¥‡ à¤¹à¥‡à¤¤à¥ à¤•à¥à¤•à¥€à¤œà¤¼",
-    "docs.p.body":"à¤…à¤¨à¥à¤°à¥‹à¤§ à¤¬à¥‰à¤¡à¥€ (POST/PUT/PATCH à¤¹à¥‡à¤¤à¥)","docs.p.b64":"à¤•à¥à¤¯à¤¾ à¤¬à¥‰à¤¡à¥€ base64-à¤à¤¨à¥à¤•à¥‹à¤¡à¥‡à¤¡ à¤¹à¥ˆ","docs.p.sticky":"à¤…à¤¨à¥à¤°à¥‹à¤§à¥‹à¤‚ à¤®à¥‡à¤‚ à¤à¤• à¤¹à¥€ IP à¤°à¤–à¥‡à¤‚",
-    "docs.examples":"à¤‰à¤¦à¤¾à¤¹à¤°à¤£","docs.res":"à¤‰à¤¤à¥à¤¤à¤°","yes":"à¤¹à¤¾à¤","no":"à¤¨à¤¹à¥€à¤‚",
-    "set.eyebrow":"à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸","set.title":"à¤•à¥‰à¤¨à¥à¤«à¤¼à¤¿à¤—à¤°à¥‡à¤¶à¤¨","set.sub":"à¤…à¤ªà¤¨à¥‡ à¤—à¥‡à¤Ÿà¤µà¥‡ à¤µà¤°à¥€à¤¯à¤¤à¤¾à¤à¤ à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚ à¤”à¤° à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤• à¤ªà¤¹à¥à¤à¤š à¤ªà¥à¤°à¤¬à¤‚à¤§à¤¿à¤¤ à¤•à¤°à¥‡à¤‚à¥¤",
-    "set.general":"à¤¸à¤¾à¤®à¤¾à¤¨à¥à¤¯","set.sticky":"à¤¸à¥à¤Ÿà¤¿à¤•à¥€ à¤¸à¥‡à¤¶à¤¨","set.sticky.d":"à¤…à¤¨à¥à¤°à¥‹à¤§à¥‹à¤‚ à¤®à¥‡à¤‚ à¤à¤• à¤¹à¥€ IP à¤«à¤¿à¤° à¤‰à¤ªà¤¯à¥‹à¤— à¤•à¤°à¥‡à¤‚",
-    "set.stream":"à¤¸à¥à¤Ÿà¥à¤°à¥€à¤®à¤¿à¤‚à¤— (SSE)","set.stream.d":"à¤‰à¤¤à¥à¤¤à¤° à¤†à¤¤à¥‡ à¤¹à¥€ à¤¸à¥à¤Ÿà¥à¤°à¥€à¤® à¤•à¤°à¥‡à¤‚","set.dark":"à¤¡à¤¾à¤°à¥à¤• à¤¥à¥€à¤®","set.dark.d":"Nebula à¤•à¥‡ à¤²à¤¿à¤ à¤¹à¤®à¥‡à¤¶à¤¾ à¤šà¤¾à¤²à¥‚",
-    "set.country":"à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤¦à¥‡à¤¶","set.country.d":"à¤•à¥‹à¤ˆ à¤¦à¥‡à¤¶ à¤¨ à¤¬à¤¤à¤¾à¤ à¤œà¤¾à¤¨à¥‡ à¤ªà¤° à¤‰à¤ªà¤¯à¥‹à¤— à¤¹à¥‹à¤—à¤¾","set.admin":"à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤• à¤²à¥‰à¤—à¤¿à¤¨",
-    "set.admin.d":"à¤ªà¥à¤°à¥‰à¤•à¥à¤¸à¥€ à¤ªà¥à¤°à¤¬à¤‚à¤§à¤¿à¤¤ à¤•à¤°à¤¨à¥‡, à¤²à¤¾à¤‡à¤µ à¤†à¤à¤•à¤¡à¤¼à¥‡ à¤¦à¥‡à¤–à¤¨à¥‡ à¤”à¤° à¤•à¥à¤‚à¤œà¤¿à¤¯à¤¾à¤ à¤˜à¥à¤®à¤¾à¤¨à¥‡ à¤¹à¥‡à¤¤à¥ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚à¥¤","set.username":"à¤‰à¤ªà¤¯à¥‹à¤—à¤•à¤°à¥à¤¤à¤¾ à¤¨à¤¾à¤®","set.password":"à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡",
-    "set.user.ph":"à¤à¤¡à¤®à¤¿à¤¨","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨","set.keys":"API à¤•à¥à¤‚à¤œà¤¿à¤¯à¤¾à¤","set.keys.d":"à¤—à¥‡à¤Ÿà¤µà¥‡ à¤•à¥à¤‚à¤œà¤¿à¤¯à¤¾à¤ à¤˜à¥à¤®à¤¾à¤à¤ à¤¯à¤¾ à¤°à¤¦à¥à¤¦ à¤•à¤°à¥‡à¤‚à¥¤ à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤• à¤ªà¤¹à¥à¤à¤š à¤†à¤µà¤¶à¥à¤¯à¤•à¥¤",
-    "set.rotate":"API à¤•à¥à¤‚à¤œà¥€ à¤˜à¥à¤®à¤¾à¤à¤","set.revoke":"à¤¸à¤­à¥€ à¤•à¥à¤‚à¤œà¤¿à¤¯à¤¾à¤ à¤°à¤¦à¥à¤¦ à¤•à¤°à¥‡à¤‚","set.demo":"à¤¡à¥‡à¤®à¥‹ à¤¬à¤¿à¤²à¥à¤¡ â€” à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤• à¤¸à¥à¤µà¤¿à¤§à¤¾à¤“à¤‚ à¤¹à¥‡à¤¤à¥ à¤œà¥à¤¡à¤¼à¤¾ à¤¬à¥ˆà¤•à¤à¤‚à¤¡ à¤†à¤µà¤¶à¥à¤¯à¤•à¥¤","set.needadmin":"à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤• à¤ªà¤¹à¥à¤à¤š à¤†à¤µà¤¶à¥à¤¯à¤• â€” à¤ªà¤¹à¤²à¥‡ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚à¥¤",
-    "footer.note":"à¤‰à¤¨ à¤¡à¥‡à¤µà¤²à¤ªà¤°à¥à¤¸ à¤¹à¥‡à¤¤à¥ à¤¬à¤¨à¤¾ à¤œà¤¿à¤¨à¥à¤¹à¥‡à¤‚ à¤¸à¤¾à¤«à¤¼, à¤°à¥‹à¤Ÿà¥‡à¤Ÿà¤¿à¤‚à¤— egress IP à¤šà¤¾à¤¹à¤¿à¤ à¤¬à¤¿à¤¨à¤¾ à¤à¤‚à¤à¤Ÿ à¤•à¥‡à¥¤","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"à¤…à¤®à¤¾à¤¨à¥à¤¯ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ â€” à¤‰à¤ªà¤¯à¥‹à¤—à¤•à¤°à¥à¤¤à¤¾ à¤¨à¤¾à¤® à¤”à¤° à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤œà¤¾à¤à¤šà¥‡à¤‚à¥¤","login.ok":"à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤¹à¥à¤†à¥¤"
-  },
-  "es": { "hero.badge":"Gateway en lÃ­nea","hero.title":"Rota tu","hero.title2":"IP de salida","hero.title3":"en cada solicitud",
-    "hero.sub":"NebulaProxy es una puerta de enlace de API de proxy rotativo. EnvÃ­a una solicitud, obtÃ©n una IP nueva de uno de seis paÃ­ses y recibe la respuesta â€” todo por un solo endpoint.",
-    "hero.play":"Abrir Playground","hero.docs":"Leer documentaciÃ³n","hero.live":"TransmisiÃ³n en vivo","hero.cookies":"Cookies y encabezados",
-    "nav.regions":"6 paÃ­ses","nav.home":"Inicio","nav.playground":"Playground","nav.docs":"DocumentaciÃ³n","nav.settings":"Ajustes",
-    "stat.requests":"Solicitudes","stat.success":"Tasa de Ã©xito","stat.latency":"Latencia media","stat.regions":"Regiones vistas",
-    "feat.eyebrow":"Por quÃ© NebulaProxy","feat.title":"Todo para rotar trÃ¡fico","feat.sub":"Un solo endpoint que gestiona proveedores, IPs, encabezados y streaming por ti.",
-    "feat.f1.t":"Respaldo multiproveedor","feat.f1.d":"Si un proxy falla, NebulaProxy reintenta con otro automÃ¡ticamente â€” sin caÃ­das.",
-    "feat.f2.t":"RotaciÃ³n de seis paÃ­ses","feat.f2.d":"Rota la salida entre EE. UU., Reino Unido, Alemania, Polonia, EspaÃ±a y JapÃ³n.",
-    "feat.f3.t":"Cookies y encabezados","feat.f3.d":"EnvÃ­a cookies y encabezados personalizados al destino â€” control total de la solicitud.",
-    "feat.f4.t":"TransmisiÃ³n en vivo","feat.f4.d":"Transmite respuestas con SSE para que descargas largas no bloqueen tu cliente.",
-    "feat.f5.t":"Binario seguro","feat.f5.d":"ImÃ¡genes, archivos y payloads binarios pasan intactos con soporte base64.",
-    "feat.f6.t":"Cualquier lenguaje","feat.f6.d":"Usa cURL, Python, Node.js o cualquier cosa que hable HTTP. Un endpoint, sin SDK.",
-    "pg.eyebrow":"Playground","pg.title":"Prueba el proxy en vivo","pg.sub":"EnvÃ­a una solicitud por la puerta de enlace e inspecciona la respuesta completa.",
-    "pg.target":"URL de destino","pg.country":"PaÃ­s","pg.retries":"Reintentos","pg.method":"MÃ©todo","pg.body":"Cuerpo (JSON)",
-    "pg.send":"Enviar solicitud","pg.idle":"Listo","pg.hint":"Llena los campos y presiona Enviar para ver la respuesta.","pg.auto":"AutomÃ¡tico (rotar)",
-    "docs.eyebrow":"DocumentaciÃ³n","docs.title":"Referencia de API","docs.sub":"Todo lo que necesitas para integrar NebulaProxy.",
-    "docs.endpoints":"Endpoints","docs.method":"MÃ©todo","docs.endpoint":"Endpoint","docs.description":"DescripciÃ³n",
-    "docs.proxy":"Proxy de una solicitud por una IP rotativa","docs.ip":"ObtÃ©n tu IP de salida actual",
-    "docs.params":"ParÃ¡metros de solicitud","docs.field":"Campo","docs.type":"Tipo","docs.req":"Requerido","docs.desc2":"DescripciÃ³n",
-    "docs.p.url":"La URL de destino","docs.p.method":"MÃ©todo HTTP (GET por defecto)","docs.p.country":"CÃ³digo de paÃ­s de dos letras (o \"auto\")",
-    "docs.p.retries":"Reintentos ante fallo","docs.p.headers":"Encabezados personalizados a reenviar","docs.p.cookies":"Cookies a adjuntar",
-    "docs.p.body":"Cuerpo (para POST/PUT/PATCH)","docs.p.b64":"Si el cuerpo estÃ¡ en base64","docs.p.sticky":"Mantener la misma IP",
-    "docs.examples":"Ejemplos","docs.res":"Respuesta","yes":"sÃ­","no":"no",
-    "set.eyebrow":"Ajustes","set.title":"ConfiguraciÃ³n","set.sub":"Ajusta tus preferencias y gestiona el acceso de administrador.",
-    "set.general":"General","set.sticky":"Sesiones fijas","set.sticky.d":"Reutilizar la misma IP entre solicitudes",
-    "set.stream":"Streaming (SSE)","set.stream.d":"Transmitir respuestas al llegar","set.dark":"Tema oscuro","set.dark.d":"Siempre activo en Nebula",
-    "set.country":"PaÃ­s por defecto","set.country.d":"Se usa cuando no se especifica paÃ­s","set.admin":"Inicio de administrador",
-    "set.admin.d":"Inicia sesiÃ³n para gestionar proxies y ver estadÃ­sticas.","set.username":"Usuario","set.password":"ContraseÃ±a",
-    "set.user.ph":"admin","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"Iniciar sesiÃ³n","set.keys":"Claves API","set.keys.d":"Rota o revoca claves de la puerta de enlace.",
-    "set.rotate":"Rotar clave API","set.revoke":"Revocar todas","set.demo":"Demo â€” las funciones de admin requieren backend.","set.needadmin":"Se requiere acceso de administrador â€” inicia sesiÃ³n primero.",
-    "footer.note":"Hecho para desarrolladores que necesitan una IP de salida rotativa sin complicaciones.","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"Credenciales invÃ¡lidas.","login.ok":"SesiÃ³n iniciada."
-  },
-  "fr": { "hero.badge":"Passerelle en ligne","hero.title":"Faites tourner","hero.title2":"votre IP","hero.title3":"Ã  chaque requÃªte",
-    "hero.sub":"NebulaProxy est une passerelle de proxy rotatif. Envoyez une requÃªte, obtenez une nouvelle IP parmi six pays et recevez la rÃ©ponse â€” via un seul endpoint.",
-    "hero.play":"Ouvrir Playground","hero.docs":"Lire la documentation","hero.live":"Streaming en direct","hero.cookies":"Cookies et en-tÃªtes",
-    "nav.regions":"6 pays","nav.home":"Accueil","nav.playground":"Playground","nav.docs":"Documentation","nav.settings":"ParamÃ¨tres",
-    "stat.requests":"RequÃªtes","stat.success":"Taux de succÃ¨s","stat.latency":"Latence moyenne","stat.regions":"RÃ©gions vues",
-    "feat.eyebrow":"Pourquoi NebulaProxy","feat.title":"Tout pour faire tourner le trafic","feat.sub":"Un seul endpoint qui gÃ¨re fournisseurs, IP, en-tÃªtes et streaming pour vous.",
-    "feat.f1.t":"Bascule multi-fournisseurs","feat.f1.d":"Si un proxy Ã©choue, NebulaProxy rÃ©essaie via un autre â€” aucun temps d'arrÃªt.",
-    "feat.f2.t":"Rotation sur six pays","feat.f2.d":"Faites tourner la sortie entre les Ã‰tats-Unis, le Royaume-Uni, l'Allemagne, la Pologne, l'Espagne et le Japon.",
-    "feat.f3.t":"Cookies et en-tÃªtes","feat.f3.d":"Transmettez cookies et en-tÃªtes personnalisÃ©s Ã  la cible.",
-    "feat.f4.t":"Streaming en direct","feat.f4.d":"Diffusez les rÃ©ponses avec SSE pour ne pas bloquer votre client.",
-    "feat.f5.t":"Binaire sÃ»r","feat.f5.d":"Images, fichiers et payloads binaires passent intacts avec le support base64.",
-    "feat.f6.t":"Tout langage","feat.f6.d":"Utilisez cURL, Python, Node.js ou tout client HTTP. Un endpoint, zÃ©ro SDK.",
-    "pg.eyebrow":"Playground","pg.title":"Testez le proxy en direct","pg.sub":"Envoyez une requÃªte via la passerelle et inspectez la rÃ©ponse.",
-    "pg.target":"URL cible","pg.country":"Pays","pg.retries":"Tentatives","pg.method":"MÃ©thode","pg.body":"Corps (JSON)",
-    "pg.send":"Envoyer","pg.idle":"PrÃªt","pg.hint":"Remplissez le formulaire et cliquez Envoyer.","pg.auto":"Auto (rotation)",
-    "docs.eyebrow":"Documentation","docs.title":"RÃ©fÃ©rence API","docs.sub":"Tout pour intÃ©grer NebulaProxy.",
-    "docs.endpoints":"Endpoints","docs.method":"MÃ©thode","docs.endpoint":"Endpoint","docs.description":"Description",
-    "docs.proxy":"Proxy d'une requÃªte via IP rotative","docs.ip":"Obtenir votre IP de sortie actuelle",
-    "docs.params":"ParamÃ¨tres","docs.field":"Champ","docs.type":"Type","docs.req":"Requis","docs.desc2":"Description",
-    "docs.p.url":"L'URL Ã  rÃ©cupÃ©rer","docs.p.method":"MÃ©thode HTTP (GET par dÃ©faut)","docs.p.country":"Code pays (ou \"auto\")",
-    "docs.p.retries":"Tentatives en cas d'Ã©chec","docs.p.headers":"En-tÃªtes Ã  transmettre","docs.p.cookies":"Cookies Ã  joindre",
-    "docs.p.body":"Corps (POST/PUT/PATCH)","docs.p.b64":"Corps encodÃ© en base64","docs.p.sticky":"Garder la mÃªme IP",
-    "docs.examples":"Exemples","docs.res":"RÃ©ponse","yes":"oui","no":"non",
-    "set.eyebrow":"ParamÃ¨tres","set.title":"Configuration","set.sub":"Ajustez vos prÃ©fÃ©rences et gÃ©rez l'accÃ¨s admin.",
-    "set.general":"GÃ©nÃ©ral","set.sticky":"Sessions persistantes","set.sticky.d":"RÃ©utiliser la mÃªme IP",
-    "set.stream":"Streaming (SSE)","set.stream.d":"Diffuser les rÃ©ponses","set.dark":"ThÃ¨me sombre","set.dark.d":"Toujours actif",
-    "set.country":"Pays par dÃ©faut","set.country.d":"UtilisÃ© si aucun pays n'est prÃ©cisÃ©","set.admin":"Connexion admin",
-    "set.admin.d":"Connectez-vous pour gÃ©rer les proxies.","set.username":"Utilisateur","set.password":"Mot de passe",
-    "set.user.ph":"admin","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"Se connecter","set.keys":"ClÃ©s API","set.keys.d":"Rotez ou rÃ©voquez les clÃ©s.",
-    "set.rotate":"Roter la clÃ©","set.revoke":"Tout rÃ©voquer","set.demo":"DÃ©mo â€” fonctions admin nÃ©cessitant un backend.","set.needadmin":"AccÃ¨s administrateur requis â€” connectez-vous d'abord.",
-    "footer.note":"ConÃ§u pour les dÃ©veloppeurs qui veulent une IP de sortie rotative sans tracas.","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"Identifiants invalides.","login.ok":"Connexion rÃ©ussie."
-  },
-  "ar": { "hero.badge":"Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ù…ØªØµÙ„Ø©","hero.title":"Ù‚Ù… Ø¨ØªØ¯ÙˆÙŠØ±","hero.title2":"Ø¹Ù†ÙˆØ§Ù† IP","hero.title3":"ÙÙŠ ÙƒÙ„ Ø·Ù„Ø¨",
-    "hero.sub":"NebulaProxy Ù‡Ùˆ Ø¨ÙˆØ§Ø¨Ø© ÙˆÙƒÙŠÙ„ Ø¯ÙˆÙ‘Ø§Ø±Ø©. Ø£Ø±Ø³Ù„ Ø·Ù„Ø¨Ù‹Ø§ØŒ ÙˆØ§Ø­ØµÙ„ Ø¹Ù„Ù‰ Ø¹Ù†ÙˆØ§Ù† IP Ø¬Ø¯ÙŠØ¯ Ù…Ù† Ø³ØªÙ‘ Ø¯ÙˆÙ„ØŒ ÙˆØ§Ø³ØªÙ„Ù… Ø§Ù„Ø±Ø¯ â€” Ù…Ù† Ù†Ù‚Ø·Ø© Ù†Ù‡Ø§ÙŠØ© ÙˆØ§Ø­Ø¯Ø©.",
-    "hero.play":"Ø§ÙØªØ­ Ø§Ù„Ù…Ù„Ø¹Ø¨","hero.docs":"Ø§Ù‚Ø±Ø£ Ø§Ù„ØªÙˆØ«ÙŠÙ‚","hero.live":"Ø¨Ø« Ù…Ø¨Ø§Ø´Ø±","hero.cookies":"Ù…Ù„ÙØ§Øª ØªØ¹Ø±ÙŠÙ ÙˆØªØ±ÙˆÙŠØ³Ø§Øª",
-    "nav.regions":"6 Ø¯ÙˆÙ„","nav.home":"Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©","nav.playground":"Ø§Ù„Ù…Ù„Ø¹Ø¨","nav.docs":"Ø§Ù„ØªÙˆØ«ÙŠÙ‚","nav.settings":"Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª",
-    "stat.requests":"Ø§Ù„Ø·Ù„Ø¨Ø§Øª","stat.success":"Ù†Ø³Ø¨Ø© Ø§Ù„Ù†Ø¬Ø§Ø­","stat.latency":"Ù…ØªÙˆØ³Ø· Ø§Ù„ØªØ£Ø®ÙŠØ±","stat.regions":"Ø§Ù„Ù…Ù†Ø§Ø·Ù‚ Ø§Ù„Ù…Ø±ØµÙˆØ¯Ø©",
-    "feat.eyebrow":"Ù„Ù…Ø§Ø°Ø§ NebulaProxy","feat.title":"ÙƒÙ„ Ù…Ø§ ØªØ­ØªØ§Ø¬Ù‡ Ù„ØªØ¯ÙˆÙŠØ± Ø§Ù„Ø­Ø±ÙƒØ©","feat.sub":"Ù†Ù‚Ø·Ø© Ù†Ù‡Ø§ÙŠØ© ÙˆØ§Ø­Ø¯Ø© ØªØ¯ÙŠØ± Ø§Ù„Ù…Ø²ÙˆÙ‘Ø¯ÙŠÙ† ÙˆØ§Ù„Ø¹Ù†Ø§ÙˆÙŠÙ† ÙˆØ§Ù„ØªØ±ÙˆÙŠØ³Ø§Øª ÙˆØ§Ù„Ø¨Ø«.",
-    "feat.f1.t":"Ø¨Ø¯ÙŠÙ„ Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ù…Ø²ÙˆÙ‘Ø¯ÙŠÙ†","feat.f1.d":"Ø¥Ø°Ø§ ÙØ´Ù„ ÙˆÙƒÙŠÙ„ØŒ ÙŠØ¹ÙŠØ¯ NebulaProxy Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ø¹Ø¨Ø± Ø¢Ø®Ø± â€” Ø¨Ù„Ø§ ØªÙˆÙ‚Ù.",
-    "feat.f2.t":"ØªØ¯ÙˆÙŠØ± Ø³Øª Ø¯ÙˆÙ„","feat.f2.d":"Ø¯Ø± Ø§Ù„Ø­Ø±ÙƒØ© Ø¨ÙŠÙ† Ø£Ù…Ø±ÙŠÙƒØ§ ÙˆØ¨Ø±ÙŠØ·Ø§Ù†ÙŠØ§ ÙˆØ£Ù„Ù…Ø§Ù†ÙŠØ§ ÙˆØ¨ÙˆÙ„Ù†Ø¯Ø§ ÙˆØ¥Ø³Ø¨Ø§Ù†ÙŠØ§ ÙˆØ§Ù„ÙŠØ§Ø¨Ø§Ù†.",
-    "feat.f3.t":"Ù…Ù„ÙØ§Øª ØªØ¹Ø±ÙŠÙ ÙˆØªØ±ÙˆÙŠØ³Ø§Øª","feat.f3.d":"Ù…Ø±Ø± Ø§Ù„ØªØ±ÙˆÙŠØ³Ø§Øª ÙˆÙ…Ù„ÙØ§Øª Ø§Ù„ØªØ¹Ø±ÙŠÙ Ø¥Ù„Ù‰ Ø§Ù„Ù‡Ø¯Ù.",
-    "feat.f4.t":"Ø¨Ø« Ù…Ø¨Ø§Ø´Ø±","feat.f4.d":"Ø¨Ø« Ø§Ù„Ø±Ø¯ÙˆØ¯ Ø¹Ø¨Ø± SSE Ø­ØªÙ‰ Ù„Ø§ ÙŠØ­Ø¬Ø¨ Ø§Ù„ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø·ÙˆÙŠÙ„ Ø¹Ù…ÙŠÙ„Ùƒ.",
-    "feat.f5.t":"Ø¢Ù…Ù† Ø«Ù†Ø§Ø¦ÙŠÙ‹Ø§","feat.f5.d":"ØªÙ…Ø± Ø§Ù„ØµÙˆØ± ÙˆØ§Ù„Ù…Ù„ÙØ§Øª Ø³Ù„ÙŠÙ…Ø© Ù…Ø¹ Ø¯Ø¹Ù… base64.",
-    "feat.f6.t":"Ø£ÙŠ Ù„ØºØ©","feat.f6.d":"Ø§Ø³ØªØ®Ø¯Ù… cURL Ø£Ùˆ Python Ø£Ùˆ Node.js. Ù†Ù‚Ø·Ø© Ù†Ù‡Ø§ÙŠØ© ÙˆØ§Ø­Ø¯Ø© Ø¨Ù„Ø§ SDK.",
-    "pg.eyebrow":"Ø§Ù„Ù…Ù„Ø¹Ø¨","pg.title":"Ø§Ø®ØªØ¨Ø± Ø§Ù„ÙˆÙƒÙŠÙ„ Ù…Ø¨Ø§Ø´Ø±Ø©","pg.sub":"Ø£Ø±Ø³Ù„ Ø·Ù„Ø¨Ù‹Ø§ Ø¹Ø¨Ø± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© ÙˆØ§ÙØ­Øµ Ø§Ù„Ø±Ø¯ ÙƒØ§Ù…Ù„Ù‹Ø§.",
-    "pg.target":"Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ù‡Ø¯Ù","pg.country":"Ø§Ù„Ø¯ÙˆÙ„Ø©","pg.retries":"Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø§Øª","pg.method":"Ø§Ù„Ø·Ø±ÙŠÙ‚Ø©","pg.body":"Ø¬Ø³Ù… Ø§Ù„Ø·Ù„Ø¨ (JSON)",
-    "pg.send":"Ø¥Ø±Ø³Ø§Ù„","pg.idle":"Ø¬Ø§Ù‡Ø²","pg.hint":"Ø§Ù…Ù„Ø£ Ø§Ù„Ø­Ù‚ÙˆÙ„ Ø«Ù… Ø§Ø¶ØºØ· Ø¥Ø±Ø³Ø§Ù„.","pg.auto":"ØªÙ„Ù‚Ø§Ø¦ÙŠ (ØªØ¯ÙˆÙŠØ±)",
-    "docs.eyebrow":"Ø§Ù„ØªÙˆØ«ÙŠÙ‚","docs.title":"Ù…Ø±Ø¬Ø¹ API","docs.sub":"ÙƒÙ„ Ù…Ø§ ØªØ­ØªØ§Ø¬Ù‡ Ù„Ø¯Ù…Ø¬ NebulaProxy.",
-    "docs.endpoints":"Ø§Ù„Ù†Ù‚Ø§Ø·","docs.method":"Ø§Ù„Ø·Ø±ÙŠÙ‚Ø©","docs.endpoint":"Ø§Ù„Ù†Ù‚Ø·Ø©","docs.description":"Ø§Ù„ÙˆØµÙ",
-    "docs.proxy":"ÙˆÙƒÙŠÙ„ Ø·Ù„Ø¨ Ø¹Ø¨Ø± Ø¹Ù†ÙˆØ§Ù† IP Ø¯ÙˆÙ‘Ø§Ø±","docs.ip":"Ø§Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ø¹Ù†ÙˆØ§Ù† IP Ø§Ù„Ø­Ø§Ù„ÙŠ",
-    "docs.params":"Ù…Ø¹Ø§Ù…Ù„Ø§Øª Ø§Ù„Ø·Ù„Ø¨","docs.field":"Ø§Ù„Ø­Ù‚Ù„","docs.type":"Ø§Ù„Ù†ÙˆØ¹","docs.req":"Ù…Ø·Ù„ÙˆØ¨","docs.desc2":"Ø§Ù„ÙˆØµÙ",
-    "docs.p.url":"Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ù…Ø·Ù„ÙˆØ¨ Ø¬Ù„Ø¨Ù‡","docs.p.method":"Ø·Ø±ÙŠÙ‚Ø© HTTP (GET Ø§ÙØªØ±Ø§Ø¶ÙŠÙ‹Ø§)","docs.p.country":"Ø±Ù…Ø² Ø§Ù„Ø¯ÙˆÙ„Ø© Ø¨Ø­Ø±ÙÙŠÙ†",
-    "docs.p.retries":"Ù…Ø­Ø§ÙˆÙ„Ø§Øª Ø¹Ù†Ø¯ Ø§Ù„ÙØ´Ù„","docs.p.headers":"ØªØ±ÙˆÙŠØ³Ø§Øª Ø§Ù„Ù…Ø±ÙˆØ±","docs.p.cookies":"Ù…Ù„ÙØ§Øª Ø§Ù„ØªØ¹Ø±ÙŠÙ",
-    "docs.p.body":"Ø¬Ø³Ù… Ø§Ù„Ø·Ù„Ø¨","docs.p.b64":"Ù‡Ù„ Ø§Ù„Ø¬Ø³Ù… Ø¨ØªØ±Ù…ÙŠØ² base64","docs.p.sticky":"Ø§Ù„Ø­ÙØ§Ø¸ Ø¹Ù„Ù‰ Ù†ÙØ³ IP",
-    "docs.examples":"Ø£Ù…Ø«Ù„Ø©","docs.res":"Ø§Ù„Ø±Ø¯","yes":"Ù†Ø¹Ù…","no":"Ù„Ø§",
-    "set.eyebrow":"Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª","set.title":"Ø§Ù„ØªÙ‡ÙŠØ¦Ø©","set.sub":"Ø§Ø¶Ø¨Ø· ØªÙØ¶ÙŠÙ„Ø§ØªÙƒ ÙˆØ£Ø¯Ø± ÙˆØµÙˆÙ„ Ø§Ù„Ù…Ø´Ø±Ù.",
-    "set.general":"Ø¹Ø§Ù…","set.sticky":"Ø¬Ù„Ø³Ø§Øª Ø«Ø§Ø¨ØªØ©","set.sticky.d":"Ø¥Ø¹Ø§Ø¯Ø© Ø§Ø³ØªØ®Ø¯Ø§Ù… Ù†ÙØ³ IP",
-    "set.stream":"Ø§Ù„Ø¨Ø« (SSE)","set.stream.d":"Ø¨Ø« Ø§Ù„Ø±Ø¯ÙˆØ¯ ÙÙˆØ± ÙˆØµÙˆÙ„Ù‡Ø§","set.dark":"Ø«ÙŠÙ… Ø¯Ø§ÙƒÙ†","set.dark.d":"Ù…ÙØ¹Ù‘Ù„ Ø¯Ø§Ø¦Ù…Ù‹Ø§",
-    "set.country":"Ø§Ù„Ø¯ÙˆÙ„Ø© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ©","set.country.d":"ØªÙØ³ØªØ®Ø¯Ù… Ø¥Ù† Ù„Ù… ØªØ­Ø¯Ø¯ Ø¯ÙˆÙ„Ø©","set.admin":"Ø¯Ø®ÙˆÙ„ Ø§Ù„Ù…Ø´Ø±Ù",
-    "set.admin.d":"Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¨Ø±ÙˆÙƒØ³ÙŠØ§Øª.","set.username":"Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…","set.password":"ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±",
-    "set.user.ph":"Ù…Ø¯ÙŠØ±","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„","set.keys":"Ù…ÙØ§ØªÙŠØ­ API","set.keys.d":"Ø¯Ø± Ø£Ùˆ Ø£Ù„ØºÙ Ø§Ù„Ù…ÙØ§ØªÙŠØ­.",
-    "set.rotate":"ØªØ¯ÙˆÙŠØ± Ø§Ù„Ù…ÙØªØ§Ø­","set.revoke":"Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ÙƒÙ„","set.demo":"Ù†Ø³Ø®Ø© ØªØ¬Ø±ÙŠØ¨ÙŠØ© â€” ØªØ­ØªØ§Ø¬ Ø®Ù„ÙÙŠØ© Ù…ØªØµÙ„Ø©.","set.needadmin":"Ù…Ø·Ù„ÙˆØ¨ ÙˆØµÙˆÙ„ Ø§Ù„Ù…Ø´Ø±Ù â€” Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø£ÙˆÙ„Ø§Ù‹.",
-    "footer.note":"ØµÙÙ†Ø¹ Ù„Ù„Ù…Ø·ÙˆØ±ÙŠÙ† Ø§Ù„Ø°ÙŠÙ† ÙŠØ­ØªØ§Ø¬ÙˆÙ† Ø¹Ù†ÙˆØ§Ù† IP Ø¯ÙˆÙ‘Ø§Ø±Ù‹Ø§ Ø¨Ù„Ø§ Ø¹Ù†Ø§Ø¡.","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"Ø¨ÙŠØ§Ù†Ø§Øª ØºÙŠØ± ØµØ­ÙŠØ­Ø©.","login.ok":"ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„."
-  },
-  "ru": { "hero.badge":"Ğ¨Ğ»ÑĞ· Ğ¾Ğ½Ğ»Ğ°Ğ¹Ğ½","hero.title":"ĞœĞµĞ½ÑĞ¹Ñ‚Ğµ","hero.title2":"Ğ¸ÑÑ…Ğ¾Ğ´ÑÑ‰Ğ¸Ğ¹ IP","hero.title3":"Ğ½Ğ° ĞºĞ°Ğ¶Ğ´Ñ‹Ğ¹ Ğ·Ğ°Ğ¿Ñ€Ğ¾Ñ",
-    "hero.sub":"NebulaProxy â€” ÑÑ‚Ğ¾ Ñ€Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ğ¾Ğ½Ğ½Ñ‹Ğ¹ Ğ¿Ñ€Ğ¾ĞºÑĞ¸-ÑˆĞ»ÑĞ·. ĞÑ‚Ğ¿Ñ€Ğ°Ğ²ÑŒÑ‚Ğµ Ğ·Ğ°Ğ¿Ñ€Ğ¾Ñ, Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ¸Ñ‚Ğµ ÑĞ²ĞµĞ¶Ğ¸Ğ¹ IP Ğ¸Ğ· ÑˆĞµÑÑ‚Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½ Ğ¸ Ğ¿Ñ€Ğ¸Ğ¼Ğ¸Ñ‚Ğµ Ğ¾Ñ‚Ğ²ĞµÑ‚ â€” Ñ‡ĞµÑ€ĞµĞ· Ğ¾Ğ´Ğ¸Ğ½ ÑĞ½Ğ´Ğ¿Ğ¾Ğ¸Ğ½Ñ‚.",
-    "hero.play":"ĞÑ‚ĞºÑ€Ñ‹Ñ‚ÑŒ Playground","hero.docs":"Ğ§Ğ¸Ñ‚Ğ°Ñ‚ÑŒ Ğ´Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ğ°Ñ†Ğ¸Ñ","hero.live":"ĞŸĞ¾Ñ‚Ğ¾ĞºĞ¾Ğ²Ğ°Ñ Ğ¿ĞµÑ€ĞµĞ´Ğ°Ñ‡Ğ°","hero.cookies":"Cookies Ğ¸ Ğ·Ğ°Ğ³Ğ¾Ğ»Ğ¾Ğ²ĞºĞ¸",
-    "nav.regions":"6 ÑÑ‚Ñ€Ğ°Ğ½","nav.home":"Ğ“Ğ»Ğ°Ğ²Ğ½Ğ°Ñ","nav.playground":"Playground","nav.docs":"Ğ”Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ğ°Ñ†Ğ¸Ñ","nav.settings":"ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸",
-    "stat.requests":"Ğ—Ğ°Ğ¿Ñ€Ğ¾ÑÑ‹","stat.success":"Ğ£ÑĞ¿ĞµÑˆĞ½Ğ¾ÑÑ‚ÑŒ","stat.latency":"Ğ¡Ñ€ĞµĞ´Ğ½ÑÑ Ğ·Ğ°Ğ´ĞµÑ€Ğ¶ĞºĞ°","stat.regions":"Ğ ĞµĞ³Ğ¸Ğ¾Ğ½Ñ‹",
-    "feat.eyebrow":"ĞŸĞ¾Ñ‡ĞµĞ¼Ñƒ NebulaProxy","feat.title":"Ğ’ÑÑ‘ Ğ´Ğ»Ñ Ñ€Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ğ¸ Ñ‚Ñ€Ğ°Ñ„Ğ¸ĞºĞ°","feat.sub":"ĞĞ´Ğ¸Ğ½ ÑĞ½Ğ´Ğ¿Ğ¾Ğ¸Ğ½Ñ‚, ĞºĞ¾Ñ‚Ğ¾Ñ€Ñ‹Ğ¹ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ÑĞµÑ‚ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°Ğ¼Ğ¸, IP, Ğ·Ğ°Ğ³Ğ¾Ğ»Ğ¾Ğ²ĞºĞ°Ğ¼Ğ¸ Ğ¸ ÑÑ‚Ñ€Ğ¸Ğ¼Ğ¸Ğ½Ğ³Ğ¾Ğ¼.",
-    "feat.f1.t":"Ğ¤Ğ¾Ğ»Ğ±ÑĞº Ğ½ĞµÑĞºĞ¾Ğ»ÑŒĞºĞ¸Ñ… Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ¾Ğ²","feat.f1.d":"Ğ•ÑĞ»Ğ¸ Ğ¿Ñ€Ğ¾ĞºÑĞ¸ ÑĞ±Ğ¾Ğ¸Ñ‚, NebulaProxy Ğ¿Ğ¾Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ñ‚ Ñ‡ĞµÑ€ĞµĞ· Ğ´Ñ€ÑƒĞ³Ğ¾Ğ¹ â€” Ğ±ĞµĞ· Ğ¿Ñ€Ğ¾ÑÑ‚Ğ¾Ñ.",
-    "feat.f2.t":"Ğ Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ñ ÑˆĞµÑÑ‚Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½","feat.f2.d":"Ğ¡Ğ¨Ğ, Ğ’ĞµĞ»Ğ¸ĞºĞ¾Ğ±Ñ€Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ, Ğ“ĞµÑ€Ğ¼Ğ°Ğ½Ğ¸Ñ, ĞŸĞ¾Ğ»ÑŒÑˆĞ°, Ğ˜ÑĞ¿Ğ°Ğ½Ğ¸Ñ Ğ¸ Ğ¯Ğ¿Ğ¾Ğ½Ğ¸Ñ.",
-    "feat.f3.t":"Cookies Ğ¸ Ğ·Ğ°Ğ³Ğ¾Ğ»Ğ¾Ğ²ĞºĞ¸","feat.f3.d":"ĞŸĞµÑ€ĞµĞ´Ğ°Ğ²Ğ°Ğ¹Ñ‚Ğµ ÑĞ²Ğ¾Ğ¸ cookies Ğ¸ Ğ·Ğ°Ğ³Ğ¾Ğ»Ğ¾Ğ²ĞºĞ¸ Ñ†ĞµĞ»Ğ¸.",
-    "feat.f4.t":"ĞŸĞ¾Ñ‚Ğ¾ĞºĞ¾Ğ²Ğ°Ñ Ğ¿ĞµÑ€ĞµĞ´Ğ°Ñ‡Ğ°","feat.f4.d":"Ğ¡Ñ‚Ñ€Ğ¸Ğ¼ÑŒÑ‚Ğµ Ğ¾Ñ‚Ğ²ĞµÑ‚Ñ‹ Ğ¿Ğ¾ SSE.",
-    "feat.f5.t":"Ğ‘Ğ¸Ğ½Ğ°Ñ€Ğ½Ğ°Ñ Ğ±ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ğ¾ÑÑ‚ÑŒ","feat.f5.d":"Ğ˜Ğ·Ğ¾Ğ±Ñ€Ğ°Ğ¶ĞµĞ½Ğ¸Ñ Ğ¸ Ñ„Ğ°Ğ¹Ğ»Ñ‹ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´ÑÑ‚ Ğ±ĞµĞ· Ğ¸Ğ·Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ğ¹ Ñ Ğ¿Ğ¾Ğ´Ğ´ĞµÑ€Ğ¶ĞºĞ¾Ğ¹ base64.",
-    "feat.f6.t":"Ğ›ÑĞ±Ğ¾Ğ¹ ÑĞ·Ñ‹Ğº","feat.f6.d":"cURL, Python, Node.js â€” Ğ¾Ğ´Ğ¸Ğ½ ÑĞ½Ğ´Ğ¿Ğ¾Ğ¸Ğ½Ñ‚, Ğ±ĞµĞ· SDK.",
-    "pg.eyebrow":"Playground","pg.title":"ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒÑ‚Ğµ Ğ¿Ñ€Ğ¾ĞºÑĞ¸","pg.sub":"ĞÑ‚Ğ¿Ñ€Ğ°Ğ²ÑŒÑ‚Ğµ Ğ·Ğ°Ğ¿Ñ€Ğ¾Ñ Ñ‡ĞµÑ€ĞµĞ· ÑˆĞ»ÑĞ·.",
-    "pg.target":"Ğ¦ĞµĞ»ĞµĞ²Ğ¾Ğ¹ URL","pg.country":"Ğ¡Ñ‚Ñ€Ğ°Ğ½Ğ°","pg.retries":"ĞŸĞ¾Ğ²Ñ‚Ğ¾Ñ€Ñ‹","pg.method":"ĞœĞµÑ‚Ğ¾Ğ´","pg.body":"Ğ¢ĞµĞ»Ğ¾ (JSON)",
-    "pg.send":"ĞÑ‚Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ","pg.idle":"Ğ“Ğ¾Ñ‚Ğ¾Ğ²Ğ¾","pg.hint":"Ğ—Ğ°Ğ¿Ğ¾Ğ»Ğ½Ğ¸Ñ‚Ğµ Ñ„Ğ¾Ñ€Ğ¼Ñƒ Ğ¸ Ğ½Ğ°Ğ¶Ğ¼Ğ¸Ñ‚Ğµ ĞÑ‚Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ.","pg.auto":"ĞĞ²Ñ‚Ğ¾ (Ñ€Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ñ)",
-    "docs.eyebrow":"Ğ”Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ğ°Ñ†Ğ¸Ñ","docs.title":"Ğ¡Ğ¿Ñ€Ğ°Ğ²Ğ¾Ñ‡Ğ½Ğ¸Ğº API","docs.sub":"Ğ’ÑÑ‘ Ğ´Ğ»Ñ Ğ¸Ğ½Ñ‚ĞµĞ³Ñ€Ğ°Ñ†Ğ¸Ğ¸ NebulaProxy.",
-    "docs.endpoints":"Ğ­Ğ½Ğ´Ğ¿Ğ¾Ğ¸Ğ½Ñ‚Ñ‹","docs.method":"ĞœĞµÑ‚Ğ¾Ğ´","docs.endpoint":"Ğ­Ğ½Ğ´Ğ¿Ğ¾Ğ¸Ğ½Ñ‚","docs.description":"ĞĞ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ",
-    "docs.proxy":"ĞŸÑ€Ğ¾ĞºÑĞ¸ Ğ·Ğ°Ğ¿Ñ€Ğ¾ÑĞ° Ñ‡ĞµÑ€ĞµĞ· Ñ€Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ğ¾Ğ½Ğ½Ñ‹Ğ¹ IP","docs.ip":"Ğ¢ĞµĞºÑƒÑ‰Ğ¸Ğ¹ Ğ¸ÑÑ…Ğ¾Ğ´ÑÑ‰Ğ¸Ğ¹ IP",
-    "docs.params":"ĞŸĞ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ñ‹","docs.field":"ĞŸĞ¾Ğ»Ğµ","docs.type":"Ğ¢Ğ¸Ğ¿","docs.req":"ĞĞ±ÑĞ·Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ğ¾","docs.desc2":"ĞĞ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ",
-    "docs.p.url":"URL Ğ´Ğ»Ñ Ğ·Ğ°Ğ¿Ñ€Ğ¾ÑĞ°","docs.p.method":"HTTP Ğ¼ĞµÑ‚Ğ¾Ğ´ (GET Ğ¿Ğ¾ ÑƒĞ¼Ğ¾Ğ»Ñ‡Ğ°Ğ½Ğ¸Ñ)","docs.p.country":"ĞšĞ¾Ğ´ ÑÑ‚Ñ€Ğ°Ğ½Ñ‹ (Ğ¸Ğ»Ğ¸ \"auto\")",
-    "docs.p.retries":"ĞŸĞ¾Ğ²Ñ‚Ğ¾Ñ€Ñ‹ Ğ¿Ñ€Ğ¸ ÑĞ±Ğ¾Ğµ","docs.p.headers":"Ğ—Ğ°Ğ³Ğ¾Ğ»Ğ¾Ğ²ĞºĞ¸","docs.p.cookies":"Cookies",
-    "docs.p.body":"Ğ¢ĞµĞ»Ğ¾ (POST/PUT/PATCH)","docs.p.b64":"Ğ¢ĞµĞ»Ğ¾ Ğ² base64","docs.p.sticky":"Ğ”ĞµÑ€Ğ¶Ğ°Ñ‚ÑŒ Ñ‚Ğ¾Ñ‚ Ğ¶Ğµ IP",
-    "docs.examples":"ĞŸÑ€Ğ¸Ğ¼ĞµÑ€Ñ‹","docs.res":"ĞÑ‚Ğ²ĞµÑ‚","yes":"Ğ´Ğ°","no":"Ğ½ĞµÑ‚",
-    "set.eyebrow":"ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸","set.title":"ĞšĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ","set.sub":"ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹Ñ‚Ğµ Ğ¿Ñ€ĞµĞ´Ğ¿Ğ¾Ñ‡Ñ‚ĞµĞ½Ğ¸Ñ Ğ¸ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ÑĞ¹Ñ‚Ğµ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ¾Ğ¼ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ°.",
-    "set.general":"ĞĞ±Ñ‰Ğ¸Ğµ","set.sticky":"ĞŸĞ¾ÑÑ‚Ğ¾ÑĞ½Ğ½Ñ‹Ğµ ÑĞµÑÑĞ¸Ğ¸","set.sticky.d":"Ğ˜ÑĞ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ÑŒ Ñ‚Ğ¾Ñ‚ Ğ¶Ğµ IP",
-    "set.stream":"Ğ¡Ñ‚Ñ€Ğ¸Ğ¼Ğ¸Ğ½Ğ³ (SSE)","set.stream.d":"ĞŸĞ¾Ñ‚Ğ¾Ğº Ğ¾Ñ‚Ğ²ĞµÑ‚Ğ¾Ğ²","set.dark":"Ğ¢Ñ‘Ğ¼Ğ½Ğ°Ñ Ñ‚ĞµĞ¼Ğ°","set.dark.d":"Ğ’ÑĞµĞ³Ğ´Ğ° Ğ²ĞºĞ»ÑÑ‡ĞµĞ½Ğ°",
-    "set.country":"Ğ¡Ñ‚Ñ€Ğ°Ğ½Ğ° Ğ¿Ğ¾ ÑƒĞ¼Ğ¾Ğ»Ñ‡Ğ°Ğ½Ğ¸Ñ","set.country.d":"Ğ•ÑĞ»Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½Ğ° Ğ½Ğµ ÑƒĞºĞ°Ğ·Ğ°Ğ½Ğ°","set.admin":"Ğ’Ñ…Ğ¾Ğ´ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ°",
-    "set.admin.d":"Ğ’Ğ¾Ğ¹Ğ´Ğ¸Ñ‚Ğµ Ğ´Ğ»Ñ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ñ Ğ¿Ñ€Ğ¾ĞºÑĞ¸.","set.username":"Ğ›Ğ¾Ğ³Ğ¸Ğ½","set.password":"ĞŸĞ°Ñ€Ğ¾Ğ»ÑŒ",
-    "set.user.ph":"admin","set.pass.ph":"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢","set.login":"Ğ’Ğ¾Ğ¹Ñ‚Ğ¸","set.keys":"ĞšĞ»ÑÑ‡Ğ¸ API","set.keys.d":"Ğ Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ñ Ğ¸Ğ»Ğ¸ Ğ¾Ñ‚Ğ·Ñ‹Ğ² ĞºĞ»ÑÑ‡ĞµĞ¹.",
-    "set.rotate":"Ğ Ğ¾Ñ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ ĞºĞ»ÑÑ‡","set.revoke":"ĞÑ‚Ğ¾Ğ·Ğ²Ğ°Ñ‚ÑŒ Ğ²ÑĞµ","set.demo":"Ğ”ĞµĞ¼Ğ¾ â€” Ğ½ÑƒĞ¶ĞµĞ½ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡Ñ‘Ğ½Ğ½Ñ‹Ğ¹ Ğ±ÑĞºĞµĞ½Ğ´.","set.needadmin":"Ğ¢Ñ€ĞµĞ±ÑƒĞµÑ‚ÑÑ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ° â€” ÑĞ½Ğ°Ñ‡Ğ°Ğ»Ğ° Ğ²Ğ¾Ğ¹Ğ´Ğ¸Ñ‚Ğµ.",
-    "footer.note":"Ğ¡Ğ¾Ğ·Ğ´Ğ°Ğ½ Ğ´Ğ»Ñ Ñ€Ğ°Ğ·Ñ€Ğ°Ğ±Ğ¾Ñ‚Ñ‡Ğ¸ĞºĞ¾Ğ², ĞºĞ¾Ñ‚Ğ¾Ñ€Ñ‹Ğ¼ Ğ½ÑƒĞ¶ĞµĞ½ Ñ‡Ğ¸ÑÑ‚Ñ‹Ğ¹ Ñ€Ğ¾Ñ‚Ğ°Ñ†Ğ¸Ğ¾Ğ½Ğ½Ñ‹Ğ¹ IP Ğ±ĞµĞ· Ñ…Ğ»Ğ¾Ğ¿Ğ¾Ñ‚.","footer.tag":"NebulaProxy Â· v1.0.0",
-    "login.err":"ĞĞµĞ²ĞµÑ€Ğ½Ñ‹Ğµ Ğ´Ğ°Ğ½Ğ½Ñ‹Ğµ.","login.ok":"Ğ’Ñ…Ğ¾Ğ´ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½."
-  }
-};
-
-let CURRENT_LANG = localStorage.getItem("npx_lang") || "en";
-const $ = (s,r)=>(r||document).querySelector(s);
-const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
-
-function applyLang(){
-  const L = STRINGS[CURRENT_LANG] || STRINGS.en;
-  const rtl = I18N.find(i=>i.code===CURRENT_LANG)?.rtl;
-  document.documentElement.lang = CURRENT_LANG;
-  document.documentElement.dir = rtl ? "rtl" : "ltr";
-  document.getElementById("langLabel").textContent = I18N.find(i=>i.code===CURRENT_LANG).label;
-  $$("[data-i18n]").forEach(el=>{
-    const k = el.getAttribute("data-i18n");
-    if(L[k]!==undefined) el.textContent = L[k];
-  });
-  $$("[data-i18n-ph]").forEach(el=>{
-    const k = el.getAttribute("data-i18n-ph");
-    if(L[k]!==undefined) el.setAttribute("placeholder", L[k]);
-  });
-}
-
-function renderLangMenu(){
-  const menu = document.getElementById("langMenu");
-  menu.innerHTML = "";
-  I18N.forEach(l=>{
-    const b = document.createElement("button");
-    b.className = "lang-item" + (l.code===CURRENT_LANG?" active":"");
-    b.textContent = l.label;
-    b.addEventListener("click",()=>{
-      CURRENT_LANG = l.code;
-      localStorage.setItem("npx_lang", l.code);
-      applyLang(); renderLangMenu();
-      document.getElementById("langWrap").classList.remove("open");
-    });
-    menu.appendChild(b);
-  });
-}
-document.getElementById("langBtn").addEventListener("click",e=>{
-  e.stopPropagation();
-  document.getElementById("langWrap").classList.toggle("open");
-});
-document.addEventListener("click",()=>document.getElementById("langWrap").classList.remove("open"));
-
-/* ==================== Tab navigation ==================== */
-function navigate(tab){
-  $$(".page").forEach(p=>p.classList.remove("active"));
-  const page = document.getElementById("page-"+tab);
-  if(page) page.classList.add("active");
-  $$(".tab").forEach(t=>t.classList.toggle("active", t.getAttribute("data-nav")===tab));
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-$$("[data-nav]").forEach(el=>{
-  el.addEventListener("click",e=>{
-    e.preventDefault();
-    navigate(el.getAttribute("data-nav"));
-  });
-});
-
-/* ==================== Playground ==================== */
-let sessionStats = { req:0, ok:0, latSum:0, regions:new Set() };
-let currentMethod = "GET";
-$$("#pg-method .method").forEach(m=>{
-  m.addEventListener("click",()=>{
-    $$("#pg-method .method").forEach(x=>x.classList.remove("active"));
-    m.classList.add("active");
-    currentMethod = m.getAttribute("data-m");
-  });
-});
-
-async function apiFetch(path, opts){
-  const res = await fetch(path, opts);
-  const ct = res.headers.get("content-type")||"";
-  let data;
-  if(ct.includes("application/json")) data = await res.json();
-  else data = await res.text();
-  return { status:res.status, data };
-}
-
-function fmtLatency(ms){
-  if(ms < 1000) return ms + " ms";
-  return (ms/1000).toFixed(2) + " s";
-}
-
-function updateStats(lastLatency){
-  sessionStats.req++;
-  if(lastLatency!==undefined){
-    sessionStats.latSum += lastLatency;
-    $("#stat-lat").textContent = fmtLatency(Math.round(sessionStats.latSum/sessionStats.req));
-  }
-  $("#stat-req").textContent = sessionStats.req;
-}
-
-document.getElementById("pg-send").addEventListener("click", async()=>{
-  const btn = document.getElementById("pg-send");
-  const resp = document.getElementById("pg-response");
-  const url = document.getElementById("pg-url").value.trim();
-  const country = document.getElementById("pg-country").value;
-  const retries = parseInt(document.getElementById("pg-retries").value,10);
-  const bodyRaw = document.getElementById("pg-body").value;
-
-  if(!url){ resp.innerHTML = '<span class="status-tag status-4xx">400</span><br>Please enter a target URL.'; return; }
-
-  const payload = { url, method: currentMethod, retries, proxy_country: country };
-  let body = bodyRaw;
-  if(bodyRaw){
-    try{ body = JSON.parse(bodyRaw); }catch(e){ /* keep as string */ }
-    payload.body = body;
-  }
-
-  btn.disabled = true;
-  resp.innerHTML = '<span class="status-tag status-idle">Â·Â·Â·</span><br>Sending requestâ€¦';
-  const t0 = performance.now();
-
-  try{
-    const out = await apiFetch("/api/proxy", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
-    });
-    const lat = Math.round(performance.now()-t0);
-    const sc = out.status;
-    const cls = sc>=200&&sc<300 ? "status-2xx" : (sc>=400 ? (sc>=500?"status-5xx":"status-4xx") : "");
-    const data = out.data;
-    const extra = [];
-    if(data && data.elapsed_ms!==undefined) extra.push("â± "+fmtLatency(data.elapsed_ms));
-    if(data && data.proxyCountry) extra.push("ğŸŒ "+data.proxyCountry.toUpperCase());
-    if(data && data.attempt!==undefined) extra.push("attempt #"+data.attempt);
-    resp.innerHTML = '<span class="status-tag '+cls+'">'+sc+'</span>' + (extra.length?" "+extra.join(" Â· "):"") +
-      '<br><pre style="margin-top:8px;white-space:pre-wrap;word-break:break-word">'+escapeHtml(typeof data==="string"?data:JSON.stringify(data,null,2))+'</pre>';
-    updateStats(lat);
-    if(data && data.proxyCountry){ sessionStats.regions.add(data.proxyCountry); $("#stat-reg").textContent = sessionStats.regions.size; }
-    if(sc>=200&&sc<300) sessionStats.ok++;
-    $("#stat-ok").textContent = Math.round(sessionStats.ok/sessionStats.req*100) + "%";
-  }catch(e){
-    resp.innerHTML = '<span class="status-tag status-5xx">ERR</span><br>'+escapeHtml(e.message)+'<br><br><em>Note: this demo runs on a static host. Connect the Cloudflare Worker to reach the real gateway.</em>';
-    updateStats(undefined);
-  }finally{
-    btn.disabled = false;
-  }
-});
-
-function escapeHtml(s){ return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
-/* ==================== Settings ==================== */
-function applyTheme(theme){
-  const dark = theme !== "light";
-  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-  const el = document.getElementById("set-dark");
-  if(el) el.checked = dark;
-}
-function persistSettings(){
-  const s = {
-    sticky: document.getElementById("set-sticky").checked,
-    stream: document.getElementById("set-stream").checked,
-    country: document.getElementById("set-country").value,
-    theme: document.getElementById("set-dark").checked ? "dark" : "light"
-  };
-  localStorage.setItem("npx_settings", JSON.stringify(s));
-  applyTheme(s.theme);
-}
-function loadSettings(){
-  try{
-    const s = JSON.parse(localStorage.getItem("npx_settings")||"{}");
-    $("#set-sticky").checked = !!s.sticky;
-    $("#set-stream").checked = s.stream!==false;
-    $("#set-country").value = s.country || "auto";
-    applyTheme(s.theme || "dark");
-  }catch(e){ applyTheme("dark"); }
-}
-document.getElementById("set-sticky").addEventListener("change",persistSettings);
-document.getElementById("set-stream").addEventListener("change",persistSettings);
-document.getElementById("set-country").addEventListener("change",persistSettings);
-document.getElementById("set-dark").addEventListener("change",persistSettings);
-
-document.getElementById("login-form").addEventListener("submit",e=>{
-  e.preventDefault();
-  const u = document.getElementById("login-user").value.trim();
-  const p = document.getElementById("login-pass").value;
-  if(u && p){
-    localStorage.setItem("npx_admin", u);
-    showToast(STRINGS[CURRENT_LANG]["login.ok"], "ok");
-  }else{
-    showToast(STRINGS[CURRENT_LANG]["login.err"], "bad");
-  }
-});
-document.getElementById("btn-rotate").addEventListener("click",()=>showToast(STRINGS[CURRENT_LANG]["set.needadmin"], "warn"));
-document.getElementById("btn-revoke").addEventListener("click",()=>showToast(STRINGS[CURRENT_LANG]["set.needadmin"], "warn"));
-
-let toastTimer;
-function showToast(msg, type){
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show" + (type ? " toast-" + type : "");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.className = "toast", 2600);
-}
-
-/* ==================== Copy buttons ==================== */
-$$("[data-copy]").forEach(b=>{
-  b.addEventListener("click",()=>{
-    const code = b.closest(".code").querySelector("code").innerText;
-    navigator.clipboard.writeText(code).then(()=>{
-      const old = b.textContent; b.textContent = "Copied!";
-      setTimeout(()=>b.textContent=old, 1500);
-    });
-  });
-});
-
-/* ==================== Init ==================== */
-loadSettings();
-applyLang();
-renderLangMenu();
-
-/* headline count-up for stats */
-function countUp(el, target, suffix){
-  let cur = 0;
-  const step = Math.max(1, Math.round(target/40));
-  const t = setInterval(()=>{
-    cur += step;
-    if(cur>=target){ cur=target; clearInterval(t); }
-    el.textContent = cur.toLocaleString() + (suffix||"");
-  }, 20);
-}
-countUp(document.getElementById("stat-req"), 12480);
-</script>
-</body>
-</html>
+×^÷óˆ§uì_‹úàğ…=QeA¡Ñµ°ø(ñ¡Ñµ°±…¹œô‰•¸ˆ‘¥Èô‰±ÑÈˆø(ñ¡•…ø(ñµ•Ñ„¡…ÉÍ•Ğô‰UQ´àˆ€¼ø(ñµ•Ñ„¹…µ”ô‰Ù¥•İÁ½ÉĞˆ½¹Ñ•¹Ğô‰İ¥‘Ñ õ‘•Ù¥”µİ¥‘Ñ °¥¹¥Ñ¥…°µÍ…±”ôÄ¸À°Ù¥•İÁ½ÉĞµ™¥Ğõ½Ù•Èˆ€¼ø(ñµ•Ñ„¹…µ”ô‰Ñ¡•µ”µ½±½Èˆ½¹Ñ•¹ĞôˆŒÁ„ÀÌÀÔˆ€¼ø(ñÑ¥Ñ±”ù9•‰Õ±…AÉ½áäƒŠPI½Ñ…Ñ¥¹œAÉ½áäA$ğ½Ñ¥Ñ±”ø(ñµ•Ñ„¹…µ”ô‰‘•ÍÉ¥ÁÑ¥½¸ˆ½¹Ñ•¹Ğô‰9•‰Õ±…AÉ½áäƒŠP„É½Ñ…Ñ¥¹œÁÉ½áäA$…Ñ•İ…ä¸É•Í •É•ÍÌ%@½¸•Ù•ÉäÉ•ÅÕ•ÍĞ°Í¥àµ½Õ¹ÑÉäÉ½Ñ…Ñ¥½¸°ÍÑ¥­äÍ•ÍÍ¥½¹Ì°…¹±¥Ù”ÍÑÉ•…µ¥¹œ¸ˆ€¼ø(ñ±¥¹¬É•°ô‰¥½¸ˆ¡É•˜ô‰‘…Ñ„é¥µ…”½ÍÙœ­áµ°°”ÍÍÙœáµ±¹Ìô¡ÑÑÀè¼½İİÜ¹ÜÌ¹½Éœ¼ÈÀÀÀ½ÍÙœœÙ¥•İ	½àôœÀ€À€ÄÀÀ€ÄÀÀœ”Í”Í‘•™Ì”Í”Í±¥¹•…ÉÉ…‘¥•¹Ğ¥ôœœàÄôœÀœäÄôœÀœàÈôœÄœäÈôœÄœ”Í”ÍÍÑ½À½™™Í•ĞôœÀœÍÑ½Àµ½±½Èôœ”ÈÍ”ÄÅÍ˜œ¼”Í”ÍÍÑ½À½™™Í•Ğôœ¸ÔœÍÑ½Àµ½±½Èôœ”ÈÍ™˜ÙˆÅ„œ¼”Í”ÍÍÑ½À½™™Í•ĞôœÄœÍÑ½Àµ½±½Èôœ”ÈÍ™™ˆÀÈÀœ¼”Í”Í½±¥¹•…ÉÉ…‘¥•¹Ğ”Í”Í½‘•™Ì”Í”Í¥É±”àôœÔÀœäôœÔÀœÈôœÌĞœ™¥±°ô¹½¹”œÍÑÉ½­”ôÕÉ° ”ÈÍœ¤œÍÑÉ½­”µİ¥‘Ñ ôœäœ¼”Í”Í¥É±”àôœÔÀœäôœÔÀœÈôœÄĞœ™¥±°ôÕÉ° ”ÈÍœ¤œ¼”Í”Í¥É±”àôœÔÀœäôœÔÀœÈôœØœ™¥±°ôœ”ÈÍ™™˜œ¼”Í”Í½ÍÙœ”Íˆ€¼ø(ñÍÑå±”ø(¼¨€ôôôôôôôôôôôô9•‰Õ±…AÉ½áäƒŠP€‰µ‰•Èˆ‘•Í¥¸ÍåÍÑ•´€ôôôôôôôôôôôô€¨¼(éÉ½½Ñì(€€´µ‰œ´ÀèŒÁ„ÀÌÀÔì€´µ‰œ´ÄèŒÄÈÀĞÀäì€´µ‰œ´ÈèŒÅ„ÀÜÄÀì€´µ‰œ´ÌèŒÈÈÁ„ÄĞì(€€´µÁ…¹•°éÉ‰„ ĞÀ°ÄÀ°ÈÀ°¸ÔÔ¤ì€´µÁ…¹•°µÍ½±¥èŒÅŒÁ„ÄÈì€´µÁ…¹•°µÉ…¥Í•èŒÈØÁÄàì(€€´µ‰½É‘•ÈèŒÍ„ÄĞÈÀì€´µ‰½É‘•ÈµÍ½™ĞèŒÉŒÁ˜Å„ì€´µ‰½É‘•ÈµÍÑÉ½¹œèŒÕŒÅ˜ÌÀì(€€´µ…•¹Ğè”ÄÅÍ˜ì€´µ…•¹Ğµ¡¤è™˜ÉÔÔì€´µ…•¹Ğ´Èè™˜ÙˆÅ„ì€´µ…•¹Ğ´Ìè™™ˆÀÈÀì(€€´µ…•¹Ğµ½¬èŒÉ‘Ñ„Àì€´µ…•¹Ğµ‰…è™˜ÍˆÍˆì€´µ…•¹Ğµİ…É¸è™™ˆÀÈÀì(€€´µÑ•áĞè™™˜Á˜Ìì€´µÑ•áĞµ‘¥´è˜ÁˆÙŒĞì€´µÑ•áĞµ™…¥¹Ğè„àÙˆİ„ì€´µÑ•áĞµ¥¹Ù•ÉĞèŒÄØÀØÁ„ì(€€´µÉ…‘¥ÕÌèÄÑÁàì€´µÉ…‘¥ÕÌµ±œèÈÁÁàì€´µÉ…‘¥ÕÌµá°èÈÙÁàì€´µÉ…‘¥ÕÌµÍ´èåÁàì€´µÉ…‘¥ÕÌµÁ¥±°èääåÁàì(€€´µÍ¡…‘½Üµ±½ÜèÀ€À€À€ÅÁàÉ‰„ ÈÈÔ°Èä°ØÌ°¸ÈÈ¤°€À€ÄÑÁà€ÔÁÁà€´ÄÉÁàÉ‰„ ÈÈÔ°Èä°ØÌ°¸ĞÈ¤ì(€€´µÍ¡…‘½ÜµÁ…¹•°èÀ€ÈÉÁà€ØÁÁà€´ÈÑÁàÉ‰„ À°À°À°¸à¤ì(€€´µÉ…é±¥¹•…ÈµÉ…‘¥•¹Ğ ÄÈÁ‘•œ°”ÄÅÍ˜€À”°™˜ÙˆÅ„€ØÀ”°™™ˆÀÈÀ€ÄÈÀ”¤ì(€€´µÉ…µÍ½™Ğé±¥¹•…ÈµÉ…‘¥•¹Ğ ÄÈÁ‘•œ±É‰„ ÈÈÔ°Èä°ØÌ°¸ÈÈ¤±É‰„ ÈÔÔ°ÄÀÜ°ÈØ°¸ÄĞ¤¤ì(€€´µ•…Í”µ½ÕĞéÕ‰¥Œµ‰•é¥•È ¸ÈÈ°Ä°¸ÌØ°Ä¤ì€´µ•…Í”µÍÁÉ¥¹œéÕ‰¥Œµ‰•é¥•È ¸ÌĞ°Ä¸Ğ°¸ĞĞ°Ä¤ì(€€´µ‘ÕÈµ™…ÍĞè¸ÄÙÌì€´µ‘ÕÈµµ•è¸ÍÌì€´µ‘ÕÈµÍ±½Üè¸ÙÌì(€€´µ™½¹Ğè%¹Ñ•Èœ°M•½”U$œ±ÍåÍÑ•´µÕ¤°µ…ÁÁ±”µÍåÍÑ•´±Í…¹ÌµÍ•É¥˜ì(€€´µµ½¹¼è)•Ñ	É…¥¹Ì5½¹¼œ°M5½¹¼µI•Õ±…Èœ±Õ¤µµ½¹½ÍÁ…”±½¹Í½±…Ì±µ½¹½ÍÁ…”ì(€€´µ½¹Ñ…¥¹•ÈèÄÄÈÁÁàì€´µ¹…Øµ èØÑÁàì€´µÑ…‰‰…Èµ èØÑÁàì)ô(¼¨€ôôôôô1¥¡ĞÑ¡•µ”€ôôôôô€¨¼)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰uì(€€´µ‰œ´Àè™…˜Ñ˜Øì€´µ‰œ´Äè˜Í”å•ì€´µ‰œ´Èè™™™™™˜ì€´µ‰œ´Ìè™••˜Èì(€€´µÁ…¹•°éÉ‰„ ÈÔÔ°ÈÔÔ°ÈÔÔ°¸ÜÈ¤ì€´µÁ…¹•°µÍ½±¥è™™™™™˜ì€´µÁ…¹•°µÉ…¥Í•è™‘˜Ñ˜Üì(€€´µ‰½É‘•Èè˜ÁÍ‘Œì€´µ‰½É‘•ÈµÍ½™Ğè˜Ù”É”äì€´µ‰½É‘•ÈµÍÑÉ½¹œè”ÄÅÍ˜ì(€€´µ…•¹Ğè”ÄÅÍ˜ì€´µ…•¹Ğµ¡¤èĞÄÀÍ„ì€´µ…•¹Ğ´Èè™˜ÙˆÅ„ì€´µ…•¹Ğ´Ìè”Àá„ÀÀì(€€´µ…•¹Ğµ½¬èŒÁ”å˜Ù”ì€´µ…•¹Ğµ‰…è‘ŒÈØÈØì€´µ…•¹Ğµİ…É¸èˆĞÔÌÀäì(€€´µÑ•áĞèŒÉ„Á„ÄÈì€´µÑ•áĞµ‘¥´èŒÙˆÍ„ĞÜì€´µÑ•áĞµ™…¥¹Ğè„ÀÙˆİ„ì€´µÑ•áĞµ¥¹Ù•ÉĞè™™™™™˜ì(€€´µÍ¡…‘½Üµ±½ÜèÀ€À€À€ÅÁàÉ‰„ ÈÈÔ°Èä°ØÌ°¸Äà¤°€À€ÄÁÁà€ÌÑÁà€´ÄÉÁàÉ‰„ ÈÈÔ°Èä°ØÌ°¸ÌÈ¤ì(€€´µÍ¡…‘½ÜµÁ…¹•°èÀ€ÄáÁà€ĞÑÁà€´ÈÉÁàÉ‰„ ÄÈÀ°ÌÀ°ÔÀ°¸Èà¤ì(€€´µÉ…µÍ½™Ğé±¥¹•…ÈµÉ…‘¥•¹Ğ ÄÈÁ‘•œ±É‰„ ÈÈÔ°Èä°ØÌ°¸ÄÈ¤±É‰„ ÈÔÔ°ÄÀÜ°ÈØ°¸ÄÀ¤¤ì)ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t‰½‘åì(€‰…­É½Õ¹µ¥µ…”è(€€€É…‘¥…°µÉ…‘¥•¹Ğ äÀÁÁà€ÔÀÁÁà…Ğ€àÔ”€´ÄÀ”°É‰„ ÈÈÔ°Èä°ØÌ°¸Àà¤°ÑÉ…¹ÍÁ…É•¹Ğ€ØÀ”¤°(€€€É…‘¥…°µÉ…‘¥•¹Ğ ÜÀÁÁà€ÔÀÁÁà…Ğ€´ÄÀ”€ÈÀ”°É‰„ ÈÔÔ°ÄÀÜ°ÈØ°¸ÀØ¤°ÑÉ…¹ÍÁ…É•¹Ğ€ØÀ”¤°(€€€É…‘¥…°µÉ…‘¥•¹Ğ àÀÁÁà€ØÀÁÁà…Ğ€ÔÀ”€ÄÈÀ”°É‰„ ÈÈÔ°Èä°ØÌ°¸ÀÔ¤°ÑÉ…¹ÍÁ…É•¹Ğ€ÔÔ”¤ì)ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€èèµİ•‰­¥ĞµÍÉ½±±‰…ÈµÑÉ…­í‰…­É½Õ¹éÙ…È ´µ‰œ´Ä¥ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€èèµİ•‰­¥ĞµÍÉ½±±‰…ÈµÑ¡Õµ‰í‰½É‘•ÈèÉÁàÍ½±¥Ù…È ´µ‰œ´Ä¥ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹¹…Ùí‰…­É½Õ¹éÉ‰„ ÈÔÔ°ÈÔÔ°ÈÔÔ°¸àÈ¥ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹Ñ…‰‰…Éí‰…­É½Õ¹éÉ‰„ ÈÔÔ°ÈÔÔ°ÈÔÔ°¸äĞ¥ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹½‘”±m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹É•ÍÁ½¹Í•í‰…­É½Õ¹éÙ…È ´µ‰œ´Ä¥ô)m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹™¥•±¥¹ÁÕĞ±m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹™¥•±Í•±•Ğ±m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹™¥•±Ñ•áÑ…É•„±m‘…Ñ„µÑ¡•µ”ô‰±¥¡Ğ‰t€¹¥¹ÁÕÑí‰…­É½Õ¹éÙ…È ´µ‰œ´È¥ô(¨°¨èé‰•™½É”°¨èé…™Ñ•Éí‰½àµÍ¥é¥¹œé‰½É‘•Èµ‰½àíµ…É¥¸èÀíÁ…‘‘¥¹œèÁô)¡Ñµ±íÍÉ½±°µ‰•¡…Ù¥½ÈéÍµ½½Ñ ìµİ•‰­¥ĞµÑ•áĞµÍ¥é”µ…‘©ÕÍĞèÄÀÀ•ô)‰½‘åì(€™½¹Ğµ™…µ¥±äéÙ…È ´µ™½¹Ğ¤í½±½ÈéÙ…È ´µÑ•áĞ¤í‰…­É½Õ¹éÙ…È ´µ‰œ´À¤í™½¹ĞµÍ¥é”èÄÙÁàí±¥¹”µ¡•¥¡ĞèÄ¸ØÔì(€µ¥¸µ¡•¥¡ĞèÄÀÁÙ í½Ù•É™±½Üµàé¡¥‘‘•¸ìµİ•‰­¥Ğµ™½¹ĞµÍµ½½Ñ¡¥¹œé…¹Ñ¥…±¥…Í•ìµµ½èµ½Íàµ™½¹ĞµÍµ½½Ñ¡¥¹œéÉ…åÍ…±”ì(€‰…­É½Õ¹µ¥µ…”è(€€€É…‘¥…°µÉ…‘¥•¹Ğ äÀÁÁà€ÔÀÁÁà…Ğ€àÔ”€´ÄÀ”°É‰„ ÈÈÔ°Èä°ØÌ°¸ÄØ¤°ÑÉ…¹ÍÁ…É•¹Ğ€ØÀ”¤°(€€€É…‘¥…°µÉ…‘¥•¹Ğ ÜÀÁÁà€ÔÀÁÁà…Ğ€´ÄÀ”€ÈÀ”°É‰„ ÈÔÔ°ÄÀÜ°ÈØ°¸ÄÀ¤°ÑÉ…¹ÍÁ…É•¹Ğ€ØÀ”¤°(€€€É…‘¥…°µÉ…‘¥•¹Ğ àÀÁÁà€ØÀÁÁà…Ğ€ÔÀ”€ÄÈÀ”°É‰„ ÈÈÔ°Èä°ØÌ°¸Àà¤°ÑÉ…¹ÍÁ…É•¹Ğ€ÔÔ”¤ì(€‰…­É½Õ¹µ…ÑÑ…¡µ•¹Ğé™¥á•ì(€Á…‘‘¥¹œµ‰½ÑÑ½´é…±Œ¡Ù…È ´µÑ…‰‰…Èµ ¤€¬•¹Ø¡Í…™”µ…É•„µ¥¹Í•Ğµ‰½ÑÑ½´¤¤ì)ô)…í½±½Èé¥¹¡•É¥ĞíÑ•áĞµ‘•½É…Ñ¥½¸é¹½¹•ô(èéÍ•±•Ñ¥½¹í‰…­É½Õ¹éÉ‰„ ÈÈÔ°Èä°ØÌ°¸ĞÔ¤í½±½Èè™™™ô(¹½¹Ñ…¥¹•Éíµ…àµİ¥‘Ñ éÙ…È ´µ½¹Ñ…¥¹•È¤íµ…É¥¸èÀ…ÕÑ¼íÁ…‘‘¥¹œèÀ€ÈÑÁáô(èèµİ•‰­¥ĞµÍÉ½±±‰…Éíİ¥‘Ñ èÄÁÁàí¡•¥¡ĞèÄÁÁáô(èèµİ•‰­¥ĞµÍÉ½±±‰…ÈµÑÉ…­í‰…­É½Õ¹éÙ…È ´µ‰œ´Ä¥ô(èèµİ•‰­¥ĞµÍÉ½±±‰…ÈµÑ¡Õµ‰í‰…­É½Õ¹é±¥¹•…ÈµÉ…‘¥•¹Ğ¡Ù…È ´µ…•¹Ğ¤±Ù…È ´µ…•¹Ğ´È¤¤í‰½É‘•ÈµÉ…‘¥ÕÌèäåÁàí‰½É‘•ÈèÉÁàÍ½±¥Ù…È ´µ‰œ´Ä¥ô((¼¨€ôôôôôQ½À¹…Ø€ôôôôô€¨¼(¹¹…ÙíÁ½Í¥Ñ¥½¸éÍÑ¥­äíÑ½ÀèÀíèµ¥¹‘•àèÔÀí¡•¥¡ĞéÙ…È ´µ¹…Øµ ¤ì(€‰…­É½Õ¹éÉ‰„ ÄÀ°Ì°Ô°¸ÜÈ¤í‰…­‘É½Àµ™¥±Ñ•Èé‰±ÕÈ ÄÑÁà¤ìµİ•‰­¥Ğµ‰…­‘É½Àµ™¥±Ñ•Èé‰±ÕÈ ÄÑÁà¤í‰½É‘•Èµ‰½ÑÑ½´èÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¥ô(¹¹…Øµ¥¹¹•Éíµ…àµİ¥‘Ñ éÙ…È ´µ½¹Ñ…¥¹•È¤íµ…É¥¸èÀ…ÕÑ¼í¡•¥¡ĞèÄÀÀ”íÁ…‘‘¥¹œèÀ€ÈÑÁàí‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí©ÕÍÑ¥™äµ½¹Ñ•¹ĞéÍÁ…”µ‰•Ñİ••¸í…ÀèÄÙÁáô(¹‰É…¹‘í‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèÄÅÁàí™½¹Ğµİ•¥¡ĞèàÀÀí™½¹ĞµÍ¥é”èÄáÁàí±•ÑÑ•ÈµÍÁ…¥¹œè´¸ÀÅ•µô(¹‰É…¹€¹±½½íİ¥‘Ñ èÌÑÁàí¡•¥¡ĞèÌÑÁàí™±•àèÀ€À…ÕÑ¼í™¥±Ñ•Èé‘É½ÀµÍ¡…‘½Ü À€À€ÄÁÁàÉ‰„ ÈÈÔ°Èä°ØÌ°¸Ø¤¥ô(¹‰É…¹‰í‰…­É½Õ¹éÙ…È ´µÉ…¤ìµİ•‰­¥Ğµ‰…­É½Õ¹µ±¥ÀéÑ•áĞí‰…­É½Õ¹µ±¥ÀéÑ•áĞìµİ•‰­¥ĞµÑ•áĞµ™¥±°µ½±½ÈéÑÉ…¹ÍÁ…É•¹Ñô(¹¹…Øµ…Ñ¥½¹Íí‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèáÁáô(¹±…¹íÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù•ô(¹±…¹œµ‰Ñ¹í‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèİÁàíÁ…‘‘¥¹œèáÁà€ÄÉÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÍ´¤ì(€‰…­É½Õ¹éÙ…È ´µÁ…¹•°¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤íÕÉÍ½ÈéÁ½¥¹Ñ•Èí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤ì(€™½¹Ğµ™…µ¥±äéÙ…È ´µ™½¹Ğ¤í™½¹ĞµÍ¥é”èÄÑÁàíÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµ™…ÍĞ¤Ù…È ´µ•…Í”µ½ÕĞ¥ô(¹±…¹œµ‰Ñ¸é¡½Ù•Éí‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¤í½±½ÈéÙ…È ´µÑ•áĞ¥ô(¹±…¹œµµ•¹ÕíÁ½Í¥Ñ¥½¸é…‰Í½±ÕÑ”íÉ¥¡ĞèÀíÑ½Àé…±Œ ÄÀÀ”€¬€áÁà¤íµ¥¸µİ¥‘Ñ èÄÜÁÁàí‰…­É½Õ¹éÙ…È ´µÁ…¹•°µÍ½±¥¤ì(€‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌ¤íÁ…‘‘¥¹œèÙÁàí‰½àµÍ¡…‘½ÜéÙ…È ´µÍ¡…‘½ÜµÁ…¹•°¤ì(€½Á…¥ÑäèÀíÙ¥Í¥‰¥±¥Ñäé¡¥‘‘•¸íÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•d ´ÙÁà¤íÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µ½ÕĞ¤íèµ¥¹‘•àèØÁô(¹±…¹œ¹½Á•¸€¹±…¹œµµ•¹Õí½Á…¥ÑäèÄíÙ¥Í¥‰¥±¥ÑäéÙ¥Í¥‰±”íÑÉ…¹Í™½É´é¹½¹•ô(¹±…¹œµ¥Ñ•µí‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèåÁàíİ¥‘Ñ èÄÀÀ”íÑ•áĞµ…±¥¸é±•™ĞíÁ…‘‘¥¹œèåÁà€ÄÅÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÍ´¤ì(€ÕÉÍ½ÈéÁ½¥¹Ñ•Èí™½¹ĞµÍ¥é”èÄÑÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤í‰…­É½Õ¹é¹½¹”í‰½É‘•Èé¹½¹”í™½¹Ğµ™…µ¥±äéÙ…È ´µ™½¹Ğ¤íÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµ™…ÍĞ¥ô(¹±…¹œµ¥Ñ•´é¡½Ù•Éí‰…­É½Õ¹éÉ‰„ ÈÈÔ°Èä°ØÌ°¸ÄÈ¤í½±½ÈéÙ…È ´µÑ•áĞ¥ô(¹±…¹œµ¥Ñ•´¹…Ñ¥Ù•í½±½ÈéÙ…È ´µ…•¹Ğµ¡¤¤í‰…­É½Õ¹éÉ‰„ ÈÈÔ°Èä°ØÌ°¸ÄĞ¤í™½¹Ğµİ•¥¡ĞèØÀÁô((¼¨€ôôôôôA…•Ì€ôôôôô€¨¼(¹Á…•í‘¥ÍÁ±…äé¹½¹”í…¹¥µ…Ñ¥½¸é™…‘•¥¸Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µ½ÕĞ¥ô(¹Á…”¹…Ñ¥Ù•í‘¥ÍÁ±…äé‰±½­ô)­•å™É…µ•Ì™…‘•¥¹í™É½µí½Á…¥ÑäèÀíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•d ÄÁÁà¥õÑ½í½Á…¥ÑäèÄíÑÉ…¹Í™½É´é¹½¹•õô((¼¨€ôôôôô	½ÑÑ½´Ñ…ˆ‰…È€ôôôôô€¨¼(¹Ñ…‰‰…ÉíÁ½Í¥Ñ¥½¸é™¥á•í±•™ĞèÀíÉ¥¡ĞèÀí‰½ÑÑ½´èÀíèµ¥¹‘•àèÔÔí¡•¥¡Ğé…±Œ¡Ù…È ´µÑ…‰‰…Èµ ¤€¬•¹Ø¡Í…™”µ…É•„µ¥¹Í•Ğµ‰½ÑÑ½´¤¤ì(€Á…‘‘¥¹œµ‰½ÑÑ½´é•¹Ø¡Í…™”µ…É•„µ¥¹Í•Ğµ‰½ÑÑ½´¤í‰…­É½Õ¹éÉ‰„ ÄÈ°Ğ°Ü°¸äÈ¤í‰…­‘É½Àµ™¥±Ñ•Èé‰±ÕÈ ÄáÁà¤ìµİ•‰­¥Ğµ‰…­‘É½Àµ™¥±Ñ•Èé‰±ÕÈ ÄáÁà¤ì(€‰½É‘•ÈµÑ½ÀèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‘¥ÍÁ±…äé™±•áô(¹Ñ…‰í™±•àèÄí‘¥ÍÁ±…äé™±•àí™±•àµ‘¥É•Ñ¥½¸é½±Õµ¸í…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èí…ÀèÑÁàì(€ÕÉÍ½ÈéÁ½¥¹Ñ•Èí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤í™½¹ĞµÍ¥é”èÄÅÁàí™½¹Ğµİ•¥¡ĞèØÀÀí‰½É‘•Èé¹½¹”í‰…­É½Õ¹é¹½¹”ì(€™½¹Ğµ™…µ¥±äéÙ…È ´µ™½¹Ğ¤íÑÉ…¹Í¥Ñ¥½¸é½±½ÈÙ…È ´µ‘ÕÈµ™…ÍĞ¤íÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù”ìµİ•‰­¥ĞµÑ…Àµ¡¥¡±¥¡Ğµ½±½ÈéÑÉ…¹ÍÁ…É•¹Ñô(¹Ñ…ˆÍÙíİ¥‘Ñ èÈÉÁàí¡•¥¡ĞèÈÉÁàíÑÉ…¹Í¥Ñ¥½¸éÑÉ…¹Í™½É´Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µÍÁÉ¥¹œ¥ô(¹Ñ…ˆ€¹Ğµ±…‰•±í±•ÑÑ•ÈµÍÁ…¥¹œè¸ÀÉ•µô(¹Ñ…ˆ¹…Ñ¥Ù•í½±½ÈéÙ…È ´µÑ•áĞ¥ô(¹Ñ…ˆ¹…Ñ¥Ù”ÍÙíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•d ´ÉÁà¤í™¥±Ñ•Èé‘É½ÀµÍ¡…‘½Ü À€À€áÁàÉ‰„ ÈÈÔ°Èä°ØÌ°¸Ü¤¥ô(¹Ñ…ˆ¹…Ñ¥Ù”€¹Ğµ¥½í½±½ÈéÙ…È ´µ…•¹Ğµ¡¤¥ô(¹Ñ…ˆ€¹Ğµ‘½ÑíÁ½Í¥Ñ¥½¸é…‰Í½±ÕÑ”íÑ½ÀèÙÁàí±•™ĞèÔÀ”íÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•` ´ÔÀ”¤íİ¥‘Ñ èÑÁàí¡•¥¡ĞèÑÁàí‰½É‘•ÈµÉ…‘¥ÕÌèÔÀ”í‰…­É½Õ¹éÙ…È ´µÉ…¤í½Á…¥ÑäèÁô(¹Ñ…ˆ¹…Ñ¥Ù”€¹Ğµ‘½Ñí½Á…¥ÑäèÅô((¼¨€ôôôôô!•É¼€ôôôôô€¨¼(¹¡•É½íÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù”íÁ…‘‘¥¹œèÜÉÁà€À€ĞÁÁàíÑ•áĞµ…±¥¸é•¹Ñ•Éô(¹¡•É¼µ‰…‘•í‘¥ÍÁ±…äé¥¹±¥¹”µ™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèáÁàíÁ…‘‘¥¹œèáÁà€ÄÙÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÁ¥±°¤ì(€‰…­É½Õ¹éÙ…È ´µÉ…µÍ½™Ğ¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í™½¹ĞµÍ¥é”èÄÌ¸ÕÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤íµ…É¥¸µ‰½ÑÑ½´èÈÙÁáô(¹‘½ĞµÁÕ±Í•íİ¥‘Ñ èáÁàí¡•¥¡ĞèáÁàí‰½É‘•ÈµÉ…‘¥ÕÌèÔÀ”í‰…­É½Õ¹éÙ…È ´µ…•¹Ğµ½¬¤í‰½àµÍ¡…‘½ÜèÀ€À€À€ÀÉ‰„ ĞÔ°ÈÄÈ°ÄØÀ°¸Ø¤í…¹¥µ…Ñ¥½¸éÁÕ±Í”€Ä¸áÌ¥¹™¥¹¥Ñ•ô)­•å™É…µ•ÌÁÕ±Í•ìÀ•í‰½àµÍ¡…‘½ÜèÀ€À€À€ÀÉ‰„ ĞÔ°ÈÄÈ°ÄØÀ°¸ÔÔ¥ôÜÀ•í‰½àµÍ¡…‘½ÜèÀ€À€À€åÁàÉ‰„ ĞÔ°ÈÄÈ°ÄØÀ°À¥ôÄÀÀ•í‰½àµÍ¡…‘½ÜèÀ€À€À€ÀÉ‰„ ĞÔ°ÈÄÈ°ÄØÀ°À¥õô(¹¡•É¼ Åí™½¹ĞµÍ¥é”é±…µÀ ÌÑÁà°ÙÙÜ°ØÁÁà¤í±¥¹”µ¡•¥¡ĞèÄ¸ÀÔí±•ÑÑ•ÈµÍÁ…¥¹œè´¸ÀÍ•´í™½¹Ğµİ•¥¡ĞèàÀÀíµ…É¥¸µ‰½ÑÑ½´èÈÁÁáô(¹¡•É¼ Ä€¹É…‘í‰…­É½Õ¹éÙ…È ´µÉ…¤ìµİ•‰­¥Ğµ‰…­É½Õ¹µ±¥ÀéÑ•áĞí‰…­É½Õ¹µ±¥ÀéÑ•áĞìµİ•‰­¥ĞµÑ•áĞµ™¥±°µ½±½ÈéÑÉ…¹ÍÁ…É•¹Ñô(¹¡•É¼µÍÕ‰íµ…àµİ¥‘Ñ èØĞÁÁàíµ…É¥¸èÀ…ÕÑ¼€ÌÁÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤í™½¹ĞµÍ¥é”èÄáÁáô(¹¡•É¼µ…Ñ¥½¹Íí‘¥ÍÁ±…äé™±•àí…ÀèÄÑÁàí©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èí™±•àµİÉ…ÀéİÉ…Áô(¹‰Ñ¹í‘¥ÍÁ±…äé¥¹±¥¹”µ™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèáÁàíÁ…‘‘¥¹œèÄÍÁà€ÈÙÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌ¤í™½¹Ğµİ•¥¡ĞèØÀÀí™½¹ĞµÍ¥é”èÄÕÁàì(€ÕÉÍ½ÈéÁ½¥¹Ñ•Èí‰½É‘•ÈèÅÁàÍ½±¥ÑÉ…¹ÍÁ…É•¹Ğí™½¹Ğµ™…µ¥±äéÙ…È ´µ™½¹Ğ¤ì(€ÑÉ…¹Í¥Ñ¥½¸éÑÉ…¹Í™½É´Ù…È ´µ‘ÕÈµ™…ÍĞ¤Ù…È ´µ•…Í”µÍÁÉ¥¹œ¤°‰½àµÍ¡…‘½ÜÙ…È ´µ‘ÕÈµ™…ÍĞ¤°‰…­É½Õ¹Ù…È ´µ‘ÕÈµ™…ÍĞ¥ô(¹‰Ñ¸é¡½Ù•ÉíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•d ´ÉÁà¥ô(¹‰Ñ¸µÁÉ¥µ…Éåí‰…­É½Õ¹éÙ…È ´µÉ…¤í½±½ÈéÙ…È ´µÑ•áĞµ¥¹Ù•ÉĞ¤í‰½àµÍ¡…‘½ÜéÙ…È ´µÍ¡…‘½Üµ±½Ü¥ô(¹‰Ñ¸µ¡½ÍÑí‰…­É½Õ¹éÙ…È ´µÁ…¹•°¤í‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•È¤í½±½ÈéÙ…È ´µÑ•áĞ¥ô(¹‰Ñ¸µ¡½ÍĞé¡½Ù•Éí‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¥ô(¹¡•É¼µµ•Ñ…í‘¥ÍÁ±…äé™±•àí…ÀèÄÉÁàí©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èí™±•àµİÉ…ÀéİÉ…Àíµ…É¥¸µÑ½ÀèÌÙÁáô(¹µ•Ñ„µ¡¥Áí‘¥ÍÁ±…äé¥¹±¥¹”µ™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèİÁàíÁ…‘‘¥¹œèåÁà€ÄÕÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÁ¥±°¤ì(€‰…­É½Õ¹éÙ…È ´µÁ…¹•°¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¤í™½¹ĞµÍ¥é”èÄÌ¸ÕÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¥ô(¹µ•Ñ„µ¡¥À‰í½±½ÈéÙ…È ´µÑ•áĞ¤í™½¹Ğµİ•¥¡ĞèØÀÁô((¼¨€ôôôôôMÑ…ÑÌ€ôôôôô€¨¼(¹ÍÑ…ÑÍí‘¥ÍÁ±…äéÉ¥íÉ¥µÑ•µÁ±…Ñ”µ½±Õµ¹ÌéÉ•Á•…Ğ¡…ÕÑ¼µ™¥Ğ±µ¥¹µ…à ÄĞÁÁà°Å™È¤¤í…ÀèÄÙÁàíµ…É¥¸èÄÙÁà€À€áÁáô(¹ÍÑ…Ñí‰…­É½Õ¹é±¥¹•…ÈµÉ…‘¥•¹Ğ ÄàÁ‘•œ±Ù…È ´µÁ…¹•°µÉ…¥Í•¤±Ù…È ´µÁ…¹•°µÍ½±¥¤¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤ì(€‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµ±œ¤íÁ…‘‘¥¹œèÈÁÁàíÑ•áĞµ…±¥¸é•¹Ñ•ÈíÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù”í½Ù•É™±½Üé¡¥‘‘•¸ì(€ÑÉ…¹Í¥Ñ¥½¸éÑÉ…¹Í™½É´Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µ½ÕĞ¤°‰½É‘•Èµ½±½ÈÙ…È ´µ‘ÕÈµµ•¥ô(¹ÍÑ…Ğé¡½Ù•ÉíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•d ´ÍÁà¤í‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¥ô(¹ÍÑ…Ğ€¹¹Õµí™½¹ĞµÍ¥é”èÈİÁàí™½¹Ğµİ•¥¡ĞèàÀÀí™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í‰…­É½Õ¹éÙ…È ´µÉ…¤ì(€€µİ•‰­¥Ğµ‰…­É½Õ¹µ±¥ÀéÑ•áĞí‰…­É½Õ¹µ±¥ÀéÑ•áĞìµİ•‰­¥ĞµÑ•áĞµ™¥±°µ½±½ÈéÑÉ…¹ÍÁ…É•¹Ñô(¹ÍÑ…Ğ€¹±‰±í™½¹ĞµÍ¥é”èÄÉÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤íµ…É¥¸µÑ½ÀèÕÁàíÑ•áĞµÑÉ…¹Í™½É´éÕÁÁ•É…Í”í±•ÑÑ•ÈµÍÁ…¥¹œè¸ÀÙ•µô((¼¨€ôôôôôM•Ñ¥½¹Ì€ôôôôô€¨¼(¹Í•Ñ¥½¹íÁ…‘‘¥¹œèĞÑÁà€Áô(¹Í•Ñ¥½¸µ¡•…‘íµ…àµİ¥‘Ñ èÜÀÁÁàíµ…É¥¸èÀ…ÕÑ¼€ÌÙÁàíÑ•áĞµ…±¥¸é•¹Ñ•Éô(¹•å•‰É½İí‘¥ÍÁ±…äé¥¹±¥¹”µ‰±½¬í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÈ¸ÕÁàí½±½ÈéÙ…È ´µ…•¹Ğµ¡¤¤í±•ÑÑ•ÈµÍÁ…¥¹œè¸ÄÙ•´íÑ•áĞµÑÉ…¹Í™½É´éÕÁÁ•É…Í”íµ…É¥¸µ‰½ÑÑ½´èÄÉÁáô(¹Í•Ñ¥½¸µ¡•… Éí™½¹ĞµÍ¥é”é±…µÀ ÈÙÁà°ÑÙÜ°ÌáÁà¤í±•ÑÑ•ÈµÍÁ…¥¹œè´¸ÀÉ•´í™½¹Ğµİ•¥¡ĞèàÀÀíµ…É¥¸µ‰½ÑÑ½´èÄÉÁáô(¹Í•Ñ¥½¸µ¡•…Áí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤í™½¹ĞµÍ¥é”èÄØ¸ÕÁáô((¼¨€ôôôôôI•ÅÕ•ÍĞÑ•ÍÑ•È€ôôôôô€¨¼(¹Ñ•ÍÑ•Éí‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµá°¤í‰…­É½Õ¹éÙ…È ´µÁ…¹•°¤í½Ù•É™±½Üé¡¥‘‘•¸í‰½àµÍ¡…‘½ÜéÙ…È ´µÍ¡…‘½ÜµÁ…¹•°¥ô(¹Ñ•ÍÑ•Èµ‰…Éí‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèáÁàíÁ…‘‘¥¹œèÄÍÁà€ÄáÁàí‰½É‘•Èµ‰½ÑÑ½´èÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¤í‰…­É½Õ¹éÙ…È ´µÁ…¹•°µÍ½±¥¥ô(¹Ğµ‘½Ñíİ¥‘Ñ èÄÅÁàí¡•¥¡ĞèÄÅÁàí‰½É‘•ÈµÉ…‘¥ÕÌèÔÀ•ô(¹Ğµ‘½Ğ¹Éí‰…­É½Õ¹è™˜Õ˜Ôİô¹Ğµ‘½Ğ¹åí‰…­É½Õ¹è™•‰ŒÉ•ô¹Ğµ‘½Ğ¹í‰…­É½Õ¹èŒÈáŒàĞÁô(¹Ñ•ÍÑ•ÈµÑ¥Ñ±•íµ…É¥¸µ±•™ĞèáÁàí™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÍÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¥ô(¹Ñ•ÍÑ•Èµ‰½‘åíÁ…‘‘¥¹œèÈÉÁáô(¹™¥•±µÉ½İí‘¥ÍÁ±…äé™±•àí™±•àµİÉ…ÀéİÉ…Àí…ÀèÄÉÁàíµ…É¥¸µ‰½ÑÑ½´èÄÑÁáô(¹™¥•±‘í™±•àèÄíµ¥¸µİ¥‘Ñ èÄĞÁÁàí‘¥ÍÁ±…äé™±•àí™±•àµ‘¥É•Ñ¥½¸é½±Õµ¸í…ÀèÙÁáô(¹™¥•±±…‰•±í™½¹ĞµÍ¥é”èÄÉÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤íÑ•áĞµÑÉ…¹Í™½É´éÕÁÁ•É…Í”í±•ÑÑ•ÈµÍÁ…¥¹œè¸ÀÙ•µô(¹™¥•±¥¹ÁÕĞ°¹™¥•±Í•±•Ğ°¹™¥•±Ñ•áÑ…É•…í‰…­É½Õ¹éÙ…È ´µ‰œ´È¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÍ´¤ì(€Á…‘‘¥¹œèÄÅÁà€ÄÍÁàí½±½ÈéÙ…È ´µÑ•áĞ¤í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÑÁàíÑÉ…¹Í¥Ñ¥½¸é‰½É‘•Èµ½±½ÈÙ…È ´µ‘ÕÈµ™…ÍĞ¤í½ÕÑ±¥¹”é¹½¹”íİ¥‘Ñ èÄÀÀ•ô(¹™¥•±¥¹ÁÕĞé™½ÕÌ°¹™¥•±Í•±•Ğé™½ÕÌ°¹™¥•±Ñ•áÑ…É•„é™½ÕÍí‰½É‘•Èµ½±½ÈéÙ…È ´µ…•¹Ğ¥ô(¹™¥•±Ñ•áÑ…É•…íµ¥¸µ¡•¥¡ĞèàÁÁàíÉ•Í¥é”éÙ•ÉÑ¥…±ô(¹™¥•±Í•±•ÑíÕÉÍ½ÈéÁ½¥¹Ñ•Éô(¹µ•Ñ¡½µÍ•í‘¥ÍÁ±…äé™±•àí…ÀèÙÁàí™±•àµİÉ…ÀéİÉ…Áô(¹µ•Ñ¡½‘í™±•àèÄíÁ…‘‘¥¹œèåÁà€ÙÁàíÑ•áĞµ…±¥¸é•¹Ñ•Èí™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÈ¸ÕÁàí‰…­É½Õ¹éÙ…È ´µ‰œ´È¤ì(€‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÍ´¤í½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤íÕÉÍ½ÈéÁ½¥¹Ñ•ÈíÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµ™…ÍĞ¥ô(¹µ•Ñ¡½é¡½Ù•Éí‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¥ô(¹µ•Ñ¡½¹…Ñ¥Ù•í‰…­É½Õ¹éÙ…È ´µÉ…¤í½±½ÈéÙ…È ´µÑ•áĞµ¥¹Ù•ÉĞ¤í‰½É‘•Èµ½±½ÈéÑÉ…¹ÍÁ…É•¹Ğí™½¹Ğµİ•¥¡ĞèÜÀÁô(¹Í•¹µ‰Ñ¹íİ¥‘Ñ èÄÀÀ”íÁ…‘‘¥¹œèÄÑÁàí™½¹ĞµÍ¥é”èÄÙÁàí©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èíµ…É¥¸µÑ½ÀèÙÁáô(¹Í•¹µ‰Ñ¸é‘¥Í…‰±•‘í½Á…¥Ñäè¸ÔÔíÕÉÍ½Èé¹½Ğµ…±±½İ•‘ô(¹É•ÍÁ½¹Í•í‰…­É½Õ¹éÙ…È ´µ‰œ´À¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌ¤íÁ…‘‘¥¹œèÄÙÁàíµ…É¥¸µÑ½ÀèÄÙÁàì(€™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÍÁàíµ¥¸µ¡•¥¡ĞèäÁÁàí½Ù•É™±½Üµàé…ÕÑ¼íİ¡¥Ñ”µÍÁ…”éÁÉ”µİÉ…Àíİ½Éµ‰É•…¬é‰É•…¬µİ½Éí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤íÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù•ô(¹É•ÍÁ½¹Í”€¹ÍÑ…ÑÕÌµÑ…í‘¥ÍÁ±…äé¥¹±¥¹”µ‰±½¬íÁ…‘‘¥¹œèÍÁà€ÄÁÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÁ¥±°¤í™½¹ĞµÍ¥é”èÄÅÁàí™½¹Ğµİ•¥¡ĞèÜÀÀíµ…É¥¸µ‰½ÑÑ½´èÄÁÁàí™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¥ô(¹ÍÑ…ÑÕÌ´Éááí‰…­É½Õ¹éÉ‰„ ĞÔ°ÈÄÈ°ÄØÀ°¸ÄÔ¤í½±½ÈéÙ…È ´µ…•¹Ğµ½¬¥ô(¹ÍÑ…ÑÕÌ´Ñáà°¹ÍÑ…ÑÕÌ´Õááí‰…­É½Õ¹éÉ‰„ ÈÔÔ°Ôä°Ôä°¸ÄÔ¤í½±½ÈéÙ…È ´µ…•¹Ğµ‰…¥ô(¹ÍÑ…ÑÕÌµ¥‘±•í‰…­É½Õ¹éÙ…È ´µÁ…¹•°¤í½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¥ô((¼¨€ôôôôô•…ÑÕÉ•Ì€ôôôôô€¨¼(¹™•…ÑÕÉ•Íí‘¥ÍÁ±…äéÉ¥íÉ¥µÑ•µÁ±…Ñ”µ½±Õµ¹ÌéÉ•Á•…Ğ¡…ÕÑ¼µ™¥Ğ±µ¥¹µ…à ÈĞÁÁà°Å™È¤¤í…ÀèÄÙÁáô(¹™•…ÑÕÉ•í‰…­É½Õ¹é±¥¹•…ÈµÉ…‘¥•¹Ğ ÄàÁ‘•œ±Ù…È ´µÁ…¹•°µÉ…¥Í•¤±Ù…È ´µÁ…¹•°µÍ½±¥¤¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤ì(€‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµ±œ¤íÁ…‘‘¥¹œèÈÑÁàíÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù”í½Ù•É™±½Üé¡¥‘‘•¸íÑÉ…¹Í¥Ñ¥½¸éÑÉ…¹Í™½É´Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µ½ÕĞ¤°‰½É‘•Èµ½±½ÈÙ…È ´µ‘ÕÈµµ•¥ô(¹™•…ÑÕÉ”é¡½Ù•ÉíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•d ´ÑÁà¤í‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¥ô(¹™•…ÑÕÉ”€¹¥½í™½¹ĞµÍ¥é”èÈÙÁàíµ…É¥¸µ‰½ÑÑ½´èÄÉÁàí‘¥ÍÁ±…äé¥¹±¥¹”µ‰±½­ô(¹™•…ÑÕÉ” Íí™½¹ĞµÍ¥é”èÄİÁàí™½¹Ğµİ•¥¡ĞèÜÀÀíµ…É¥¸µ‰½ÑÑ½´èáÁáô(¹™•…ÑÕÉ”Áí™½¹ĞµÍ¥é”èÄÑÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¥ô((¼¨€ôôôôô½‘”‰±½­Ì€ôôôôô€¨¼(¹½‘•í‰…­É½Õ¹éÙ…È ´µ‰œ´Ä¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌ¤í½Ù•É™±½Üé¡¥‘‘•¸íµ…É¥¸èÄÑÁà€Áô(¹½‘”µ¡•…‘í‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí©ÕÍÑ¥™äµ½¹Ñ•¹ĞéÍÁ…”µ‰•Ñİ••¸íÁ…‘‘¥¹œèÄÁÁà€ÄÙÁàí‰½É‘•Èµ‰½ÑÑ½´èÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¤í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÉÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¥ô(¹½Áäµ‰Ñ¹í‰…­É½Õ¹é¹½¹”í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÍ´¤ì(€Á…‘‘¥¹œèÑÁà€ÄÅÁàí™½¹ĞµÍ¥é”èÄÅÁàíÕÉÍ½ÈéÁ½¥¹Ñ•Èí™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤íÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµ™…ÍĞ¥ô(¹½Áäµ‰Ñ¸é¡½Ù•Éí‰½É‘•Èµ½±½ÈéÙ…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¤í½±½ÈéÙ…È ´µÑ•áĞ¥ô(¹½‘”ÁÉ•íÁ…‘‘¥¹œèÄÙÁàí½Ù•É™±½Üµàé…ÕÑ¼í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÍÁàí±¥¹”µ¡•¥¡ĞèÄ¸Øí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¥ô(¹½‘”½‘•í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¥ô((¼¨€ôôôôôQ…‰±•Ì€ôôôôô€¨¼(¹Ñ‰±íİ¥‘Ñ èÄÀÀ”í‰½É‘•Èµ½±±…ÁÍ”é½±±…ÁÍ”íµ…É¥¸èÄÑÁà€Àí™½¹ĞµÍ¥é”èÄÑÁáô(¹Ñ‰°Ñ °¹Ñ‰°Ñ‘íÑ•áĞµ…±¥¸é±•™ĞíÁ…‘‘¥¹œèÄÅÁà€ÄÑÁàí‰½É‘•Èµ‰½ÑÑ½´èÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¥ô(¹Ñ‰°Ñ¡í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÉÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤íÑ•áĞµÑÉ…¹Í™½É´éÕÁÁ•É…Í”í±•ÑÑ•ÈµÍÁ…¥¹œè¸ÀÙ•µô(¹Ñ‰°Ñ‘í½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¥ô(¹Ñ‰°½‘”°¹Ñ‰°€¹µ¹í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í½±½ÈéÙ…È ´µ…•¹Ğµ¡¤¤í™½¹ĞµÍ¥é”èÄÍÁáô(¹Ñ‰°ÑÈé¡½Ù•ÈÑ‘í‰…­É½Õ¹éÉ‰„ ÈÈÔ°Èä°ØÌ°¸ÀĞ¥ô((¼¨€ôôôôôM•ÑÑ¥¹Ì€ôôôôô€¨¼(¹Í•ÑÑ¥¹ÌµÉ¥‘í‘¥ÍÁ±…äéÉ¥íÉ¥µÑ•µÁ±…Ñ”µ½±Õµ¹ÌéÉ•Á•…Ğ¡…ÕÑ¼µ™¥Ğ±µ¥¹µ…à ÌÀÁÁà°Å™È¤¤í…ÀèÄÙÁáô(¹…É‘í‰…­É½Õ¹é±¥¹•…ÈµÉ…‘¥•¹Ğ ÄàÁ‘•œ±Ù…È ´µÁ…¹•°µÉ…¥Í•¤±Ù…È ´µÁ…¹•°µÍ½±¥¤¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤ì(€‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµ±œ¤íÁ…‘‘¥¹œèÈÑÁáô(¹…É Íí™½¹ĞµÍ¥é”èÄÙÁàí™½¹Ğµİ•¥¡ĞèÜÀÀíµ…É¥¸µ‰½ÑÑ½´èÄÑÁàí‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí…ÀèáÁáô(¹…ÉÁí™½¹ĞµÍ¥é”èÄÌ¸ÕÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¤íµ…É¥¸µ‰½ÑÑ½´èÄÙÁáô(¹Í•ÑÑ¥¹œµÉ½İí‘¥ÍÁ±…äé™±•àí…±¥¸µ¥Ñ•µÌé•¹Ñ•Èí©ÕÍÑ¥™äµ½¹Ñ•¹ĞéÍÁ…”µ‰•Ñİ••¸í…ÀèÄÉÁàíÁ…‘‘¥¹œèÄÉÁà€Àí‰½É‘•Èµ‰½ÑÑ½´èÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¥ô(¹Í•ÑÑ¥¹œµÉ½Üé±…ÍĞµ¡¥±‘í‰½É‘•Èµ‰½ÑÑ½´é¹½¹•ô(¹Í•ÑÑ¥¹œµÉ½Ü€¹Ìµ±…‰•±í™½¹ĞµÍ¥é”èÄÑÁàí½±½ÈéÙ…È ´µÑ•áĞ¥ô(¹Í•ÑÑ¥¹œµÉ½Ü€¹ÌµÍÕ‰í™½¹ĞµÍ¥é”èÄÉÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¥ô(¹Ñ½±•íÁ½Í¥Ñ¥½¸éÉ•±…Ñ¥Ù”íİ¥‘Ñ èĞÙÁàí¡•¥¡ĞèÈÙÁàí™±•àèÀ€À…ÕÑ¼íÕÉÍ½ÈéÁ½¥¹Ñ•Éô(¹Ñ½±”¥¹ÁÕÑí½Á…¥ÑäèÀíİ¥‘Ñ èÀí¡•¥¡ĞèÁô(¹Ñ½±”€¹Í±¥‘•ÉíÁ½Í¥Ñ¥½¸é…‰Í½±ÕÑ”í¥¹Í•ĞèÀí‰…­É½Õ¹éÙ…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌèäåÁàíÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµµ•¥ô(¹Ñ½±”€¹Í±¥‘•Èèé‰•™½É•í½¹Ñ•¹ĞèˆˆíÁ½Í¥Ñ¥½¸é…‰Í½±ÕÑ”í¡•¥¡ĞèÈÁÁàíİ¥‘Ñ èÈÁÁàí±•™ĞèÍÁàíÑ½ÀèÍÁàí‰…­É½Õ¹è™™˜í‰½É‘•ÈµÉ…‘¥ÕÌèÔÀ”íÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µÍÁÉ¥¹œ¥ô(¹Ñ½±”¥¹ÁÕĞé¡•­•€¬€¹Í±¥‘•Éí‰…­É½Õ¹éÙ…È ´µÉ…¥ô(¹Ñ½±”¥¹ÁÕĞé¡•­•€¬€¹Í±¥‘•Èèé‰•™½É•íÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•` ÈÁÁà¥ô(¹¥¹ÁÕÑíİ¥‘Ñ èÄÀÀ”í‰…­É½Õ¹éÙ…È ´µ‰œ´È¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÍ´¤íÁ…‘‘¥¹œèÄÅÁà€ÄÍÁàì(€½±½ÈéÙ…È ´µÑ•áĞ¤í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÑÁàí½ÕÑ±¥¹”é¹½¹”íÑÉ…¹Í¥Ñ¥½¸é‰½É‘•Èµ½±½ÈÙ…È ´µ‘ÕÈµ™…ÍĞ¥ô(¹¥¹ÁÕĞé™½ÕÍí‰½É‘•Èµ½±½ÈéÙ…È ´µ…•¹Ğ¥ô(¹±½¥¸µ™½Éµí‘¥ÍÁ±…äé™±•àí™±•àµ‘¥É•Ñ¥½¸é½±Õµ¸í…ÀèÄÉÁáô(¹Ñ½…ÍÑíÁ½Í¥Ñ¥½¸é™¥á•í‰½ÑÑ½´é…±Œ¡Ù…È ´µÑ…‰‰…Èµ ¤€¬•¹Ø¡Í…™”µ…É•„µ¥¹Í•Ğµ‰½ÑÑ½´¤€¬€ÄÙÁà¤í±•™ĞèÔÀ”íÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•` ´ÔÀ”¤ÑÉ…¹Í±…Ñ•d ÈÁÁà¤ì(€‰…­É½Õ¹éÙ…È ´µÁ…¹•°µÍ½±¥¤í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍÑÉ½¹œ¤í½±½ÈéÙ…È ´µÑ•áĞ¤íÁ…‘‘¥¹œèÄÉÁà€ÈÁÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÁ¥±°¤ì(€™½¹ĞµÍ¥é”èÄÑÁàí‰½àµÍ¡…‘½ÜéÙ…È ´µÍ¡…‘½ÜµÁ…¹•°¤í½Á…¥ÑäèÀíÑÉ…¹Í¥Ñ¥½¸é…±°Ù…È ´µ‘ÕÈµµ•¤Ù…È ´µ•…Í”µ½ÕĞ¤íèµ¥¹‘•àèÄÀÀíİ¡¥Ñ”µÍÁ…”é¹½İÉ…Áô(¹Ñ½…ÍĞ¹Í¡½İí½Á…¥ÑäèÄíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•` ´ÔÀ”¤ÑÉ…¹Í±…Ñ•d À¥ô(¹Ñ½…ÍĞµ½­í‰½É‘•Èµ½±½ÈéÉ‰„ ĞÔ°ÈÄÈ°ÄØÀ°¸Ô¤í½±½ÈèŒİ˜Õ”Ñô(¹Ñ½…ÍĞµ‰…‘í‰½É‘•Èµ½±½ÈéÉ‰„ ÈÔÔ°Ôä°Ôä°¸ÔÔ¤í½±½Èè™™İİô(¹Ñ½…ÍĞµİ…É¹í‰½É‘•Èµ½±½ÈéÉ‰„ ÈÔÔ°ÄÜØ°ÌÈ°¸ÔÔ¤í½±½Èè™™”áŒÁô((¼¨€ôôôôô½½Ñ•È€ôôôôô€¨¼(¹™½½Ñ•ÉíÁ…‘‘¥¹œèĞÁÁà€À€ÈÑÁàíÑ•áĞµ…±¥¸é•¹Ñ•Èí‰½É‘•ÈµÑ½ÀèÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¤íµ…É¥¸µÑ½ÀèĞÁÁáô(¹™½½Ñ•È€¹‰É…¹‘í©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èíµ…É¥¸µ‰½ÑÑ½´èÄÉÁáô(¹™½½Ñ•È€¹˜µ±¥¹­Íí‘¥ÍÁ±…äé™±•àí…ÀèÈÁÁàí©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èí™±•àµİÉ…ÀéİÉ…Àíµ…É¥¸èÄÉÁà€Àí™½¹ĞµÍ¥é”èÄÍÁàí½±½ÈéÙ…È ´µÑ•áĞµ‘¥´¥ô(¹™½½Ñ•È€¹˜µ¹½Ñ•í™½¹ĞµÍ¥é”èÄÈ¸ÕÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤íµ…É¥¸µÑ½ÀèÄÁÁáô(¹™½½Ñ•È€¹˜µÑ…í‘¥ÍÁ±…äé¥¹±¥¹”µ‰±½¬í™½¹Ğµ™…µ¥±äéÙ…È ´µµ½¹¼¤í™½¹ĞµÍ¥é”èÄÅÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤í‰…­É½Õ¹éÙ…È ´µÁ…¹•°¤ì(€‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•ÈµÍ½™Ğ¤íÁ…‘‘¥¹œèÑÁà€ÄÁÁàí‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµÁ¥±°¤íµ…É¥¸µÑ½ÀèÄÑÁáô()µ•‘¥„€¡µ¥¸µİ¥‘Ñ èÜØáÁà¥ì(€€¹Ñ…‰‰…Éí±•™ĞèÔÀ”íÉ¥¡Ğé…ÕÑ¼íİ¥‘Ñ èĞàÁÁàíÑÉ…¹Í™½É´éÑÉ…¹Í±…Ñ•` ´ÔÀ”¤í‰½É‘•ÈµÉ…‘¥ÕÌéÙ…È ´µÉ…‘¥ÕÌµá°¤Ù…È ´µÉ…‘¥ÕÌµá°¤€À€Àí½Ù•É™±½Üé¡¥‘‘•¸í‰½É‘•ÈèÅÁàÍ½±¥Ù…È ´µ‰½É‘•È¤í‰½É‘•Èµ‰½ÑÑ½´é¹½¹•ô)ô)µ•‘¥„€¡ÁÉ•™•ÉÌµÉ•‘Õ•µµ½Ñ¥½¸éÉ•‘Õ”¥ì©í…¹¥µ…Ñ¥½¸é¹½¹”…¥µÁ½ÉÑ…¹ĞíÑÉ…¹Í¥Ñ¥½¸é¹½¹”…¥µÁ½ÉÑ…¹Ñõô(ğ½ÍÑå±”ø(ğ½¡•…ø(ñ‰½‘äø((ğ„´´€ôôôôôQ½À¹…Ø€ôôôôô€´´ø(ñ¡•…‘•È±…ÍÌô‰¹…Øˆø(€€ñ‘¥Ø±…ÍÌô‰¹…Øµ¥¹¹•Èˆø(€€€€ñ„±…ÍÌô‰‰É…¹ˆ¡É•˜ôˆŒˆ‘…Ñ„µ¹…Øô‰¡½µ”ˆø(€€€€€€ñÍÙœ±…ÍÌô‰±½¼ˆÙ¥•İ	½àôˆÀ€À€ÄÀÀ€ÄÀÀˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆø(€€€€€€€€ñ‘•™Ìøñ±¥¹•…ÉÉ…‘¥•¹Ğ¥ô‰±œˆàÄôˆÀˆäÄôˆÀˆàÈôˆÄˆäÈôˆÄˆø(€€€€€€€€€€ñÍÑ½À½™™Í•ĞôˆÀˆÍÑ½Àµ½±½Èôˆ”ÄÅÍ˜ˆ¼øñÍÑ½À½™™Í•Ğôˆ¸ÔˆÍÑ½Àµ½±½Èôˆ™˜ÙˆÅ„ˆ¼øñÍÑ½À½™™Í•ĞôˆÄˆÍÑ½Àµ½±½Èôˆ™™ˆÀÈÀˆ¼ø(€€€€€€€€ğ½±¥¹•…ÉÉ…‘¥•¹Ğøğ½‘•™Ìø(€€€€€€€€ñ¥É±”àôˆÔÀˆäôˆÔÀˆÈôˆÌĞˆ™¥±°ô‰¹½¹”ˆÍÑÉ½­”ô‰ÕÉ° ±œ¤ˆÍÑÉ½­”µİ¥‘Ñ ôˆäˆ¼ø(€€€€€€€€ñ¥É±”àôˆÔÀˆäôˆÔÀˆÈôˆÄĞˆ™¥±°ô‰ÕÉ° ±œ¤ˆ¼ø(€€€€€€€€ñ¥É±”àôˆÔÀˆäôˆÔÀˆÈôˆØˆ™¥±°ôˆ™™˜ˆ¼ø(€€€€€€€€ğ„´´Í…Ñ•±±¥Ñ”€´´ø(€€€€€€€€ñ¥É±”àôˆÜÈˆäôˆÈàˆÈôˆÔˆ™¥±°ôˆ™˜ÙˆÅ„ˆ¼ø(€€€€€€ğ½ÍÙœø(€€€€€€ñÍÁ…¸ù9•‰Õ±„ñˆùAÉ½áäğ½ˆøğ½ÍÁ…¸ø(€€€€ğ½„ø(€€€€ñ‘¥Ø±…ÍÌô‰¹…Øµ…Ñ¥½¹Ìˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰±…¹œˆ¥ô‰±…¹]É…Àˆø(€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰±…¹œµ‰Ñ¸ˆ¥ô‰±…¹	Ñ¸ˆøñÍÁ…¸±…ÍÌô‰±½‰”ˆûÂ~2@ğ½ÍÁ…¸øñÍÁ…¸¥ô‰±…¹1…‰•°ˆù¹±¥Í ğ½ÍÁ…¸øğ½‰ÕÑÑ½¸ø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰±…¹œµµ•¹Ôˆ¥ô‰±…¹5•¹Ôˆøğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€ğ½‘¥Øø(ğ½¡•…‘•Èø((ğ„´´€ôôôôô!=5€ôôôôô€´´ø(ñµ…¥¸±…ÍÌô‰Á…”…Ñ¥Ù”ˆ¥ô‰Á…”µ¡½µ”ˆø(€€ñÍ•Ñ¥½¸±…ÍÌô‰¡•É¼ˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñÍÁ…¸±…ÍÌô‰¡•É¼µ‰…‘”ˆøñÍÁ…¸±…ÍÌô‰‘½ĞµÁÕ±Í”ˆøğ½ÍÁ…¸øñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰¡•É¼¹‰…‘”ˆù…Ñ•İ…ä=¹±¥¹”ğ½ÍÁ…¸øğ½ÍÁ…¸ø(€€€€€€ñ ÄøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰¡•É¼¹Ñ¥Ñ±”ˆùI½Ñ…Ñ”å½ÕÈğ½ÍÁ…¸ø€ñÍÁ…¸±…ÍÌô‰É…ˆ‘…Ñ„µ¤Äá¸ô‰¡•É¼¹Ñ¥Ñ±”Èˆù•É•ÍÌ%@ğ½ÍÁ…¸øñ‰ÈøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰¡•É¼¹Ñ¥Ñ±”Ìˆù½¸•Ù•ÉäÉ•ÅÕ•ÍĞğ½ÍÁ…¸øğ½ Äø(€€€€€€ñÀ±…ÍÌô‰¡•É¼µÍÕˆˆ‘…Ñ„µ¤Äá¸ô‰¡•É¼¹ÍÕˆˆù9•‰Õ±…AÉ½áä¥Ì„É½Ñ…Ñ¥¹œÁÉ½áäA$…Ñ•İ…ä¸M•¹„É•ÅÕ•ÍĞ°•Ğ„™É•Í %@™É½´½¹”½˜Í¥à½Õ¹ÑÉ¥•Ì°…¹ÍÑÉ•…´Ñ¡”É•ÍÁ½¹Í”‰…¬ƒŠP…±°Ñ¡É½Õ „Í¥¹±”•¹‘Á½¥¹Ğ¸ğ½Àø(€€€€€€ñ‘¥Ø±…ÍÌô‰¡•É¼µ…Ñ¥½¹Ìˆø(€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰‰Ñ¸‰Ñ¸µÁÉ¥µ…Éäˆ‘…Ñ„µ¹…Øô‰Á±…åÉ½Õ¹ˆøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰¡•É¼¹Á±…äˆù=Á•¸A±…åÉ½Õ¹ğ½ÍÁ…¸øƒŠHğ½‰ÕÑÑ½¸ø(€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰‰Ñ¸‰Ñ¸µ¡½ÍĞˆ‘…Ñ„µ¹…Øô‰‘½ÌˆøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰¡•É¼¹‘½ÌˆùI•…½Õµ•¹Ñ…Ñ¥½¸ğ½ÍÁ…¸øğ½‰ÕÑÑ½¸ø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰¡•É¼µµ•Ñ„ˆø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰µ•Ñ„µ¡¥ÀˆûÂ~24€ñˆ‘…Ñ„µ¤Äá¸ô‰¹…Ø¹É•¥½¹ÌˆøØ½Õ¹ÑÉ¥•Ìğ½ˆøğ½ÍÁ…¸ø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰µ•Ñ„µ¡¥ÀˆûŠj„€ñˆ‘…Ñ„µ¤Äá¸ô‰¡•É¼¹±¥Ù”ˆù1¥Ù”ÍÑÉ•…µ¥¹œğ½ˆøğ½ÍÁ…¸ø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰µ•Ñ„µ¡¥ÀˆûÂ~6¨€ñˆ‘…Ñ„µ¤Äá¸ô‰¡•É¼¹½½­¥•Ìˆù½½­¥•Ì€˜¡•…‘•ÉÌğ½ˆøğ½ÍÁ…¸ø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€ğ½Í•Ñ¥½¸ø((€€ñÍ•Ñ¥½¸±…ÍÌô‰Í•Ñ¥½¸ˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰ÍÑ…ÑÌˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰ÍÑ…Ğˆøñ‘¥Ø±…ÍÌô‰¹Õ´ˆ¥ô‰ÍÑ…ĞµÉ•ÄˆøÀğ½‘¥Øøñ‘¥Ø±…ÍÌô‰±‰°ˆ‘…Ñ„µ¤Äá¸ô‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆùI•ÅÕ•ÍÑÌğ½‘¥Øøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰ÍÑ…Ğˆøñ‘¥Ø±…ÍÌô‰¹Õ´ˆ¥ô‰ÍÑ…Ğµ½¬ˆøÄÀÀ”ğ½‘¥Øøñ‘¥Ø±…ÍÌô‰±‰°ˆ‘…Ñ„µ¤Äá¸ô‰ÍÑ…Ğ¹ÍÕ•ÍÌˆùMÕ•ÍÌÉ…Ñ”ğ½‘¥Øøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰ÍÑ…Ğˆøñ‘¥Ø±…ÍÌô‰¹Õ´ˆ¥ô‰ÍÑ…Ğµ±…ĞˆûŠPğ½‘¥Øøñ‘¥Ø±…ÍÌô‰±‰°ˆ‘…Ñ„µ¤Äá¸ô‰ÍÑ…Ğ¹±…Ñ•¹äˆùÙœ±…Ñ•¹äğ½‘¥Øøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰ÍÑ…Ğˆøñ‘¥Ø±…ÍÌô‰¹Õ´ˆ¥ô‰ÍÑ…ĞµÉ•œˆøÀğ½‘¥Øøñ‘¥Ø±…ÍÌô‰±‰°ˆ‘…Ñ„µ¤Äá¸ô‰ÍÑ…Ğ¹É•¥½¹ÌˆùI•¥½¹ÌÍ••¸ğ½‘¥Øøğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€ğ½Í•Ñ¥½¸ø((€€ñÍ•Ñ¥½¸±…ÍÌô‰Í•Ñ¥½¸ˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰Í•Ñ¥½¸µ¡•…ˆø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰•å•‰É½Üˆ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹•å•‰É½Üˆù]¡ä9•‰Õ±…AÉ½áäğ½ÍÁ…¸ø(€€€€€€€€ñ È‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹Ñ¥Ñ±”ˆùÙ•ÉåÑ¡¥¹œå½Ô¹••Ñ¼É½Ñ…Ñ”ÑÉ…™™¥Œğ½ Èø(€€€€€€€€ñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹ÍÕˆˆùÍ¥¹±”A$•¹‘Á½¥¹ĞÑ¡…Ğ¡…¹‘±•ÌÁÉ½Ù¥‘•ÉÌ°%AÌ°¡•…‘•ÉÌ°…¹ÍÑÉ•…µ¥¹œ™½Èå½Ô¸ğ½Àø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ•Ìˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ”ˆøñÍÁ…¸±…ÍÌô‰¥¼ˆûÂ~n‡¾â<ğ½ÍÁ…¸øñ Ì‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ä¹Ğˆù5Õ±Ñ¤µÁÉ½Ù¥‘•È™…±±‰…¬ğ½ ÌøñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ä¹ˆù%˜½¹”ÕÁÍÑÉ•…´ÁÉ½áä™…¥±Ì°9•‰Õ±…AÉ½áä…ÕÑ½µ…Ñ¥…±±äÉ•ÑÉ¥•ÌÑ¡É½Õ …¹½Ñ¡•ÈƒŠP¹¼‘½İ¹Ñ¥µ”¸ğ½Àøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ”ˆøñÍÁ…¸±…ÍÌô‰¥¼ˆûÂ~24ğ½ÍÁ…¸øñ Ì‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜È¹ĞˆùM¥àµ½Õ¹ÑÉäÉ½Ñ…Ñ¥½¸ğ½ ÌøñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜È¹ˆùI½Ñ…Ñ”•É•ÍÌ…É½ÍÌÑ¡”U¹¥Ñ•MÑ…Ñ•Ì°U¹¥Ñ•-¥¹‘½´°•Éµ…¹ä°A½±…¹°MÁ…¥¸°…¹)…Á…¸¸ğ½Àøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ”ˆøñÍÁ…¸±…ÍÌô‰¥¼ˆûÂ~6¨ğ½ÍÁ…¸øñ Ì‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ì¹Ğˆù½½­¥•Ì€˜¡•…‘•ÉÌğ½ ÌøñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ì¹ˆùA…ÍÌÕÍÑ½´½½­¥•Ì…¹¡•…‘•ÉÌÍÑÉ…¥¡ĞÑ¡É½Õ Ñ¼Ñ¡”Ñ…É•ĞƒŠP™Õ±°½¹ÑÉ½°½Ù•ÈÑ¡”É•ÅÕ•ÍĞ¸ğ½Àøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ”ˆøñÍÁ…¸±…ÍÌô‰¥¼ˆûŠj„ğ½ÍÁ…¸øñ Ì‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ğ¹Ğˆù1¥Ù”ÍÑÉ•…µ¥¹œğ½ ÌøñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ğ¹ˆùMÑÉ•…´É•ÍÁ½¹Í•Ì…ÌÑ¡•ä…ÉÉ¥Ù”İ¥Ñ MM°Í¼±½¹œ‘½İ¹±½…‘Ì‘½¸Ğ‰±½¬å½ÕÈ±¥•¹Ğ¸ğ½Àøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ”ˆøñÍÁ…¸±…ÍÌô‰¥¼ˆûÂ~Nğ½ÍÁ…¸øñ Ì‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ô¹Ğˆù	¥¹…ÉäµÍ…™”ğ½ ÌøñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ô¹ˆù%µ…•Ì°™¥±•Ì°…¹‰¥¹…ÉäÁ…å±½…‘ÌÁ…ÍÌÑ¡É½Õ Õ¹Ñ½Õ¡•İ¥Ñ ‰…Í”ØĞÍÕÁÁ½ÉĞ¸ğ½Àøğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰™•…ÑÕÉ”ˆøñÍÁ…¸±…ÍÌô‰¥¼ˆûÂ~B4ğ½ÍÁ…¸øñ Ì‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ø¹Ğˆù¹ä±…¹Õ…”ğ½ ÌøñÀ‘…Ñ„µ¤Äá¸ô‰™•…Ğ¹˜Ø¹ˆùUÍ”UI0°AåÑ¡½¸°9½‘”¹©Ì°½È…¹åÑ¡¥¹œÑ¡…ĞÍÁ•…­Ì!QQ@¸=¹”•¹‘Á½¥¹Ğ°¹¼M,É•ÅÕ¥É•¸ğ½Àøğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€ğ½Í•Ñ¥½¸ø((€€ñ™½½Ñ•È±…ÍÌô‰™½½Ñ•Èˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰‰É…¹ˆø(€€€€€€€€ñÍÙœ±…ÍÌô‰±½¼ˆÙ¥•İ	½àôˆÀ€À€ÄÀÀ€ÄÀÀˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆøñÕÍ”¡É•˜ôˆ±œˆ¼øñ¥É±”àôˆÔÀˆäôˆÔÀˆÈôˆÌĞˆ™¥±°ô‰¹½¹”ˆÍÑÉ½­”ô‰ÕÉ° ±œ¤ˆÍÑÉ½­”µİ¥‘Ñ ôˆäˆ¼øñ¥É±”àôˆÔÀˆäôˆÔÀˆÈôˆÄĞˆ™¥±°ô‰ÕÉ° ±œ¤ˆ¼øñ¥É±”àôˆÔÀˆäôˆÔÀˆÈôˆØˆ™¥±°ôˆ™™˜ˆ¼øñ¥É±”àôˆÜÈˆäôˆÈàˆÈôˆÔˆ™¥±°ôˆ™˜ÙˆÅ„ˆ¼øğ½ÍÙœø(€€€€€€€€ñÍÁ…¸ù9•‰Õ±„ñˆùAÉ½áäğ½ˆøğ½ÍÁ…¸ø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰˜µ±¥¹­Ìˆø(€€€€€€€€ñ„¡É•˜ôˆŒˆ‘…Ñ„µ¹…Øô‰¡½µ”ˆù!½µ”ğ½„ø(€€€€€€€€ñ„¡É•˜ôˆŒˆ‘…Ñ„µ¹…Øô‰Á±…åÉ½Õ¹ˆùA±…åÉ½Õ¹ğ½„ø(€€€€€€€€ñ„¡É•˜ôˆŒˆ‘…Ñ„µ¹…Øô‰‘½Ìˆù½Õµ•¹Ñ…Ñ¥½¸ğ½„ø(€€€€€€€€ñ„¡É•˜ôˆŒˆ‘…Ñ„µ¹…Øô‰Í•ÑÑ¥¹ÌˆùM•ÑÑ¥¹Ìğ½„ø(€€€€€€ğ½‘¥Øø(€€€€€€ñÀ±…ÍÌô‰˜µ¹½Ñ”ˆ‘…Ñ„µ¤Äá¸ô‰™½½Ñ•È¹¹½Ñ”ˆù	Õ¥±Ğ™½È‘•Ù•±½Á•ÉÌİ¡¼¹••„±•…¸°É½Ñ…Ñ¥¹œ•É•ÍÌ%@İ¥Ñ¡½ÕĞÑ¡”¡…ÍÍ±”¸ğ½Àø(€€€€€€ñÍÁ…¸±…ÍÌô‰˜µÑ…œˆ‘…Ñ„µ¤Äá¸ô‰™½½Ñ•È¹Ñ…œˆù9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àğ½ÍÁ…¸ø(€€€€ğ½‘¥Øø(€€ğ½™½½Ñ•Èø(ğ½µ…¥¸ø((ğ„´´€ôôôôôA1eI=U9€ôôôôô€´´ø(ñµ…¥¸±…ÍÌô‰Á…”ˆ¥ô‰Á…”µÁ±…åÉ½Õ¹ˆø(€€ñÍ•Ñ¥½¸±…ÍÌô‰Í•Ñ¥½¸ˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰Í•Ñ¥½¸µ¡•…ˆø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰•å•‰É½Üˆ‘…Ñ„µ¤Äá¸ô‰Áœ¹•å•‰É½ÜˆùA±…åÉ½Õ¹ğ½ÍÁ…¸ø(€€€€€€€€ñ È‘…Ñ„µ¤Äá¸ô‰Áœ¹Ñ¥Ñ±”ˆùQ•ÍĞÑ¡”ÁÉ½áä±¥Ù”ğ½ Èø(€€€€€€€€ñÀ‘…Ñ„µ¤Äá¸ô‰Áœ¹ÍÕˆˆùM•¹„É•ÅÕ•ÍĞÑ¡É½Õ Ñ¡”…Ñ•İ…ä…¹¥¹ÍÁ•ĞÑ¡”™Õ±°É•ÍÁ½¹Í”¸ğ½Àø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰Ñ•ÍÑ•Èˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰Ñ•ÍÑ•Èµ‰…ÈˆøñÍÁ…¸±…ÍÌô‰Ğµ‘½ĞÈˆøğ½ÍÁ…¸øñÍÁ…¸±…ÍÌô‰Ğµ‘½Ğäˆøğ½ÍÁ…¸øñÍÁ…¸±…ÍÌô‰Ğµ‘½Ğœˆøğ½ÍÁ…¸øñÍÁ…¸±…ÍÌô‰Ñ•ÍÑ•ÈµÑ¥Ñ±”ˆùÉ•ÅÕ•ÍĞÑ•ÍÑ•Èğ½ÍÁ…¸øğ½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰Ñ•ÍÑ•Èµ‰½‘äˆø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±µÉ½Üˆø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆÍÑå±”ô‰™±•àèÈ€Ä€ÈØÁÁàˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Áœ¹Ñ…É•ĞˆùQ…É•ĞUI0ğ½±…‰•°ø(€€€€€€€€€€€€€€ñ¥¹ÁÕĞÑåÁ”ô‰ÕÉ°ˆ¥ô‰ÁœµÕÉ°ˆÙ…±Õ”ô‰¡ÑÑÁÌè¼½…Á¤¹¥Á¥™ä¹½Éœı™½Éµ…Ğõ©Í½¸ˆÁ±…•¡½±‘•Èô‰¡ÑÑÁÌè¼½•á…µÁ±”¹½´ˆ€¼ø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Áœ¹½Õ¹ÑÉäˆù½Õ¹ÑÉäğ½±…‰•°ø(€€€€€€€€€€€€€€ñÍ•±•Ğ¥ô‰Áœµ½Õ¹ÑÉäˆø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰…ÕÑ¼ˆ‘…Ñ„µ¤Äá¸ô‰Áœ¹…ÕÑ¼ˆùÕÑ¼€¡É½Ñ…Ñ”¤ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰ÕÌˆùU¹¥Ñ•MÑ…Ñ•Ìğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰ˆˆùU¹¥Ñ•-¥¹‘½´ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰‘”ˆù•Éµ…¹äğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰Á°ˆùA½±…¹ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰•ÌˆùMÁ…¥¸ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰©Àˆù)…Á…¸ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ğ½Í•±•Ğø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Áœ¹É•ÑÉ¥•ÌˆùI•ÑÉ¥•Ìğ½±…‰•°ø(€€€€€€€€€€€€€€ñÍ•±•Ğ¥ô‰ÁœµÉ•ÑÉ¥•Ìˆø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ôˆÄˆøÄğ½½ÁÑ¥½¸øñ½ÁÑ¥½¸Ù…±Õ”ôˆÈˆøÈğ½½ÁÑ¥½¸øñ½ÁÑ¥½¸Ù…±Õ”ôˆĞˆÍ•±•Ñ•øĞğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ôˆØˆøØğ½½ÁÑ¥½¸øñ½ÁÑ¥½¸Ù…±Õ”ôˆàˆøàğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ğ½Í•±•Ğø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±µÉ½Üˆø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆÍÑå±”ô‰™±•àèÄ€Ä€ÄÀÀ”ˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Áœ¹µ•Ñ¡½ˆù5•Ñ¡½ğ½±…‰•°ø(€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰µ•Ñ¡½µÍ•œˆ¥ô‰Áœµµ•Ñ¡½ˆø(€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰µ•Ñ¡½…Ñ¥Ù”ˆ‘…Ñ„µ´ô‰PˆùPğ½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰µ•Ñ¡½ˆ‘…Ñ„µ´ô‰A=MPˆùA=MPğ½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰µ•Ñ¡½ˆ‘…Ñ„µ´ô‰AUPˆùAUPğ½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰µ•Ñ¡½ˆ‘…Ñ„µ´ô‰AQ ˆùAQ ğ½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰µ•Ñ¡½ˆ‘…Ñ„µ´ô‰1Qˆù1Qğ½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±µÉ½Üˆø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆÍÑå±”ô‰™±•àèÄ€Ä€ÄÀÀ”ˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Áœ¹‰½‘äˆùI•ÅÕ•ÍĞ‰½‘ä€¡)M=8¤ğ½±…‰•°ø(€€€€€€€€€€€€€€ñÑ•áÑ…É•„¥ô‰Áœµ‰½‘äˆÁ±…•¡½±‘•Èôì‰­•äˆè‰Ù…±Õ”‰ôœøğ½Ñ•áÑ…É•„ø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰‰Ñ¸‰Ñ¸µÁÉ¥µ…ÉäÍ•¹µ‰Ñ¸ˆ¥ô‰ÁœµÍ•¹ˆøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Áœ¹Í•¹ˆùM•¹I•ÅÕ•ÍĞğ½ÍÁ…¸øğ½‰ÕÑÑ½¸ø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰É•ÍÁ½¹Í”ˆ¥ô‰ÁœµÉ•ÍÁ½¹Í”ˆøñÍÁ…¸±…ÍÌô‰ÍÑ…ÑÕÌµÑ…œÍÑ…ÑÕÌµ¥‘±”ˆ‘…Ñ„µ¤Äá¸ô‰Áœ¹¥‘±”ˆùI•…‘äğ½ÍÁ…¸øñ‰ÈøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Áœ¹¡¥¹Ğˆù¥±°Ñ¡”™¥•±‘Ì…¹ÁÉ•ÍÌM•¹Ñ¼Í•”Ñ¡”É•ÍÁ½¹Í”¸ğ½ÍÁ…¸øğ½‘¥Øø(€€€€€€€€ğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€ğ½Í•Ñ¥½¸ø(ğ½µ…¥¸ø((ğ„´´€ôôôôô=U59QQ%=8€ôôôôô€´´ø(ñµ…¥¸±…ÍÌô‰Á…”ˆ¥ô‰Á…”µ‘½Ìˆø(€€ñÍ•Ñ¥½¸±…ÍÌô‰Í•Ñ¥½¸ˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰Í•Ñ¥½¸µ¡•…ˆø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰•å•‰É½Üˆ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹•å•‰É½Üˆù½Õµ•¹Ñ…Ñ¥½¸ğ½ÍÁ…¸ø(€€€€€€€€ñ È‘…Ñ„µ¤Äá¸ô‰‘½Ì¹Ñ¥Ñ±”ˆùA$É•™•É•¹”ğ½ Èø(€€€€€€€€ñÀ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹ÍÕˆˆùÙ•ÉåÑ¡¥¹œå½Ô¹••Ñ¼¥¹Ñ•É…Ñ”9•‰Õ±…AÉ½áä¥¹Ñ¼å½ÕÈ…ÁÀ¸ğ½Àø(€€€€€€ğ½‘¥Øø((€€€€€€ñ ÌÍÑå±”ô‰µ…É¥¸èÈÁÁà€À€áÁàˆ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹•¹‘Á½¥¹ÑÌˆù¹‘Á½¥¹ÑÌğ½ Ìø(€€€€€€ñ‘¥Ø±…ÍÌô‰…ÉˆÍÑå±”ô‰Á…‘‘¥¹œèáÁà€Àˆø(€€€€€€€€ñÑ…‰±”±…ÍÌô‰Ñ‰°ˆø(€€€€€€€€€€ñÑ¡•…øñÑÈøñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹µ•Ñ¡½ˆù5•Ñ¡½ğ½Ñ øñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹•¹‘Á½¥¹Ğˆù¹‘Á½¥¹Ğğ½Ñ øñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆù•ÍÉ¥ÁÑ¥½¸ğ½Ñ øğ½ÑÈøğ½Ñ¡•…ø(€€€€€€€€€€ñÑ‰½‘äø(€€€€€€€€€€€€ñÑÈøñÑøñÍÁ…¸±…ÍÌô‰µ¸ˆùA=MPğ½ÍÁ…¸øğ½ÑøñÑøñ½‘”ø½…Á¤½ÁÉ½áäğ½½‘”øğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹ÁÉ½áäˆùAÉ½áä„É•ÅÕ•ÍĞÑ¡É½Õ „É½Ñ…Ñ¥¹œ%@ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñÍÁ…¸±…ÍÌô‰µ¸ˆùPğ½ÍÁ…¸øğ½ÑøñÑøñ½‘”ø½…Á¤½ÁÉ½áä½¥Àğ½½‘”øğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹¥Àˆù•Ğå½ÕÈÕÉÉ•¹Ğ•É•ÍÌ%@ğ½Ñøğ½ÑÈø(€€€€€€€€€€ğ½Ñ‰½‘äø(€€€€€€€€ğ½Ñ…‰±”ø(€€€€€€ğ½‘¥Øø((€€€€€€ñ ÌÍÑå±”ô‰µ…É¥¸èÈÑÁà€À€áÁàˆ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹Á…É…µÌˆùI•ÅÕ•ÍĞÁ…É…µ•Ñ•ÉÌğ½ Ìø(€€€€€€ñ‘¥Ø±…ÍÌô‰…ÉˆÍÑå±”ô‰Á…‘‘¥¹œèáÁà€Àˆø(€€€€€€€€ñÑ…‰±”±…ÍÌô‰Ñ‰°ˆø(€€€€€€€€€€ñÑ¡•…øñÑÈøñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹™¥•±ˆù¥•±ğ½Ñ øñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹ÑåÁ”ˆùQåÁ”ğ½Ñ øñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹É•ÄˆùI•ÅÕ¥É•ğ½Ñ øñÑ ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹‘•ÍŒÈˆù•ÍÉ¥ÁÑ¥½¸ğ½Ñ øğ½ÑÈøğ½Ñ¡•…ø(€€€€€€€€€€ñÑ‰½‘äø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ùÕÉ°ğ½½‘”øğ½ÑøñÑùÍÑÉ¥¹œğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰å•Ìˆùå•Ìğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹ÕÉ°ˆùQ¡”Ñ…É•ĞUI0Ñ¼™•Ñ ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ùµ•Ñ¡½ğ½½‘”øğ½ÑøñÑùÍÑÉ¥¹œğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹µ•Ñ¡½ˆù!QQ@µ•Ñ¡½€¡‘•™…Õ±ĞP¤ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ùÁÉ½áå}½Õ¹ÑÉäğ½½‘”øğ½ÑøñÑùÍÑÉ¥¹œğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹½Õ¹ÑÉäˆùQİ¼µ±•ÑÑ•È½Õ¹ÑÉä½‘”€¡½È€‰…ÕÑ¼ˆ¤ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ùÉ•ÑÉ¥•Ìğ½½‘”øğ½ÑøñÑù¹Õµ‰•Èğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹É•ÑÉ¥•ÌˆùI•ÑÉä…ÑÑ•µÁÑÌ½¸™…¥±ÕÉ”ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ù¡•…‘•ÉÌğ½½‘”øğ½ÑøñÑù½‰©•Ğğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹¡•…‘•ÉÌˆùÕÍÑ½´¡•…‘•ÉÌÑ¼™½Éİ…Éğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ù½½­¥•Ìğ½½‘”øğ½ÑøñÑù½‰©•Ğğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹½½­¥•Ìˆù½½­¥•ÌÑ¼…ÑÑ… ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ù‰½‘äğ½½‘”øğ½ÑøñÑùÍÑÉ¥¹œğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹‰½‘äˆùI•ÅÕ•ÍĞ‰½‘ä€¡™½ÈA=MP½AUP½AQ ¤ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ù‰½‘å%Í	…Í”ØĞğ½½‘”øğ½ÑøñÑù‰½½±•…¸ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹ˆØĞˆù]¡•Ñ¡•ÈÑ¡”‰½‘ä¥Ì‰…Í”ØĞµ•¹½‘•ğ½Ñøğ½ÑÈø(€€€€€€€€€€€€ñÑÈøñÑøñ½‘”ùÍÑ¥­äğ½½‘”øğ½ÑøñÑù‰½½±•…¸ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰¹¼ˆù¹¼ğ½ÑøñÑ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹À¹ÍÑ¥­äˆù-••ÀÑ¡”Í…µ”%@…É½ÍÌÉ•ÅÕ•ÍÑÌğ½Ñøğ½ÑÈø(€€€€€€€€€€ğ½Ñ‰½‘äø(€€€€€€€€ğ½Ñ…‰±”ø(€€€€€€ğ½‘¥Øø((€€€€€€ñ ÌÍÑå±”ô‰µ…É¥¸èÈÑÁà€À€áÁàˆ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹•á…µÁ±•Ìˆùá…µÁ±•Ìğ½ Ìø(€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”ˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”µ¡•…ˆøñÍÁ…¸ùUI0ğ½ÍÁ…¸øñ‰ÕÑÑ½¸±…ÍÌô‰½Áäµ‰Ñ¸ˆ‘…Ñ„µ½Áäù½Áäğ½‰ÕÑÑ½¸øğ½‘¥Øø(€€€€€€€€ñÁÉ”øñ½‘”ùÕÉ°€µ`A=MP¡ÑÑÁÌè¼½å½ÕÈµİ½É­•È¹‘•Ø½…Á¤½ÁÉ½áäp(€€µ €‰½¹Ñ•¹ĞµQåÁ”è…ÁÁ±¥…Ñ¥½¸½©Í½¸ˆp(€€µ€ì‰ÕÉ°ˆè‰¡ÑÑÁÌè¼½…Á¤¹¥Á¥™ä¹½Éœı™½Éµ…Ğõ©Í½¸ˆ°‰ÁÉ½áå}½Õ¹ÑÉäˆè‰ÕÌ‰ôœğ½½‘”øğ½ÁÉ”ø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”ˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”µ¡•…ˆøñÍÁ…¸ùAåÑ¡½¸ğ½ÍÁ…¸øñ‰ÕÑÑ½¸±…ÍÌô‰½Áäµ‰Ñ¸ˆ‘…Ñ„µ½Áäù½Áäğ½‰ÕÑÑ½¸øğ½‘¥Øø(€€€€€€€€ñÁÉ”øñ½‘”ù¥µÁ½ÉĞÉ•ÅÕ•ÍÑÌ()È€ôÉ•ÅÕ•ÍÑÌ¹Á½ÍĞ ‰¡ÑÑÁÌè¼½å½ÕÈµİ½É­•È¹‘•Ø½…Á¤½ÁÉ½áäˆ°©Í½¸õì(€€€€‰ÕÉ°ˆè€‰¡ÑÑÁÌè¼½…Á¤¹¥Á¥™ä¹½Éœı™½Éµ…Ğõ©Í½¸ˆ°(€€€€‰ÁÉ½áå}½Õ¹ÑÉäˆè€‰ÕÌˆ)ô¤)ÁÉ¥¹Ğ¡È¹©Í½¸ ¤¤ğ½½‘”øğ½ÁÉ”ø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”ˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”µ¡•…ˆøñÍÁ…¸ù9½‘”¹©Ìğ½ÍÁ…¸øñ‰ÕÑÑ½¸±…ÍÌô‰½Áäµ‰Ñ¸ˆ‘…Ñ„µ½Áäù½Áäğ½‰ÕÑÑ½¸øğ½‘¥Øø(€€€€€€€€ñÁÉ”øñ½‘”ù½¹ÍĞÉ•Ì€ô…İ…¥Ğ™•Ñ  ‰¡ÑÑÁÌè¼½å½ÕÈµİ½É­•È¹‘•Ø½…Á¤½ÁÉ½áäˆ°ì(€µ•Ñ¡½è€‰A=MPˆ°(€¡•…‘•ÉÌèì€‰½¹Ñ•¹ĞµQåÁ”ˆè€‰…ÁÁ±¥…Ñ¥½¸½©Í½¸ˆô°(€‰½‘äè)M=8¹ÍÑÉ¥¹¥™ä¡ìÕÉ°è€‰¡ÑÑÁÌè¼½…Á¤¹¥Á¥™ä¹½Éœı™½Éµ…Ğõ©Í½¸ˆ°ÁÉ½áå}½Õ¹ÑÉäè€‰ÕÌˆô¤)ô¤ì)½¹Í½±”¹±½œ¡…İ…¥ĞÉ•Ì¹©Í½¸ ¤¤ìğ½½‘”øğ½ÁÉ”ø(€€€€€€ğ½‘¥Øø((€€€€€€ñ ÌÍÑå±”ô‰µ…É¥¸èÈÑÁà€À€áÁàˆ‘…Ñ„µ¤Äá¸ô‰‘½Ì¹É•ÌˆùI•ÍÁ½¹Í”ğ½ Ìø(€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”ˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰½‘”µ¡•…ˆøñÍÁ…¸ù)M=8ğ½ÍÁ…¸øñ‰ÕÑÑ½¸±…ÍÌô‰½Áäµ‰Ñ¸ˆ‘…Ñ„µ½Áäù½Áäğ½‰ÕÑÑ½¸øğ½‘¥Øø(€€€€€€€€ñÁÉ”øñ½‘”ùì(€€‰ÍÑ…ÑÕÌˆè€ÈÀÀ°(€€‰ÍÑ…ÑÕÍQ•áĞˆè€‰=,ˆ°(€€‰¡•…‘•ÉÌˆèì€‰½¹Ñ•¹ĞµÑåÁ”ˆè€‰…ÁÁ±¥…Ñ¥½¸½©Í½¸ˆô°(€€‰‘…Ñ„ˆèì€‰¥Àˆè€ˆÄäà¸ÄÀÔ¸ÄÈÄ¸ÈÀÀˆô°(€€‰‘…Ñ…}ˆØĞˆè¹Õ±°°(€€‰‰¥¹…Éäˆè™…±Í”°(€€‰Í¥é”ˆè€ÈĞ°(€€‰ÁÉ½áå½Õ¹ÑÉäˆè€‰ÕÌˆ°(€€‰…ÑÑ•µÁĞˆè€Ä°(€€‰ÍÕ•ÍÌˆèÑÉÕ”°(€€‰•±…ÁÍ•‘}µÌˆè€àÄÈ°(€€‰•±…ÁÍ•‘}Í•Œˆè€À¸àÄÈ)ôğ½½‘”øğ½ÁÉ”ø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€ğ½Í•Ñ¥½¸ø(ğ½µ…¥¸ø((ğ„´´€ôôôôôMQQ%9L€ôôôôô€´´ø(ñµ…¥¸±…ÍÌô‰Á…”ˆ¥ô‰Á…”µÍ•ÑÑ¥¹Ìˆø(€€ñÍ•Ñ¥½¸±…ÍÌô‰Í•Ñ¥½¸ˆø(€€€€ñ‘¥Ø±…ÍÌô‰½¹Ñ…¥¹•Èˆø(€€€€€€ñ‘¥Ø±…ÍÌô‰Í•Ñ¥½¸µ¡•…ˆø(€€€€€€€€ñÍÁ…¸±…ÍÌô‰•å•‰É½Üˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹•å•‰É½ÜˆùM•ÑÑ¥¹Ìğ½ÍÁ…¸ø(€€€€€€€€ñ È‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹Ñ¥Ñ±”ˆù½¹™¥ÕÉ…Ñ¥½¸ğ½ Èø(€€€€€€€€ñÀ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹ÍÕˆˆùQÕ¹”å½ÕÈ…Ñ•İ…äÁÉ•™•É•¹•Ì…¹µ…¹…”…‘µ¥¸…•ÍÌ¸ğ½Àø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥Ø±…ÍÌô‰Í•ÑÑ¥¹ÌµÉ¥ˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰…Éˆø(€€€€€€€€€€ñ ÌûŠjg¾â<€ñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹•¹•É…°ˆù•¹•É…°ğ½ÍÁ…¸øğ½ Ìø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰Í•ÑÑ¥¹œµÉ½Üˆø(€€€€€€€€€€€€ñ‘¥Øøñ‘¥Ø±…ÍÌô‰Ìµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹ÍÑ¥­äˆùMÑ¥­äÍ•ÍÍ¥½¹Ìğ½‘¥Øøñ‘¥Ø±…ÍÌô‰ÌµÍÕˆˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹ÍÑ¥­ä¹ˆùI•ÕÍ”Ñ¡”Í…µ”%@…É½ÍÌÉ•ÅÕ•ÍÑÌğ½‘¥Øøğ½‘¥Øø(€€€€€€€€€€€€ñ±…‰•°±…ÍÌô‰Ñ½±”ˆøñ¥¹ÁÕĞÑåÁ”ô‰¡•­‰½àˆ¥ô‰Í•ĞµÍÑ¥­äˆøñÍÁ…¸±…ÍÌô‰Í±¥‘•Èˆøğ½ÍÁ…¸øğ½±…‰•°ø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰Í•ÑÑ¥¹œµÉ½Üˆø(€€€€€€€€€€€€ñ‘¥Øøñ‘¥Ø±…ÍÌô‰Ìµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹ÍÑÉ•…´ˆùMÑÉ•…µ¥¹œ€¡MM¤ğ½‘¥Øøñ‘¥Ø±…ÍÌô‰ÌµÍÕˆˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹ÍÑÉ•…´¹ˆùMÑÉ•…´É•ÍÁ½¹Í•Ì…ÌÑ¡•ä…ÉÉ¥Ù”ğ½‘¥Øøğ½‘¥Øø(€€€€€€€€€€€€ñ±…‰•°±…ÍÌô‰Ñ½±”ˆøñ¥¹ÁÕĞÑåÁ”ô‰¡•­‰½àˆ¥ô‰Í•ĞµÍÑÉ•…´ˆ¡•­•øñÍÁ…¸±…ÍÌô‰Í±¥‘•Èˆøğ½ÍÁ…¸øğ½±…‰•°ø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰Í•ÑÑ¥¹œµÉ½Üˆø(€€€€€€€€€€€€ñ‘¥Øøñ‘¥Ø±…ÍÌô‰Ìµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹‘…É¬ˆù…É¬Ñ¡•µ”ğ½‘¥Øøñ‘¥Ø±…ÍÌô‰ÌµÍÕˆˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹‘…É¬¹ˆùQ½±”‰•Ñİ••¸‘…É¬€˜±¥¡Ğğ½‘¥Øøğ½‘¥Øø(€€€€€€€€€€€€ñ±…‰•°±…ÍÌô‰Ñ½±”ˆøñ¥¹ÁÕĞÑåÁ”ô‰¡•­‰½àˆ¥ô‰Í•Ğµ‘…É¬ˆ¡•­•øñÍÁ…¸±…ÍÌô‰Í±¥‘•Èˆøğ½ÍÁ…¸øğ½±…‰•°ø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰Í•ÑÑ¥¹œµÉ½ÜˆÍÑå±”ô‰™±•àµ‘¥É•Ñ¥½¸é½±Õµ¸í…±¥¸µ¥Ñ•µÌéÍÑÉ•Ñ í…ÀèáÁàˆø(€€€€€€€€€€€€ñ‘¥Øøñ‘¥Ø±…ÍÌô‰Ìµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹½Õ¹ÑÉäˆù•™…Õ±Ğ½Õ¹ÑÉäğ½‘¥Øøñ‘¥Ø±…ÍÌô‰ÌµÍÕˆˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹½Õ¹ÑÉä¹ˆùUÍ•İ¡•¸¹¼½Õ¹ÑÉä¥ÌÍÁ•¥™¥•ğ½‘¥Øøğ½‘¥Øø(€€€€€€€€€€€€ñÍ•±•Ğ±…ÍÌô‰¥¹ÁÕĞˆ¥ô‰Í•Ğµ½Õ¹ÑÉäˆø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰…ÕÑ¼ˆ‘…Ñ„µ¤Äá¸ô‰Áœ¹…ÕÑ¼ˆùÕÑ¼€¡É½Ñ…Ñ”¤ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰ÕÌˆùU¹¥Ñ•MÑ…Ñ•Ìğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰ˆˆùU¹¥Ñ•-¥¹‘½´ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰‘”ˆù•Éµ…¹äğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰Á°ˆùA½±…¹ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰•ÌˆùMÁ…¥¸ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€€€ñ½ÁÑ¥½¸Ù…±Õ”ô‰©Àˆù)…Á…¸ğ½½ÁÑ¥½¸ø(€€€€€€€€€€€€ğ½Í•±•Ğø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€ğ½‘¥Øø((€€€€€€€€ñ‘¥Ø±…ÍÌô‰…Éˆø(€€€€€€€€€€ñ ÌûÂ~R@€ñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹…‘µ¥¸ˆù‘µ¥¸±½¥¸ğ½ÍÁ…¸øğ½ Ìø(€€€€€€€€€€ñÀ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹…‘µ¥¸¹ˆùM¥¸¥¸Ñ¼µ…¹…”ÁÉ½á¥•Ì°Ù¥•Ü±¥Ù”ÍÑ…ÑÌ°…¹É½Ñ…Ñ”­•åÌ¸ğ½Àø(€€€€€€€€€€ñ™½É´±…ÍÌô‰±½¥¸µ™½É´ˆ¥ô‰±½¥¸µ™½É´ˆø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹ÕÍ•É¹…µ”ˆùUÍ•É¹…µ”ğ½±…‰•°ø(€€€€€€€€€€€€€€ñ¥¹ÁÕĞ±…ÍÌô‰¥¹ÁÕĞˆÑåÁ”ô‰Ñ•áĞˆ¥ô‰±½¥¸µÕÍ•Èˆ…ÕÑ½½µÁ±•Ñ”ô‰ÕÍ•É¹…µ”ˆ‘…Ñ„µ¤Äá¸µÁ ô‰Í•Ğ¹ÕÍ•È¹Á ˆÁ±…•¡½±‘•Èô‰…‘µ¥¸ˆ€¼ø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰™¥•±ˆø(€€€€€€€€€€€€€€ñ±…‰•°‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹Á…ÍÍİ½ÉˆùA…ÍÍİ½Éğ½±…‰•°ø(€€€€€€€€€€€€€€ñ¥¹ÁÕĞ±…ÍÌô‰¥¹ÁÕĞˆÑåÁ”ô‰Á…ÍÍİ½Éˆ¥ô‰±½¥¸µÁ…ÍÌˆ…ÕÑ½½µÁ±•Ñ”ô‰ÕÉÉ•¹ĞµÁ…ÍÍİ½Éˆ‘…Ñ„µ¤Äá¸µÁ ô‰Í•Ğ¹Á…ÍÌ¹Á ˆÁ±…•¡½±‘•Èô‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ€¼ø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰‰Ñ¸‰Ñ¸µÁÉ¥µ…ÉäˆÑåÁ”ô‰ÍÕ‰µ¥ĞˆÍÑå±”ô‰©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•ÈˆøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹±½¥¸ˆùM¥¸¥¸ğ½ÍÁ…¸øğ½‰ÕÑÑ½¸ø(€€€€€€€€€€ğ½™½É´ø(€€€€€€€€ğ½‘¥Øø((€€€€€€€€ñ‘¥Ø±…ÍÌô‰…Éˆø(€€€€€€€€€€ñ ÌûÂ~RD€ñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹­•åÌˆùA$­•åÌğ½ÍÁ…¸øğ½ Ìø(€€€€€€€€€€ñÀ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹­•åÌ¹ˆùI½Ñ…Ñ”½ÈÉ•Ù½­”…Ñ•İ…ä­•åÌ¸‘µ¥¸…•ÍÌÉ•ÅÕ¥É•¸ğ½Àø(€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰‰Ñ¸‰Ñ¸µ¡½ÍĞˆ¥ô‰‰Ñ¸µÉ½Ñ…Ñ”ˆÍÑå±”ô‰İ¥‘Ñ èÄÀÀ”í©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•ÈˆøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹É½Ñ…Ñ”ˆùI½Ñ…Ñ”A$­•äğ½ÍÁ…¸øğ½‰ÕÑÑ½¸ø(€€€€€€€€€€ñ‰ÕÑÑ½¸±…ÍÌô‰‰Ñ¸‰Ñ¸µ¡½ÍĞˆ¥ô‰‰Ñ¸µÉ•Ù½­”ˆÍÑå±”ô‰İ¥‘Ñ èÄÀÀ”í©ÕÍÑ¥™äµ½¹Ñ•¹Ğé•¹Ñ•Èíµ…É¥¸µÑ½ÀèÄÁÁàˆøñÍÁ…¸‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹É•Ù½­”ˆùI•Ù½­”…±°­•åÌğ½ÍÁ…¸øğ½‰ÕÑÑ½¸ø(€€€€€€€€ğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€€€ñÀÍÑå±”ô‰Ñ•áĞµ…±¥¸é•¹Ñ•Èíµ…É¥¸µÑ½ÀèÈÑÁàí™½¹ĞµÍ¥é”èÄÈ¸ÕÁàí½±½ÈéÙ…È ´µÑ•áĞµ™…¥¹Ğ¤ˆ‘…Ñ„µ¤Äá¸ô‰Í•Ğ¹‘•µ¼ˆù•µ¼‰Õ¥±ƒŠP…‘µ¥¸™•…ÑÕÉ•ÌÉ•ÅÕ¥É”„½¹¹•Ñ•‰…­•¹¸ğ½Àø(€€€€ğ½‘¥Øø(€€ğ½Í•Ñ¥½¸ø(ğ½µ…¥¸ø((ğ„´´€ôôôôô	½ÑÑ½´Ñ…ˆ‰…È€ôôôôô€´´ø(ñ¹…Ø±…ÍÌô‰Ñ…‰‰…Èˆ¥ô‰Ñ…‰‰…Èˆø(€€ñ‰ÕÑÑ½¸±…ÍÌô‰Ñ…ˆ…Ñ¥Ù”ˆ‘…Ñ„µ¹…Øô‰¡½µ”ˆø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ‘½Ğˆøğ½ÍÁ…¸ø(€€€€ñÍÙœ±…ÍÌô‰Ğµ¥¼ˆÙ¥•İ	½àôˆÀ€À€ÈĞ€ÈĞˆ™¥±°ô‰¹½¹”ˆÍÑÉ½­”ô‰ÕÉÉ•¹Ñ½±½ÈˆÍÑÉ½­”µİ¥‘Ñ ôˆÈˆÍÑÉ½­”µ±¥¹•…Àô‰É½Õ¹ˆÍÑÉ½­”µ±¥¹•©½¥¸ô‰É½Õ¹ˆøñÁ…Ñ ô‰4Ì€å°ä´Ü€ä€İØÄÅ„È€È€À€À€Ä´È€É Õ„È€È€À€À€Ä´È´Éèˆ¼øñÁ½±å±¥¹”Á½¥¹ÑÌôˆä€ÈÈ€ä€ÄÈ€ÄÔ€ÄÈ€ÄÔ€ÈÈˆ¼øğ½ÍÙœø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰¹…Ø¹¡½µ”ˆù!½µ”ğ½ÍÁ…¸ø(€€ğ½‰ÕÑÑ½¸ø(€€ñ‰ÕÑÑ½¸±…ÍÌô‰Ñ…ˆˆ‘…Ñ„µ¹…Øô‰Á±…åÉ½Õ¹ˆø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ‘½Ğˆøğ½ÍÁ…¸ø(€€€€ñÍÙœ±…ÍÌô‰Ğµ¥¼ˆÙ¥•İ	½àôˆÀ€À€ÈĞ€ÈĞˆ™¥±°ô‰¹½¹”ˆÍÑÉ½­”ô‰ÕÉÉ•¹Ñ½±½ÈˆÍÑÉ½­”µİ¥‘Ñ ôˆÈˆÍÑÉ½­”µ±¥¹•…Àô‰É½Õ¹ˆÍÑÉ½­”µ±¥¹•©½¥¸ô‰É½Õ¹ˆøñÁ½±å±¥¹”Á½¥¹ÑÌôˆÄØ€Äà€ÈÈ€ÄÈ€ÄØ€Øˆ¼øñÁ½±å±¥¹”Á½¥¹ÑÌôˆà€Ø€È€ÄÈ€à€Äàˆ¼øğ½ÍÙœø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰¹…Ø¹Á±…åÉ½Õ¹ˆùA±…åÉ½Õ¹ğ½ÍÁ…¸ø(€€ğ½‰ÕÑÑ½¸ø(€€ñ‰ÕÑÑ½¸±…ÍÌô‰Ñ…ˆˆ‘…Ñ„µ¹…Øô‰‘½Ìˆø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ‘½Ğˆøğ½ÍÁ…¸ø(€€€€ñÍÙœ±…ÍÌô‰Ğµ¥¼ˆÙ¥•İ	½àôˆÀ€À€ÈĞ€ÈĞˆ™¥±°ô‰¹½¹”ˆÍÑÉ½­”ô‰ÕÉÉ•¹Ñ½±½ÈˆÍÑÉ½­”µİ¥‘Ñ ôˆÈˆÍÑÉ½­”µ±¥¹•…Àô‰É½Õ¹ˆÍÑÉ½­”µ±¥¹•©½¥¸ô‰É½Õ¹ˆøñÁ…Ñ ô‰4ÄĞ€É Ù„È€È€À€À€À´È€ÉØÄÙ„È€È€À€À€À€È€É ÄÉ„È€È€À€À€À€È´ÉXáèˆ¼øñÁ½±å±¥¹”Á½¥¹ÑÌôˆÄĞ€È€ÄĞ€à€ÈÀ€àˆ¼øñ±¥¹”àÄôˆÄØˆäÄôˆÄÌˆàÈôˆàˆäÈôˆÄÌˆ¼øñ±¥¹”àÄôˆÄØˆäÄôˆÄÜˆàÈôˆàˆäÈôˆÄÜˆ¼øğ½ÍÙœø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰¹…Ø¹‘½Ìˆù½Õµ•¹Ñ…Ñ¥½¸ğ½ÍÁ…¸ø(€€ğ½‰ÕÑÑ½¸ø(€€ñ‰ÕÑÑ½¸±…ÍÌô‰Ñ…ˆˆ‘…Ñ„µ¹…Øô‰Í•ÑÑ¥¹Ìˆø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ‘½Ğˆøğ½ÍÁ…¸ø(€€€€ñÍÙœ±…ÍÌô‰Ğµ¥¼ˆÙ¥•İ	½àôˆÀ€À€ÈĞ€ÈĞˆ™¥±°ô‰¹½¹”ˆÍÑÉ½­”ô‰ÕÉÉ•¹Ñ½±½ÈˆÍÑÉ½­”µİ¥‘Ñ ôˆÈˆÍÑÉ½­”µ±¥¹•…Àô‰É½Õ¹ˆÍÑÉ½­”µ±¥¹•©½¥¸ô‰É½Õ¹ˆøñ¥É±”àôˆÄÈˆäôˆÄÈˆÈôˆÌˆ¼øñÁ…Ñ ô‰4Ää¸Ğ€ÄÕ„Ä¸ØÔ€Ä¸ØÔ€À€À€À€¸ÌÌ€Ä¸àÉ°¸ÀØ¸ÀÙ„È€È€À€À€Ä€À€È¸àÌ€È€È€À€À€Ä´È¸àÌ€Á°´¸ÀØ´¸ÀÙ„Ä¸ØÔ€Ä¸ØÔ€À€À€À´Ä¸àÈ´¸ÌÌ€Ä¸ØÔ€Ä¸ØÔ€À€À€À´Ä€Ä¸ÔÅXÈÅ„È€È€À€À€Ä´È€È€È€È€À€À€Ä´È´ÉØ´¸ÀåÄ¸ØÔ€Ä¸ØÔ€À€À€À€ä€Ää¸Ñ„Ä¸ØÔ€Ä¸ØÔ€À€À€À´Ä¸àÈ¸ÌÍ°´¸ÀØ¸ÀÙ„È€È€À€À€Ä´È¸àÌ€À€È€È€À€À€Ä€À´È¸àÍ°¸ÀØ´¸ÀÙ„Ä¸ØÔ€Ä¸ØÔ€À€À€À€¸ÌÌ´Ä¸àÈ€Ä¸ØÔ€Ä¸ØÔ€À€À€À´Ä¸ÔÄ´Å Í„È€È€À€À€Ä´È´È€È€È€À€À€Ä€È´É ¸ÀåÄ¸ØÔ€Ä¸ØÔ€À€À€À€Ğ¸Ø€å„Ä¸ØÔ€Ä¸ØÔ€À€À€À´¸ÌÌ´Ä¸àÉ°´¸ÀØ´¸ÀÙ„È€È€À€À€Ä€À´È¸àÌ€È€È€À€À€Ä€È¸àÌ€Á°¸ÀØ¸ÀÙ„Ä¸ØÔ€Ä¸ØÔ€À€À€À€Ä¸àÈ¸ÌÍ å„Ä¸ØÔ€Ä¸ØÔ€À€À€À€Ä´Ä¸ÔÅXÍ„È€È€À€À€Ä€È´È€È€È€À€À€Ä€È€ÉØ¸Àå„Ä¸ØÔ€Ä¸ØÔ€À€À€À€Ä€Ä¸ÔÄ€Ä¸ØÔ€Ä¸ØÔ€À€À€À€Ä¸àÈ´¸ÌÍ°¸ÀØ´¸ÀÙ„È€È€À€À€Ä€È¸àÌ€À€È€È€À€À€Ä€À€È¸àÍ°´¸ÀØ¸ÀÙ„Ä¸ØÔ€Ä¸ØÔ€À€À€À´¸ÌÌ€Ä¸àÉXå„Ä¸ØÔ€Ä¸ØÔ€À€À€À€Ä¸ÔÄ€Å ÈÅ„È€È€À€À€Ä€È€È€È€È€À€À€Ä´È€É ´¸Àå„Ä¸ØÔ€Ä¸ØÔ€À€À€À´Ä¸ÔÄ€Åèˆ¼øğ½ÍÙœø(€€€€ñÍÁ…¸±…ÍÌô‰Ğµ±…‰•°ˆ‘…Ñ„µ¤Äá¸ô‰¹…Ø¹Í•ÑÑ¥¹ÌˆùM•ÑÑ¥¹Ìğ½ÍÁ…¸ø(€€ğ½‰ÕÑÑ½¸ø(ğ½¹…Øø((ñ‘¥Ø±…ÍÌô‰Ñ½…ÍĞˆ¥ô‰Ñ½…ÍĞˆøğ½‘¥Øø((ñÍÉ¥ÁĞø(¼¨€ôôôôôôôôôôôôôôôôôôôô¤Äá¸€ôôôôôôôôôôôôôôôôôôôô€¨¼)½¹ÍĞ$Äá8€ôl(€ì½‘”è‰•¸ˆ°±…‰•°è‰¹±¥Í ˆ°ÉÑ°é™…±Í”ô°(€ì½‘”è‰‰¸ˆ°±…‰•°è‹‚š³‚šû‚š‚šË‚šøˆ°ÉÑ°é™…±Í”ô°(€ì½‘”è‰¡¤ˆ°±…‰•°è‹‚’ç‚’ÿ‚’£‚–7‚’›‚– ˆ°ÉÑ°é™…±Í”ô°(€ì½‘”è‰•Ìˆ°±…‰•°è‰ÍÁ‡Å½°ˆ°ÉÑ°é™…±Í”ô°(€ì½‘”è‰™Èˆ°±…‰•°è‰É…»…¥Ìˆ°ÉÑ°é™…±Í”ô°(€ì½‘”è‰…Èˆ°±…‰•°è‹bŸfbçbÇb£f+b¤ˆ°ÉÑ°éÑÉÕ”ô°(€ì½‘”è‰ÉÔˆ°±…‰•°è‹BƒFFFBëBãBäˆ°ÉÑ°é™…±Í”ô°)tì)½¹ÍĞMQI%9L€ôì(€€‰•¸ˆèì€‰¡•É¼¹‰…‘”ˆè‰…Ñ•İ…ä=¹±¥¹”ˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‰I½Ñ…Ñ”å½ÕÈˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‰•É•ÍÌ%@ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‰½¸•Ù•ÉäÉ•ÅÕ•ÍĞˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áä¥Ì„É½Ñ…Ñ¥¹œÁÉ½áäA$…Ñ•İ…ä¸M•¹„É•ÅÕ•ÍĞ°•Ğ„™É•Í %@™É½´½¹”½˜Í¥à½Õ¹ÑÉ¥•Ì°…¹ÍÑÉ•…´Ñ¡”É•ÍÁ½¹Í”‰…¬ƒŠP…±°Ñ¡É½Õ „Í¥¹±”•¹‘Á½¥¹Ğ¸ˆ°(€€€€‰¡•É¼¹Á±…äˆè‰=Á•¸A±…åÉ½Õ¹ˆ°‰¡•É¼¹‘½Ìˆè‰I•…½Õµ•¹Ñ…Ñ¥½¸ˆ°‰¡•É¼¹±¥Ù”ˆè‰1¥Ù”ÍÑÉ•…µ¥¹œˆ°‰¡•É¼¹½½­¥•Ìˆè‰½½­¥•Ì€˜¡•…‘•ÉÌˆ°(€€€€‰¹…Ø¹É•¥½¹ÌˆèˆØ½Õ¹ÑÉ¥•Ìˆ°‰¹…Ø¹¡½µ”ˆè‰!½µ”ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‰A±…åÉ½Õ¹ˆ°‰¹…Ø¹‘½Ìˆè‰½Õµ•¹Ñ…Ñ¥½¸ˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‰M•ÑÑ¥¹Ìˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‰I•ÅÕ•ÍÑÌˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‰MÕ•ÍÌÉ…Ñ”ˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‰Ùœ±…Ñ•¹äˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‰I•¥½¹ÌÍ••¸ˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‰]¡ä9•‰Õ±…AÉ½áäˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‰Ù•ÉåÑ¡¥¹œå½Ô¹••Ñ¼É½Ñ…Ñ”ÑÉ…™™¥Œˆ°‰™•…Ğ¹ÍÕˆˆè‰Í¥¹±”A$•¹‘Á½¥¹ĞÑ¡…Ğ¡…¹‘±•ÌÁÉ½Ù¥‘•ÉÌ°%AÌ°¡•…‘•ÉÌ°…¹ÍÑÉ•…µ¥¹œ™½Èå½Ô¸ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‰5Õ±Ñ¤µÁÉ½Ù¥‘•È™…±±‰…¬ˆ°‰™•…Ğ¹˜Ä¹ˆè‰%˜½¹”ÕÁÍÑÉ•…´ÁÉ½áä™…¥±Ì°9•‰Õ±…AÉ½áä…ÕÑ½µ…Ñ¥…±±äÉ•ÑÉ¥•ÌÑ¡É½Õ …¹½Ñ¡•ÈƒŠP¹¼‘½İ¹Ñ¥µ”¸ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‰M¥àµ½Õ¹ÑÉäÉ½Ñ…Ñ¥½¸ˆ°‰™•…Ğ¹˜È¹ˆè‰I½Ñ…Ñ”•É•ÍÌ…É½ÍÌÑ¡”U¹¥Ñ•MÑ…Ñ•Ì°U¹¥Ñ•-¥¹‘½´°•Éµ…¹ä°A½±…¹°MÁ…¥¸°…¹)…Á…¸¸ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‰½½­¥•Ì€˜¡•…‘•ÉÌˆ°‰™•…Ğ¹˜Ì¹ˆè‰A…ÍÌÕÍÑ½´½½­¥•Ì…¹¡•…‘•ÉÌÍÑÉ…¥¡ĞÑ¡É½Õ Ñ¼Ñ¡”Ñ…É•ĞƒŠP™Õ±°½¹ÑÉ½°½Ù•ÈÑ¡”É•ÅÕ•ÍĞ¸ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‰1¥Ù”ÍÑÉ•…µ¥¹œˆ°‰™•…Ğ¹˜Ğ¹ˆè‰MÑÉ•…´É•ÍÁ½¹Í•Ì…ÌÑ¡•ä…ÉÉ¥Ù”İ¥Ñ MM°Í¼±½¹œ‘½İ¹±½…‘Ì‘½¸Ğ‰±½¬å½ÕÈ±¥•¹Ğ¸ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‰	¥¹…ÉäµÍ…™”ˆ°‰™•…Ğ¹˜Ô¹ˆè‰%µ…•Ì°™¥±•Ì°…¹‰¥¹…ÉäÁ…å±½…‘ÌÁ…ÍÌÑ¡É½Õ Õ¹Ñ½Õ¡•İ¥Ñ ‰…Í”ØĞÍÕÁÁ½ÉĞ¸ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‰¹ä±…¹Õ…”ˆ°‰™•…Ğ¹˜Ø¹ˆè‰UÍ”UI0°AåÑ¡½¸°9½‘”¹©Ì°½È…¹åÑ¡¥¹œÑ¡…ĞÍÁ•…­Ì!QQ@¸=¹”•¹‘Á½¥¹Ğ°¹¼M,É•ÅÕ¥É•¸ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‰A±…åÉ½Õ¹ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‰Q•ÍĞÑ¡”ÁÉ½áä±¥Ù”ˆ°‰Áœ¹ÍÕˆˆè‰M•¹„É•ÅÕ•ÍĞÑ¡É½Õ Ñ¡”…Ñ•İ…ä…¹¥¹ÍÁ•ĞÑ¡”™Õ±°É•ÍÁ½¹Í”¸ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‰Q…É•ĞUI0ˆ°‰Áœ¹½Õ¹ÑÉäˆè‰½Õ¹ÑÉäˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‰I•ÑÉ¥•Ìˆ°‰Áœ¹µ•Ñ¡½ˆè‰5•Ñ¡½ˆ°‰Áœ¹‰½‘äˆè‰I•ÅÕ•ÍĞ‰½‘ä€¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‰M•¹I•ÅÕ•ÍĞˆ°‰Áœ¹¥‘±”ˆè‰I•…‘äˆ°‰Áœ¹¡¥¹Ğˆè‰¥±°Ñ¡”™¥•±‘Ì…¹ÁÉ•ÍÌM•¹Ñ¼Í•”Ñ¡”É•ÍÁ½¹Í”¸ˆ°‰Áœ¹…ÕÑ¼ˆè‰ÕÑ¼€¡É½Ñ…Ñ”¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‰½Õµ•¹Ñ…Ñ¥½¸ˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‰A$É•™•É•¹”ˆ°‰‘½Ì¹ÍÕˆˆè‰Ù•ÉåÑ¡¥¹œå½Ô¹••Ñ¼¥¹Ñ•É…Ñ”9•‰Õ±…AÉ½áä¥¹Ñ¼å½ÕÈ…ÁÀ¸ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‰¹‘Á½¥¹ÑÌˆ°‰‘½Ì¹µ•Ñ¡½ˆè‰5•Ñ¡½ˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‰¹‘Á½¥¹Ğˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‰•ÍÉ¥ÁÑ¥½¸ˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‰AÉ½áä„É•ÅÕ•ÍĞÑ¡É½Õ „É½Ñ…Ñ¥¹œ%@ˆ°‰‘½Ì¹¥Àˆè‰•Ğå½ÕÈÕÉÉ•¹Ğ•É•ÍÌ%@ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‰I•ÅÕ•ÍĞÁ…É…µ•Ñ•ÉÌˆ°‰‘½Ì¹™¥•±ˆè‰¥•±ˆ°‰‘½Ì¹ÑåÁ”ˆè‰QåÁ”ˆ°‰‘½Ì¹É•Äˆè‰I•ÅÕ¥É•ˆ°‰‘½Ì¹‘•ÍŒÈˆè‰•ÍÉ¥ÁÑ¥½¸ˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‰Q¡”Ñ…É•ĞUI0Ñ¼™•Ñ ˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‰!QQ@µ•Ñ¡½€¡‘•™…Õ±ĞP¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‰Qİ¼µ±•ÑÑ•È½Õ¹ÑÉä½‘”€¡½Èp‰…ÕÑ½pˆ¤ˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‰I•ÑÉä…ÑÑ•µÁÑÌ½¸™…¥±ÕÉ”ˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‰ÕÍÑ½´¡•…‘•ÉÌÑ¼™½Éİ…Éˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‰½½­¥•ÌÑ¼…ÑÑ… ˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‰I•ÅÕ•ÍĞ‰½‘ä€¡™½ÈA=MP½AUP½AQ ¤ˆ°‰‘½Ì¹À¹ˆØĞˆè‰]¡•Ñ¡•ÈÑ¡”‰½‘ä¥Ì‰…Í”ØĞµ•¹½‘•ˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‰-••ÀÑ¡”Í…µ”%@…É½ÍÌÉ•ÅÕ•ÍÑÌˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‰á…µÁ±•Ìˆ°‰‘½Ì¹É•Ìˆè‰I•ÍÁ½¹Í”ˆ°‰å•Ìˆè‰å•Ìˆ°‰¹¼ˆè‰¹¼ˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‰M•ÑÑ¥¹Ìˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‰½¹™¥ÕÉ…Ñ¥½¸ˆ°‰Í•Ğ¹ÍÕˆˆè‰QÕ¹”å½ÕÈ…Ñ•İ…äÁÉ•™•É•¹•Ì…¹µ…¹…”…‘µ¥¸…•ÍÌ¸ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‰•¹•É…°ˆ°‰Í•Ğ¹ÍÑ¥­äˆè‰MÑ¥­äÍ•ÍÍ¥½¹Ìˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‰I•ÕÍ”Ñ¡”Í…µ”%@…É½ÍÌÉ•ÅÕ•ÍÑÌˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‰MÑÉ•…µ¥¹œ€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‰MÑÉ•…´É•ÍÁ½¹Í•Ì…ÌÑ¡•ä…ÉÉ¥Ù”ˆ°‰Í•Ğ¹‘…É¬ˆè‰…É¬Ñ¡•µ”ˆ°‰Í•Ğ¹‘…É¬¹ˆè‰±İ…åÌ•¹…‰±•™½È9•‰Õ±„ˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‰•™…Õ±Ğ½Õ¹ÑÉäˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‰UÍ•İ¡•¸¹¼½Õ¹ÑÉä¥ÌÍÁ•¥™¥•ˆ°‰Í•Ğ¹…‘µ¥¸ˆè‰‘µ¥¸±½¥¸ˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‰M¥¸¥¸Ñ¼µ…¹…”ÁÉ½á¥•Ì°Ù¥•Ü±¥Ù”ÍÑ…ÑÌ°…¹É½Ñ…Ñ”­•åÌ¸ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‰UÍ•É¹…µ”ˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‰A…ÍÍİ½Éˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‰…‘µ¥¸ˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‰M¥¸¥¸ˆ°‰Í•Ğ¹­•åÌˆè‰A$­•åÌˆ°‰Í•Ğ¹­•åÌ¹ˆè‰I½Ñ…Ñ”½ÈÉ•Ù½­”…Ñ•İ…ä­•åÌ¸‘µ¥¸…•ÍÌÉ•ÅÕ¥É•¸ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‰I½Ñ…Ñ”A$­•äˆ°‰Í•Ğ¹É•Ù½­”ˆè‰I•Ù½­”…±°­•åÌˆ°‰Í•Ğ¹‘•µ¼ˆè‰•µ¼‰Õ¥±ƒŠP…‘µ¥¸™•…ÑÕÉ•ÌÉ•ÅÕ¥É”„½¹¹•Ñ•‰…­•¹¸ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‰‘µ¥¸…•ÍÌÉ•ÅÕ¥É•ƒŠPÍ¥¸¥¸™¥ÉÍĞ¸ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‰	Õ¥±Ğ™½È‘•Ù•±½Á•ÉÌİ¡¼¹••„±•…¸°É½Ñ…Ñ¥¹œ•É•ÍÌ%@İ¥Ñ¡½ÕĞÑ¡”¡…ÍÍ±”¸ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‰%¹Ù…±¥É•‘•¹Ñ¥…±ÌƒŠPÁ±•…Í”¡•¬å½ÕÈÕÍ•É¹…µ”…¹Á…ÍÍİ½É¸ˆ°‰±½¥¸¹½¬ˆè‰M¥¹•¥¸ÍÕ•ÍÍ™Õ±±ä¸ˆ(€ô°(€€‰‰¸ˆèì€‰¡•É¼¹‰…‘”ˆè‹‚š_‚‚š‚šO‚š¿‚šó‚ƒ‚šk‚šû‚šË‚ƒ‚š‚šo‚ˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‹‚š«‚7‚šÃ‚š“‚šÿ‚š‚šüƒ‚š‚š£‚‚šÃ‚/‚šŸ‚ˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‹‚š‚š«‚š£‚šû‚šÀ%@ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‹‚šc‚‚šÃ‚šû‚š ˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áäƒ‚š?‚šW‚š‚šüƒ‚šÃ‚/‚š‚‚š‚šÿ‚šƒ‚š«‚7‚šÃ‚šW‚7‚šã‚šüA$ƒ‚š_‚‚š‚šO‚š¿‚šó‚‚–ƒ‚š?‚šW‚š‚šüƒ‚š‚š£‚‚šÃ‚/‚šœƒ‚š«‚šû‚šƒ‚šû‚š °ƒ‚šo‚š¿‚šó‚š‚šüƒ‚š›‚‚šÛ‚‚šÀƒ‚š¿‚‚šW‚/‚š£‚,ƒ‚š?‚šW‚š‚šüƒ‚š—‚‚šW‚ƒ‚š£‚š“‚‚š %@ƒ‚š«‚šû‚š °ƒ‚š?‚š³‚šƒ‚š?‚šW‚š‚šüƒ‚š»‚šû‚š“‚7‚šÀƒ‚š?‚š£‚7‚š‡‚š«‚š¿‚šó‚‚š£‚7‚š|ƒ‚š›‚šÿ‚š¿‚šó‚ƒ‚š'‚š“‚7‚š“‚šÀƒ‚š¯‚‚šÃ‚šƒ‚š«‚šû‚š£‚–ˆ°(€€€€‰¡•É¼¹Á±…äˆè‹‚š«‚7‚šË‚‚š_‚7‚šÃ‚šû‚š'‚š£‚7‚š„ƒ‚š[‚‚šË‚‚š ˆ°‰¡•É¼¹‘½Ìˆè‹‚š‡‚šW‚‚š»‚‚š£‚7‚š‚‚šÛ‚š ƒ‚š«‚š‡‚šó‚‚š ˆ°‰¡•É¼¹±¥Ù”ˆè‹‚šË‚šû‚š‚š´ƒ‚šã‚7‚š‚7‚šÃ‚šÿ‚š»‚šÿ‚šˆ°‰¡•É¼¹½½­¥•Ìˆè‹‚šW‚‚šW‚šüƒ‚šLƒ‚šç‚‚š‡‚šû‚šÀˆ°(€€€€‰¹…Ø¹É•¥½¹Ìˆè‹‚³‚š‚šüƒ‚š›‚‚šØˆ°‰¹…Ø¹¡½µ”ˆè‹‚šç‚/‚š¸ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‹‚š«‚7‚šË‚‚š_‚7‚šÃ‚šû‚š'‚š£‚7‚š„ˆ°‰¹…Ø¹‘½Ìˆè‹‚š‡‚šW‚‚š»‚‚š£‚7‚š‚‚šÛ‚š ˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‹‚šã‚‚š‚šÿ‚š‚šàˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‹‚š‚š£‚‚šÃ‚/‚šœˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‹‚šã‚šû‚š¯‚šË‚7‚š¿‚‚šÀƒ‚šç‚šû‚šÀˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‹‚š_‚š‡‚šğƒ‚šË‚‚š‚‚š£‚7‚šã‚šüˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‹‚š›‚‚š[‚šøƒ‚š‚š{‚7‚šk‚šÈˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‹‚šW‚‚š 9•‰Õ±…AÉ½áäˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‹‚š‚7‚šÃ‚šû‚š¯‚šÿ‚šTƒ‚šc‚/‚šÃ‚šû‚š“‚ƒ‚š¿‚šøƒ‚š¿‚šøƒ‚š›‚šÃ‚šW‚šû‚šÀˆ°‰™•…Ğ¹ÍÕˆˆè‹‚š?‚šW‚š‚šüƒ‚š»‚šû‚š“‚7‚šÀA$ƒ‚š?‚š£‚7‚š‡‚š«‚š¿‚šó‚‚š£‚7‚š|ƒ‚š¿‚šøƒ‚š‚š«‚š£‚šû‚šÀƒ‚šs‚š£‚7‚š¼ƒ‚š«‚7‚šÃ‚/‚š·‚šû‚š‚š‡‚šû‚šÀ°%@°ƒ‚šç‚‚š‡‚šû‚šÀƒ‚šLƒ‚šã‚7‚š‚7‚šÃ‚šÿ‚š»‚šÿ‚šƒ‚šã‚šû‚š»‚šË‚šû‚š¿‚šó‚–ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‹‚š»‚šû‚šË‚7‚š‚šü·‚š«‚7‚šÃ‚/‚š·‚šû‚š‚š‡‚šû‚šÀƒ‚š¯‚šË‚š³‚7‚š¿‚šû‚šTˆ°‰™•…Ğ¹˜Ä¹ˆè‹‚š?‚šW‚š‚šüƒ‚š‚š«‚šã‚7‚š‚7‚šÃ‚šÿ‚š¸ƒ‚š«‚7‚šÃ‚šW‚7‚šã‚šüƒ‚š³‚7‚š¿‚šÃ‚7‚š”ƒ‚šç‚šË‚9•‰Õ±…AÉ½áäƒ‚šã‚7‚š³‚š¿‚šó‚š‚šW‚7‚šÃ‚šÿ‚š¿‚šó‚š·‚šû‚š³‚ƒ‚š‚š£‚7‚š¿‚š‚šüƒ‚š³‚7‚š¿‚š³‚šç‚šû‚šÀƒ‚šW‚šÃ‚ƒŠPƒ‚šW‚/‚š£‚,ƒ‚š‡‚šû‚š'‚š£‚š‚šû‚š‚š¸ƒ‚š£‚‚š‚–ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‹‚šo‚š¿‚šğ·‚š›‚‚šØƒ‚šÃ‚/‚š‚‚šÛ‚š ˆ°‰™•…Ğ¹˜È¹ˆè‹‚š¿‚‚šW‚7‚š“‚šÃ‚šû‚šß‚7‚š‚7‚šÀ°ƒ‚š¿‚‚šW‚7‚š“‚šÃ‚šû‚šs‚7‚š¼°ƒ‚šs‚šû‚šÃ‚7‚š»‚šû‚š£‚šü°ƒ‚š«‚/‚šË‚7‚š¿‚šû‚š£‚7‚š„°ƒ‚šã‚7‚š«‚‚š ƒ‚šLƒ‚šs‚šû‚š«‚šû‚š ƒ‚šs‚‚š‡‚šó‚•É•ÍÌƒ‚šc‚/‚šÃ‚šû‚š£‚–ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‹‚šW‚‚šW‚šüƒ‚šLƒ‚šç‚‚š‡‚šû‚šÀˆ°‰™•…Ğ¹˜Ì¹ˆè‹‚šW‚šû‚šã‚7‚š‚š¸ƒ‚šW‚‚šW‚šüƒ‚šLƒ‚šç‚‚š‡‚šû‚šÀƒ‚šã‚šÃ‚šû‚šã‚šÃ‚šüƒ‚š‚šû‚šÃ‚7‚š_‚‚š‚ƒ‚š«‚šû‚šƒ‚šû‚š ƒŠPƒ‚š‚š£‚‚šÃ‚/‚šŸ‚‚šÀƒ‚šO‚š«‚šÀƒ‚šã‚š»‚7‚š«‚‚šÃ‚7‚šŒƒ‚š£‚šÿ‚š¿‚šó‚š£‚7‚š“‚7‚šÃ‚š‚–ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‹‚šË‚šû‚š‚š´ƒ‚šã‚7‚š‚7‚šÃ‚šÿ‚š»‚šÿ‚šˆ°‰™•…Ğ¹˜Ğ¹ˆè‰MMƒ‚š›‚šÿ‚š¿‚šó‚ƒ‚š'‚š“‚7‚š“‚šÀƒ‚š‚šã‚šû‚šÀƒ‚šã‚šû‚š—‚ƒ‚šã‚šû‚š—‚ƒ‚šã‚7‚š‚7‚šÃ‚šÿ‚š¸ƒ‚šW‚šÃ‚‚š °ƒ‚š›‚‚šÃ‚7‚š`ƒ‚š‡‚šû‚š'‚š£‚šË‚/‚š„ƒ‚šW‚7‚šË‚šû‚š¿‚šó‚‚š£‚7‚š‚šW‚ƒ‚š‚š‚šW‚šû‚š³‚ƒ‚š£‚šû‚–ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‹‚š³‚šû‚š‚š£‚šû‚šÃ‚šü·‚š£‚šÿ‚šÃ‚šû‚š«‚š˜ˆ°‰™•…Ğ¹˜Ô¹ˆè‹‚šo‚š³‚šü°ƒ‚š¯‚šû‚š‚šÈƒ‚šLƒ‚š³‚šû‚š‚š£‚šû‚šÃ‚šüƒ‚š«‚‚šË‚/‚š„ƒ‚š‚šW‚7‚šß‚šƒ‚š‚š³‚šã‚7‚š—‚šû‚š¿‚šğƒ‚š«‚šû‚šÀƒ‚šç‚š¿‚šğ‰…Í”ØĞƒ‚šã‚šû‚š«‚/‚šÃ‚7‚š‚šã‚šç‚–ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‹‚š¿‚‚šW‚/‚š£‚,ƒ‚š·‚šû‚šß‚šøˆ°‰™•…Ğ¹˜Ø¹ˆè‰UI0°AåÑ¡½¸°9½‘”¹©Ìƒ‚š³‚šøƒ‚š¿‚‚šW‚/‚š£‚,!QQ@ƒ‚šW‚7‚šË‚šû‚š¿‚šó‚‚š£‚7‚š|ƒ‚š³‚7‚š¿‚š³‚šç‚šû‚šÀƒ‚šW‚šÃ‚‚š£‚–ƒ‚š?‚šTƒ‚š?‚š£‚7‚š‡‚š«‚š¿‚šó‚‚š£‚7‚š|°ƒ‚šW‚/‚š£‚,M,ƒ‚šË‚šû‚š_‚š³‚ƒ‚š£‚šû‚–ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‹‚š«‚7‚šË‚‚š_‚7‚šÃ‚šû‚š'‚š£‚7‚š„ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‹‚š«‚7‚šÃ‚šW‚7‚šã‚šüƒ‚šË‚šû‚š‚š´ƒ‚š‚‚šã‚7‚š|ƒ‚šW‚šÃ‚‚š ˆ°‰Áœ¹ÍÕˆˆè‹‚š_‚‚š‚šO‚š¿‚šó‚ƒ‚š›‚šÿ‚š¿‚šó‚ƒ‚š?‚šW‚š‚šüƒ‚š‚š£‚‚šÃ‚/‚šœƒ‚š«‚šû‚šƒ‚šû‚š ƒ‚š?‚š³‚šƒ‚š«‚‚šÃ‚,ƒ‚š'‚š“‚7‚š“‚šÀƒ‚š«‚šÃ‚‚šW‚7‚šß‚šøƒ‚šW‚šÃ‚‚š£‚–ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‹‚š‚šû‚šÃ‚7‚š_‚‚š|UI0ˆ°‰Áœ¹½Õ¹ÑÉäˆè‹‚š›‚‚šØˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‹‚š«‚‚š£‚š‚š«‚7‚šÃ‚šk‚‚šß‚7‚š‚šøˆ°‰Áœ¹µ•Ñ¡½ˆè‹‚š»‚‚š—‚š„ˆ°‰Áœ¹‰½‘äˆè‹‚š‚š£‚‚šÃ‚/‚šœƒ‚š³‚š‡‚šü€¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‹‚š‚š£‚‚šÃ‚/‚šœƒ‚š«‚šû‚šƒ‚šû‚š ˆ°‰Áœ¹¥‘±”ˆè‹‚š«‚7‚šÃ‚šã‚7‚š“‚‚šˆ°‰Áœ¹¡¥¹Ğˆè‹‚š'‚š“‚7‚š“‚šÀƒ‚š›‚‚š[‚š“‚ƒ‚š¯‚šÃ‚7‚š¸ƒ‚š«‚‚šÃ‚šŒƒ‚šW‚šÃ‚ƒ‚š«‚šû‚šƒ‚šû‚š ƒ‚šk‚šû‚š«‚‚š£‚–ˆ°‰Áœ¹…ÕÑ¼ˆè‹‚šã‚7‚š³‚š¿‚šó‚š‚šW‚7‚šÃ‚šÿ‚š¿‚šğ€£‚šc‚/‚šÃ‚šû‚š ¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‹‚š‡‚šW‚‚š»‚‚š£‚7‚š‚‚šÛ‚š ˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‰A$ƒ‚šÃ‚‚š¯‚šû‚šÃ‚‚š£‚7‚šàˆ°‰‘½Ì¹ÍÕˆˆè‹‚š‚š«‚š£‚šû‚šÀƒ‚š‚7‚š¿‚šû‚š«‚9•‰Õ±…AÉ½áäƒ‚š¿‚‚šW‚7‚šƒ‚šW‚šÃ‚š“‚ƒ‚š¿‚šøƒ‚š¿‚šøƒ‚š›‚šÃ‚šW‚šû‚šÃ‚–ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‹‚š?‚š£‚7‚š‡‚š«‚š¿‚šó‚‚š£‚7‚š|ˆ°‰‘½Ì¹µ•Ñ¡½ˆè‹‚š»‚‚š—‚š„ˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‹‚š?‚š£‚7‚š‡‚š«‚š¿‚šó‚‚š£‚7‚š|ˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‹‚š³‚šÃ‚7‚š‚š£‚šøˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‹‚šÃ‚/‚š‚‚š‚šÿ‚š%@ƒ‚š›‚šÿ‚š¿‚šó‚ƒ‚š?‚šW‚š‚šüƒ‚š‚š£‚‚šÃ‚/‚šœƒ‚š«‚7‚šÃ‚šW‚7‚šã‚šüƒ‚šW‚šÃ‚‚š ˆ°‰‘½Ì¹¥Àˆè‹‚š‚š«‚š£‚šû‚šÀƒ‚š³‚šÃ‚7‚š“‚š»‚šû‚š •É•ÍÌ%@ƒ‚š›‚‚š[‚‚š ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‹‚š‚š£‚‚šÃ‚/‚šœƒ‚š«‚7‚š¿‚šû‚šÃ‚šû‚š»‚šÿ‚š‚šû‚šÀˆ°‰‘½Ì¹™¥•±ˆè‹‚š¯‚šÿ‚šË‚7‚š„ˆ°‰‘½Ì¹ÑåÁ”ˆè‹‚š‚šû‚š‚š¨ˆ°‰‘½Ì¹É•Äˆè‹‚š‚š³‚šÛ‚7‚š¿‚šTˆ°‰‘½Ì¹‘•ÍŒÈˆè‹‚š³‚šÃ‚7‚š‚š£‚šøˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‹‚š¿‚UI0ƒ‚š¯‚‚šhƒ‚šW‚šÃ‚š“‚ƒ‚šç‚š³‚ˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‰!QQ@ƒ‚š»‚‚š—‚š„€£‚š‡‚šÿ‚š¯‚šË‚7‚š|P¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‹‚š›‚‚š·‚š‚šW‚7‚šß‚šÃ‚‚šÀƒ‚š›‚‚šØƒ‚šW‚/‚š„€£‚š³‚šøp‰…ÕÑ½pˆ¤ˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‹‚š³‚7‚š¿‚šÃ‚7‚š”ƒ‚šç‚šË‚ƒ‚š«‚‚š£‚š‚š«‚7‚šÃ‚šk‚‚šß‚7‚š‚šøˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‹‚š¯‚šÃ‚/‚š¿‚šó‚šû‚šÃ‚7‚š„ƒ‚šW‚šÃ‚š“‚ƒ‚šW‚šû‚šã‚7‚š‚š¸ƒ‚šç‚‚š‡‚šû‚šÀˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‹‚šã‚š‚š¿‚‚šW‚7‚šƒ‚šW‚šÃ‚š“‚ƒ‚šW‚‚šW‚šüˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‹‚š‚š£‚‚šÃ‚/‚šœƒ‚š³‚š‡‚šü€¡A=MP½AUP½AQ ƒ‚š?‚šÀƒ‚šs‚š£‚7‚š¼¤ˆ°‰‘½Ì¹À¹ˆØĞˆè‹‚š³‚š‡‚šü‰…Í”ØĞ·‚š?‚š£‚šW‚/‚š‡‚‚š„ƒ‚šW‚šÿ‚š£‚šøˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‹‚š‚š£‚‚šÃ‚/‚šŸ‚šs‚‚š‡‚šó‚ƒ‚š?‚šW‚š%@ƒ‚šÃ‚šû‚š[‚‚š ˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‹‚š'‚š›‚šû‚šç‚šÃ‚šŒˆ°‰‘½Ì¹É•Ìˆè‹‚š'‚š“‚7‚š“‚šÀˆ°‰å•Ìˆè‹‚šç‚7‚š¿‚šû‚šˆ°‰¹¼ˆè‹‚š£‚šøˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‹‚šã‚‚š‚šÿ‚š‚šàˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‹‚šW‚š£‚š¯‚šÿ‚š_‚šû‚šÃ‚‚šÛ‚š ˆ°‰Í•Ğ¹ÍÕˆˆè‹‚š‚š«‚š£‚šû‚šÀƒ‚š_‚‚š‚šO‚š¿‚šó‚ƒ‚š«‚šo‚š£‚7‚š˜ƒ‚šƒ‚šÿ‚šTƒ‚šW‚šÃ‚‚š ƒ‚šLƒ‚š‚7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚š‚7‚š¿‚šû‚šW‚7‚šã‚‚šàƒ‚š«‚šÃ‚šÿ‚šk‚šû‚šË‚š£‚šøƒ‚šW‚šÃ‚‚š£‚–ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‹‚šã‚šû‚šŸ‚šû‚šÃ‚šŒˆ°‰Í•Ğ¹ÍÑ¥­äˆè‹‚šã‚7‚š‚šÿ‚šW‚šüƒ‚šã‚‚šÛ‚š ˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‹‚š‚š£‚‚šÃ‚/‚šŸ‚šs‚‚š‡‚šó‚ƒ‚š?‚šW‚š%@ƒ‚š«‚‚š£‚š‚š³‚7‚š¿‚š³‚šç‚šû‚šÀƒ‚šW‚šÃ‚‚š ˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‹‚šã‚7‚š‚7‚šÃ‚šÿ‚š»‚šÿ‚š€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‹‚š‚šã‚šû‚šÀƒ‚šã‚šû‚š—‚ƒ‚šã‚šû‚š—‚ƒ‚š'‚š“‚7‚š“‚šÀƒ‚šã‚7‚š‚7‚šÃ‚šÿ‚š¸ƒ‚šW‚šÃ‚‚š ˆ°‰Í•Ğ¹‘…É¬ˆè‹‚š‡‚šû‚šÃ‚7‚šTƒ‚š—‚šÿ‚š¸ˆ°‰Í•Ğ¹‘…É¬¹ˆè‰9•‰Õ±„·‚š?‚šÀƒ‚šs‚š£‚7‚š¼ƒ‚šã‚š³‚šã‚š»‚š¿‚šğƒ‚šk‚šû‚šË‚ˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‹‚š‡‚šÿ‚š¯‚šË‚7‚š|ƒ‚š›‚‚šØˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‹‚šW‚/‚š£‚,ƒ‚š›‚‚šØƒ‚š£‚šÿ‚šÃ‚7‚š›‚šÿ‚šß‚7‚š|ƒ‚š£‚šøƒ‚š—‚šû‚šW‚šË‚ƒ‚š³‚7‚š¿‚š³‚šç‚‚šƒ‚šç‚š³‚ˆ°‰Í•Ğ¹…‘µ¥¸ˆè‹‚š‚7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚šË‚š_‚š‚š ˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‹‚š«‚7‚šÃ‚šW‚7‚šã‚šüƒ‚š«‚šÃ‚šÿ‚šk‚šû‚šË‚š£‚šø°ƒ‚šË‚šû‚š‚š´ƒ‚š«‚šÃ‚šÿ‚šã‚š‚š[‚7‚š¿‚šû‚š ƒ‚š›‚‚š[‚š“‚ƒ‚šLƒ‚šW‚šüƒ‚šc‚/‚šÃ‚šû‚š“‚ƒ‚šã‚šû‚š‚š ƒ‚š‚š ƒ‚šW‚šÃ‚‚š£‚–ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‹‚š‚š'‚šs‚šû‚šÃ‚š£‚‚š¸ˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‹‚š«‚šû‚šã‚šO‚š¿‚šó‚šû‚šÃ‚7‚š„ˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‹‚š‚7‚š¿‚šû‚š‡‚š»‚šÿ‚š ˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‹‚šã‚šû‚š‚š ƒ‚š‚š ˆ°‰Í•Ğ¹­•åÌˆè‰A$ƒ‚šW‚šüˆ°‰Í•Ğ¹­•åÌ¹ˆè‹‚š_‚‚š‚šO‚š¿‚šó‚ƒ‚šW‚šüƒ‚šc‚/‚šÃ‚šû‚š ƒ‚š³‚šøƒ‚š«‚7‚šÃ‚š“‚7‚š¿‚šû‚šç‚šû‚šÀƒ‚šW‚šÃ‚‚š£‚–ƒ‚š‚7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚š‚7‚š¿‚šû‚šW‚7‚šã‚‚šàƒ‚š‚š³‚šÛ‚7‚š¿‚šW‚–ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‰A$ƒ‚šW‚šüƒ‚šc‚/‚šÃ‚šû‚š ˆ°‰Í•Ğ¹É•Ù½­”ˆè‹‚šã‚š°ƒ‚šW‚šüƒ‚š«‚7‚šÃ‚š“‚7‚š¿‚šû‚šç‚šû‚šÀƒ‚šW‚šÃ‚‚š ˆ°‰Í•Ğ¹‘•µ¼ˆè‹‚š‡‚‚š»‚,ƒ‚š³‚šÿ‚šË‚7‚š„ƒŠPƒ‚š‚7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚š¯‚šÿ‚šk‚šû‚šÃ‚‚šÀƒ‚šs‚š£‚7‚š¼ƒ‚šã‚š‚š¿‚‚šW‚7‚šƒ‚š³‚7‚š¿‚šû‚šW‚š?‚š£‚7‚š„ƒ‚š«‚7‚šÃ‚š¿‚šó‚/‚šs‚š£‚–ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‹‚š‚7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚š‚7‚š¿‚šû‚šW‚7‚šã‚‚šàƒ‚š«‚7‚šÃ‚š¿‚šó‚/‚šs‚š ƒŠPƒ‚š‚š_‚ƒ‚šã‚šû‚š‚š ƒ‚š‚š ƒ‚šW‚šÃ‚‚š£‚–ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‹‚š‡‚‚š·‚‚šË‚š«‚šû‚šÃ‚š›‚‚šÀƒ‚šs‚š£‚7‚š¼ƒ‚š£‚šÿ‚šÃ‚7‚š»‚šÿ‚šƒ‚š¿‚šû‚š›‚‚šÀƒ‚šw‚šû‚š»‚‚šË‚šû‚šç‚‚š °ƒ‚šc‚‚šÃ‚7‚š‚šû‚š¿‚šó‚š»‚šû‚š •É•ÍÌ%@ƒ‚š›‚šÃ‚šW‚šû‚šÃ‚–ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‹‚š·‚‚šÈƒ‚š“‚š—‚7‚š¼ƒŠPƒ‚š‚š'‚šs‚šû‚šÃ‚š£‚‚š¸ƒ‚šLƒ‚š«‚šû‚šã‚šO‚š¿‚šó‚šû‚šÃ‚7‚š„ƒ‚š¿‚šû‚šk‚šû‚šƒ‚šW‚šÃ‚‚š£‚–ˆ°‰±½¥¸¹½¬ˆè‹‚šã‚š¯‚šË‚š·‚šû‚š³‚ƒ‚šã‚šû‚š‚š ƒ‚š‚š ƒ‚šç‚š¿‚šó‚‚šo‚‚–ˆ(€ô°(€€‰¡¤ˆèì€‰¡•É¼¹‰…‘”ˆè‹‚’_‚–‚’‚’×‚–ƒ‚’G‚’£‚’Ë‚’û‚’‚’ ˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‹‚’ç‚’Àƒ‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’«‚’Àˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‹‚’‚’«‚’£‚’ø%@ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‹‚’c‚–‚’»‚’û‚’?‚’ˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áäƒ‚’?‚’Tƒ‚’Ã‚–/‚’‚–‚’‚’ÿ‚’‚’\ƒ‚’«‚–7‚’Ã‚–'‚’W‚–7‚’ã‚– A$ƒ‚’_‚–‚’‚’×‚–ƒ‚’ç‚–#‚–ƒ‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’·‚–‚’s‚–‚’°ƒ‚’o‚’äƒ‚’›‚–‚’Û‚–/‚’ƒ‚’»‚–‚’ƒ‚’ã‚–ƒ‚’W‚’ÿ‚’ã‚– ƒ‚’?‚’Tƒ‚’ã‚–ƒ‚’£‚’¿‚’ø%@ƒ‚’«‚’û‚’?‚’°ƒ‚’S‚’Àƒ‚’?‚’Tƒ‚’ç‚– ƒ‚’?‚’‚’‡‚’«‚–'‚’‚’‚’|ƒ‚’ã‚–ƒ‚’'‚’“‚–7‚’“‚’Àƒ‚’«‚’û‚’?‚’‚–ˆ°(€€€€‰¡•É¼¹Á±…äˆè‹‚’«‚–7‚’Ë‚–‚’_‚–7‚’Ã‚’û‚’'‚’‚’„ƒ‚’[‚–/‚’Ë‚–‚’ˆ°‰¡•É¼¹‘½Ìˆè‹‚’›‚’ã‚–7‚’“‚’û‚’×‚–‚’s‚’ğƒ‚’«‚’‹‚’ó‚–‚’ˆ°‰¡•É¼¹±¥Ù”ˆè‹‚’Ë‚’û‚’‚’Ôƒ‚’ã‚–7‚’‚–7‚’Ã‚–‚’»‚’ÿ‚’‚’\ˆ°‰¡•É¼¹½½­¥•Ìˆè‹‚’W‚–‚’W‚–‚’s‚’ğƒ‚’S‚’Àƒ‚’ç‚–‚’‡‚’Àˆ°(€€€€‰¹…Ø¹É•¥½¹ÌˆèˆØƒ‚’›‚–‚’Øˆ°‰¹…Ø¹¡½µ”ˆè‹‚’ç‚–/‚’¸ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‹‚’«‚–7‚’Ë‚–‚’_‚–7‚’Ã‚’û‚’'‚’‚’„ˆ°‰¹…Ø¹‘½Ìˆè‹‚’›‚’ã‚–7‚’“‚’û‚’×‚–‚’s‚’ğˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‹‚’ã‚–‚’‚’ÿ‚’‚’_‚–7‚’àˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‹‚’‚’£‚–‚’Ã‚–/‚’œˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‹‚’ã‚’¯‚’Ë‚’“‚’øƒ‚’›‚’Àˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‹‚’S‚’ã‚’ƒ‚’×‚’ÿ‚’Ë‚’‚’°ˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‹‚’›‚–‚’[‚–ƒ‚’_‚’<ƒ‚’W‚–7‚’ß‚–‚’“‚–7‚’Àˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‰9•‰Õ±…AÉ½áäƒ‚’W‚–7‚’¿‚–/‚’ˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‹‚’‚–7‚’Ã‚–#‚’¯‚’ó‚’ÿ‚’Tƒ‚’c‚–‚’»‚’û‚’£‚–ƒ‚’W‚–ƒ‚’Ë‚’ÿ‚’<ƒ‚’ã‚’³‚’W‚–‚’lˆ°‰™•…Ğ¹ÍÕˆˆè‹‚’?‚’Tƒ‚’ç‚– A$ƒ‚’?‚’‚’‡‚’«‚–'‚’‚’‚’|ƒ‚’s‚–,ƒ‚’«‚–7‚’Ã‚–/‚’×‚’û‚’‚’‡‚’À°%@°ƒ‚’ç‚–‚’‡‚’Àƒ‚’S‚’Àƒ‚’ã‚–7‚’‚–7‚’Ã‚–‚’»‚’ÿ‚’‚’\ƒ‚’ã‚’‚’·‚’û‚’Ë‚’“‚’øƒ‚’ç‚–#‚–ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‹‚’»‚’Ë‚–7‚’‚– ·‚’«‚–7‚’Ã‚–/‚’×‚’û‚’‚’‡‚’Àƒ‚’¯‚’ó‚–'‚’Ë‚’³‚–#‚’Tˆ°‰™•…Ğ¹˜Ä¹ˆè‹‚’‚’_‚’Àƒ‚’?‚’Tƒ‚’‚’«‚’ã‚–7‚’‚–7‚’Ã‚–‚’¸ƒ‚’«‚–7‚’Ã‚–'‚’W‚–7‚’ã‚– ƒ‚’×‚’ÿ‚’¯‚’Èƒ‚’ç‚–,°9•‰Õ±…AÉ½áäƒ‚’‚’«‚’£‚–ƒ‚’‚’¨ƒ‚’›‚–‚’ã‚’Ã‚–ƒ‚’ã‚–ƒ‚’¯‚’ÿ‚’Àƒ‚’W‚–/‚’Û‚’ÿ‚’Øƒ‚’W‚’Ã‚’“‚’øƒ‚’ç‚– ƒŠPƒ‚’W‚–/‚’ ƒ‚’‡‚’û‚’'‚’£‚’‚’û‚’‚’¸ƒ‚’£‚’ç‚–‚’‚–ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‹‚’o‚’ä·‚’›‚–‚’Øƒ‚’Ã‚–/‚’‚–‚’Û‚’ ˆ°‰™•…Ğ¹˜È¹ˆè‹‚’‚’»‚–‚’Ã‚’ÿ‚’W‚’ø°ƒ‚’¿‚–‚’W‚–°ƒ‚’s‚’Ã‚–7‚’»‚’£‚– °ƒ‚’«‚–/‚’Ë‚–#‚’‚’„°ƒ‚’ã‚–7‚’«‚–‚’ ƒ‚’S‚’Àƒ‚’s‚’û‚’«‚’û‚’ ƒ‚’»‚–‚’•É•ÍÌƒ‚’c‚–‚’»‚’û‚’?‚’‚–ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‹‚’W‚–‚’W‚–‚’s‚’ğƒ‚’S‚’Àƒ‚’ç‚–‚’‡‚’Àˆ°‰™•…Ğ¹˜Ì¹ˆè‹‚’W‚’ã‚–7‚’‚’¸ƒ‚’W‚–‚’W‚–‚’s‚’ğƒ‚’S‚’Àƒ‚’ç‚–‚’‡‚’Àƒ‚’ã‚–‚’Ÿ‚–ƒ‚’Ë‚’W‚–7‚’ß‚–7‚’¼ƒ‚’“‚’Tƒ‚’·‚–‚’s‚–‚’ƒŠPƒ‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’«‚’Àƒ‚’«‚–‚’Ã‚’øƒ‚’£‚’ÿ‚’¿‚’‚’“‚–7‚’Ã‚’‚–ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‹‚’Ë‚’û‚’‚’Ôƒ‚’ã‚–7‚’‚–7‚’Ã‚–‚’»‚’ÿ‚’‚’\ˆ°‰™•…Ğ¹˜Ğ¹ˆè‰MMƒ‚’ã‚–ƒ‚’'‚’“‚–7‚’“‚’Àƒ‚’‚’“‚–ƒ‚’ç‚– ƒ‚’ã‚–7‚’‚–7‚’Ã‚–‚’¸ƒ‚’W‚’Ã‚–‚’°ƒ‚’Ë‚’‚’³‚–ƒ‚’‡‚’û‚’'‚’£‚’Ë‚–/‚’„ƒ‚’W‚–7‚’Ë‚’û‚’‚’‚’|ƒ‚’W‚–,ƒ‚’Ã‚–/‚’W‚–‚’‚’_‚–ƒ‚’£‚’ç‚–‚’‚–ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‹‚’³‚’û‚’‚’£‚’Ã‚– ·‚’ã‚–‚’Ã‚’W‚–7‚’ß‚’ÿ‚’ˆ°‰™•…Ğ¹˜Ô¹ˆè‹‚’o‚’×‚’ÿ‚’¿‚’û‚’°ƒ‚’¯‚’ó‚’û‚’‚’Ë‚–‚’ƒ‚’S‚’Àƒ‚’³‚’û‚’‚’£‚’Ã‚– ƒ‚’«‚–‚’Ë‚–/‚’„‰…Í”ØĞƒ‚’ã‚’«‚–/‚’Ã‚–7‚’|ƒ‚’W‚–ƒ‚’ã‚’û‚’”ƒ‚’³‚’ÿ‚’£‚’øƒ‚’³‚’›‚’Ë‚–ƒ‚’_‚–‚’s‚’ó‚’Ã‚’“‚–ƒ‚’ç‚–#‚’‚–ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‹‚’W‚–/‚’ ƒ‚’·‚– ƒ‚’·‚’û‚’ß‚’øˆ°‰™•…Ğ¹˜Ø¹ˆè‰UI0°AåÑ¡½¸°9½‘”¹©Ìƒ‚’¿‚’øƒ‚’W‚–‚’lƒ‚’·‚– ƒ‚’s‚–,!QQ@ƒ‚’³‚–/‚’Ë‚–‚–ƒ‚’?‚’Tƒ‚’?‚’‚’‡‚’«‚–'‚’‚’‚’|°ƒ‚’W‚–/‚’ M,ƒ‚’£‚’ç‚–‚’‚–ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‹‚’«‚–7‚’Ë‚–‚’_‚–7‚’Ã‚’û‚’'‚’‚’„ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‹‚’«‚–7‚’Ã‚–'‚’W‚–7‚’ã‚– ƒ‚’Ë‚’û‚’‚’Ôƒ‚’‚–‚’ã‚–7‚’|ƒ‚’W‚’Ã‚–‚’ˆ°‰Áœ¹ÍÕˆˆè‹‚’_‚–‚’‚’×‚–ƒ‚’ã‚–ƒ‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’·‚–‚’s‚–‚’ƒ‚’S‚’Àƒ‚’«‚–‚’Ã‚’øƒ‚’'‚’“‚–7‚’“‚’Àƒ‚’›‚–‚’[‚–‚’‚–ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‹‚’Ë‚’W‚–7‚’ß‚–7‚’¼UI0ˆ°‰Áœ¹½Õ¹ÑÉäˆè‹‚’›‚–‚’Øˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‹‚’«‚–‚’£‚’ƒ‚’«‚–7‚’Ã‚’¿‚’û‚’àˆ°‰Áœ¹µ•Ñ¡½ˆè‹‚’×‚’ÿ‚’Ÿ‚’üˆ°‰Áœ¹‰½‘äˆè‹‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’³‚–'‚’‡‚– €¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‹‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’·‚–‚’s‚–‚’ˆ°‰Áœ¹¥‘±”ˆè‹‚’“‚–#‚’¿‚’û‚’Àˆ°‰Áœ¹¡¥¹Ğˆè‹‚’'‚’“‚–7‚’“‚’Àƒ‚’›‚–‚’[‚’£‚–ƒ‚’W‚–ƒ‚’Ë‚’ÿ‚’<ƒ‚’¯‚’ó‚–'‚’Ã‚–7‚’¸ƒ‚’·‚’Ã‚’W‚’ÀM•¹ƒ‚’›‚’³‚’û‚’?‚’‚–ˆ°‰Áœ¹…ÕÑ¼ˆè‹‚’ã‚–7‚’×‚’k‚’û‚’Ë‚’ÿ‚’€£‚’c‚–‚’»‚’û‚’?‚’¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‹‚’›‚’ã‚–7‚’“‚’û‚’×‚–‚’s‚’ğˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‰A$ƒ‚’ã‚’‚’›‚’Ã‚–7‚’´ˆ°‰‘½Ì¹ÍÕˆˆè‰9•‰Õ±…AÉ½áäƒ‚’W‚–,ƒ‚’‚’«‚’£‚–ƒ‚’C‚’¨ƒ‚’»‚–‚’ƒ‚’s‚–/‚’‡‚’ó‚’£‚–ƒ‚’W‚–ƒ‚’Ë‚’ÿ‚’<ƒ‚’ã‚’³‚’W‚–‚’o‚–ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‹‚’?‚’‚’‡‚’«‚–'‚’‚’‚’|ˆ°‰‘½Ì¹µ•Ñ¡½ˆè‹‚’×‚’ÿ‚’Ÿ‚’üˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‹‚’?‚’‚’‡‚’«‚–'‚’‚’‚’|ˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‹‚’×‚’ÿ‚’×‚’Ã‚’Œˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‹‚’Ã‚–/‚’‚–‚’‚’ÿ‚’‚’\%@ƒ‚’ã‚–ƒ‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’«‚–7‚’Ã‚–'‚’W‚–7‚’ã‚– ƒ‚’W‚’Ã‚–‚’ˆ°‰‘½Ì¹¥Àˆè‹‚’‚’«‚’£‚’øƒ‚’×‚’Ã‚–7‚’“‚’»‚’û‚’ •É•ÍÌ%@ƒ‚’›‚–‚’[‚–‚’ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‹‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’«‚–#‚’Ã‚’û‚’»‚–‚’‚’Àˆ°‰‘½Ì¹™¥•±ˆè‹‚’¯‚’ó‚–‚’Ë‚–7‚’„ˆ°‰‘½Ì¹ÑåÁ”ˆè‹‚’«‚–7‚’Ã‚’W‚’û‚’Àˆ°‰‘½Ì¹É•Äˆè‹‚’‚’×‚’Û‚–7‚’¿‚’Tˆ°‰‘½Ì¹‘•ÍŒÈˆè‹‚’×‚’ÿ‚’×‚’Ã‚’Œˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‹‚’¯‚’ó‚–‚’hƒ‚’W‚’Ã‚’£‚–ƒ‚’ç‚–‚’“‚–UI0ˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‰!QQ@ƒ‚’×‚’ÿ‚’Ÿ‚’ü€£‚’‡‚’ÿ‚’¯‚’ó‚–'‚’Ë‚–7‚’|P¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‹‚’›‚–,·‚’‚’W‚–7‚’ß‚’Àƒ‚’›‚–‚’Øƒ‚’W‚–/‚’„€£‚’¿‚’øp‰…ÕÑ½pˆ¤ˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‹‚’×‚’ÿ‚’¯‚’Ë‚’“‚’øƒ‚’«‚’Àƒ‚’«‚–‚’£‚’ƒ‚’«‚–7‚’Ã‚’¿‚’û‚’àˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‹‚’‚’_‚–7‚’Ã‚–‚’ß‚’ÿ‚’ƒ‚’W‚’Ã‚’£‚–ƒ‚’ç‚–‚’“‚–ƒ‚’W‚’ã‚–7‚’‚’¸ƒ‚’ç‚–‚’‡‚’Àˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‹‚’s‚–/‚’‡‚’ó‚’£‚–ƒ‚’ç‚–‚’“‚–ƒ‚’W‚–‚’W‚–‚’s‚’ğˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‹‚’‚’£‚–‚’Ã‚–/‚’œƒ‚’³‚–'‚’‡‚– €¡A=MP½AUP½AQ ƒ‚’ç‚–‚’“‚–¤ˆ°‰‘½Ì¹À¹ˆØĞˆè‹‚’W‚–7‚’¿‚’øƒ‚’³‚–'‚’‡‚– ‰…Í”ØĞ·‚’?‚’£‚–7‚’W‚–/‚’‡‚–‚’„ƒ‚’ç‚– ˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‹‚’‚’£‚–‚’Ã‚–/‚’Ÿ‚–/‚’ƒ‚’»‚–‚’ƒ‚’?‚’Tƒ‚’ç‚– %@ƒ‚’Ã‚’[‚–‚’ˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‹‚’'‚’›‚’û‚’ç‚’Ã‚’Œˆ°‰‘½Ì¹É•Ìˆè‹‚’'‚’“‚–7‚’“‚’Àˆ°‰å•Ìˆè‹‚’ç‚’û‚’ˆ°‰¹¼ˆè‹‚’£‚’ç‚–‚’ˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‹‚’ã‚–‚’‚’ÿ‚’‚’_‚–7‚’àˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‹‚’W‚–'‚’£‚–7‚’¯‚’ó‚’ÿ‚’_‚’Ã‚–‚’Û‚’ ˆ°‰Í•Ğ¹ÍÕˆˆè‹‚’‚’«‚’£‚–ƒ‚’_‚–‚’‚’×‚–ƒ‚’×‚’Ã‚–‚’¿‚’“‚’û‚’?‚’ƒ‚’ã‚–‚’|ƒ‚’W‚’Ã‚–‚’ƒ‚’S‚’Àƒ‚’×‚–7‚’¿‚’×‚’ã‚–7‚’—‚’û‚’«‚’Tƒ‚’«‚’ç‚–‚’‚’hƒ‚’«‚–7‚’Ã‚’³‚’‚’Ÿ‚’ÿ‚’ƒ‚’W‚’Ã‚–‚’‚–ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‹‚’ã‚’û‚’»‚’û‚’£‚–7‚’¼ˆ°‰Í•Ğ¹ÍÑ¥­äˆè‹‚’ã‚–7‚’‚’ÿ‚’W‚– ƒ‚’ã‚–‚’Û‚’ ˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‹‚’‚’£‚–‚’Ã‚–/‚’Ÿ‚–/‚’ƒ‚’»‚–‚’ƒ‚’?‚’Tƒ‚’ç‚– %@ƒ‚’¯‚’ÿ‚’Àƒ‚’'‚’«‚’¿‚–/‚’\ƒ‚’W‚’Ã‚–‚’ˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‹‚’ã‚–7‚’‚–7‚’Ã‚–‚’»‚’ÿ‚’‚’\€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‹‚’'‚’“‚–7‚’“‚’Àƒ‚’‚’“‚–ƒ‚’ç‚– ƒ‚’ã‚–7‚’‚–7‚’Ã‚–‚’¸ƒ‚’W‚’Ã‚–‚’ˆ°‰Í•Ğ¹‘…É¬ˆè‹‚’‡‚’û‚’Ã‚–7‚’Tƒ‚’—‚–‚’¸ˆ°‰Í•Ğ¹‘…É¬¹ˆè‰9•‰Õ±„ƒ‚’W‚–ƒ‚’Ë‚’ÿ‚’<ƒ‚’ç‚’»‚–‚’Û‚’øƒ‚’k‚’û‚’Ë‚–ˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‹‚’‡‚’ÿ‚’¯‚’ó‚–'‚’Ë‚–7‚’|ƒ‚’›‚–‚’Øˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‹‚’W‚–/‚’ ƒ‚’›‚–‚’Øƒ‚’ ƒ‚’³‚’“‚’û‚’<ƒ‚’s‚’û‚’£‚–ƒ‚’«‚’Àƒ‚’'‚’«‚’¿‚–/‚’\ƒ‚’ç‚–/‚’_‚’øˆ°‰Í•Ğ¹…‘µ¥¸ˆè‹‚’×‚–7‚’¿‚’×‚’ã‚–7‚’—‚’û‚’«‚’Tƒ‚’Ë‚–'‚’_‚’ÿ‚’ ˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‹‚’«‚–7‚’Ã‚–'‚’W‚–7‚’ã‚– ƒ‚’«‚–7‚’Ã‚’³‚’‚’Ÿ‚’ÿ‚’ƒ‚’W‚’Ã‚’£‚–°ƒ‚’Ë‚’û‚’‚’Ôƒ‚’‚’‚’W‚’‡‚’ó‚–ƒ‚’›‚–‚’[‚’£‚–ƒ‚’S‚’Àƒ‚’W‚–‚’‚’s‚’ÿ‚’¿‚’û‚’ƒ‚’c‚–‚’»‚’û‚’£‚–ƒ‚’ç‚–‚’“‚–ƒ‚’ã‚’û‚’‚’ ƒ‚’‚’ ƒ‚’W‚’Ã‚–‚’‚–ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‹‚’'‚’«‚’¿‚–/‚’_‚’W‚’Ã‚–7‚’“‚’øƒ‚’£‚’û‚’¸ˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‹‚’«‚’û‚’ã‚’×‚’Ã‚–7‚’„ˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‹‚’?‚’‡‚’»‚’ÿ‚’ ˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‹‚’ã‚’û‚’‚’ ƒ‚’‚’ ˆ°‰Í•Ğ¹­•åÌˆè‰A$ƒ‚’W‚–‚’‚’s‚’ÿ‚’¿‚’û‚’ˆ°‰Í•Ğ¹­•åÌ¹ˆè‹‚’_‚–‚’‚’×‚–ƒ‚’W‚–‚’‚’s‚’ÿ‚’¿‚’û‚’ƒ‚’c‚–‚’»‚’û‚’?‚’ƒ‚’¿‚’øƒ‚’Ã‚’›‚–7‚’˜ƒ‚’W‚’Ã‚–‚’‚–ƒ‚’×‚–7‚’¿‚’×‚’ã‚–7‚’—‚’û‚’«‚’Tƒ‚’«‚’ç‚–‚’‚’hƒ‚’‚’×‚’Û‚–7‚’¿‚’W‚–ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‰A$ƒ‚’W‚–‚’‚’s‚– ƒ‚’c‚–‚’»‚’û‚’?‚’ˆ°‰Í•Ğ¹É•Ù½­”ˆè‹‚’ã‚’·‚– ƒ‚’W‚–‚’‚’s‚’ÿ‚’¿‚’û‚’ƒ‚’Ã‚’›‚–7‚’˜ƒ‚’W‚’Ã‚–‚’ˆ°‰Í•Ğ¹‘•µ¼ˆè‹‚’‡‚–‚’»‚–,ƒ‚’³‚’ÿ‚’Ë‚–7‚’„ƒŠPƒ‚’×‚–7‚’¿‚’×‚’ã‚–7‚’—‚’û‚’«‚’Tƒ‚’ã‚–‚’×‚’ÿ‚’Ÿ‚’û‚’O‚’ƒ‚’ç‚–‚’“‚–ƒ‚’s‚–‚’‡‚’ó‚’øƒ‚’³‚–#‚’W‚’?‚’‚’„ƒ‚’‚’×‚’Û‚–7‚’¿‚’W‚–ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‹‚’×‚–7‚’¿‚’×‚’ã‚–7‚’—‚’û‚’«‚’Tƒ‚’«‚’ç‚–‚’‚’hƒ‚’‚’×‚’Û‚–7‚’¿‚’TƒŠPƒ‚’«‚’ç‚’Ë‚–ƒ‚’ã‚’û‚’‚’ ƒ‚’‚’ ƒ‚’W‚’Ã‚–‚’‚–ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‹‚’'‚’ ƒ‚’‡‚–‚’×‚’Ë‚’«‚’Ã‚–7‚’àƒ‚’ç‚–‚’“‚–ƒ‚’³‚’£‚’øƒ‚’s‚’ÿ‚’£‚–7‚’ç‚–‚’ƒ‚’ã‚’û‚’¯‚’ğ°ƒ‚’Ã‚–/‚’‚–‚’‚’ÿ‚’‚’\•É•ÍÌ%@ƒ‚’k‚’û‚’ç‚’ÿ‚’<ƒ‚’³‚’ÿ‚’£‚’øƒ‚’w‚’‚’w‚’|ƒ‚’W‚–‚–ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‹‚’‚’»‚’û‚’£‚–7‚’¼ƒ‚’s‚’û‚’£‚’W‚’û‚’Ã‚– ƒŠPƒ‚’'‚’«‚’¿‚–/‚’_‚’W‚’Ã‚–7‚’“‚’øƒ‚’£‚’û‚’¸ƒ‚’S‚’Àƒ‚’«‚’û‚’ã‚’×‚’Ã‚–7‚’„ƒ‚’s‚’û‚’‚’k‚–‚’‚–ˆ°‰±½¥¸¹½¬ˆè‹‚’ã‚’¯‚’Ë‚’“‚’û‚’«‚–‚’Ã‚–7‚’×‚’Tƒ‚’ã‚’û‚’‚’ ƒ‚’‚’ ƒ‚’ç‚–‚’‚–ˆ(€ô°(€€‰•Ìˆèì€‰¡•É¼¹‰…‘”ˆè‰…Ñ•İ…ä•¸³µ¹•„ˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‰I½Ñ„ÑÔˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‰%@‘”Í…±¥‘„ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‰•¸…‘„Í½±¥¥ÑÕˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áä•ÌÕ¹„ÁÕ•ÉÑ„‘”•¹±…”‘”A$‘”ÁÉ½áäÉ½Ñ…Ñ¥Ù¼¸¹Ûµ„Õ¹„Í½±¥¥ÑÕ°½‰Ó¥¸Õ¹„%@¹Õ•Ù„‘”Õ¹¼‘”Í•¥ÌÁ‡µÍ•ÌäÉ•¥‰”±„É•ÍÁÕ•ÍÑ„ƒŠPÑ½‘¼Á½ÈÕ¸Í½±¼•¹‘Á½¥¹Ğ¸ˆ°(€€€€‰¡•É¼¹Á±…äˆè‰‰É¥ÈA±…åÉ½Õ¹ˆ°‰¡•É¼¹‘½Ìˆè‰1••È‘½Õµ•¹Ñ…§Í¸ˆ°‰¡•É¼¹±¥Ù”ˆè‰QÉ…¹Íµ¥Í§Í¸•¸Ù¥Ù¼ˆ°‰¡•É¼¹½½­¥•Ìˆè‰½½­¥•Ìä•¹…‰•é…‘½Ìˆ°(€€€€‰¹…Ø¹É•¥½¹ÌˆèˆØÁ‡µÍ•Ìˆ°‰¹…Ø¹¡½µ”ˆè‰%¹¥¥¼ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‰A±…åÉ½Õ¹ˆ°‰¹…Ø¹‘½Ìˆè‰½Õµ•¹Ñ…§Í¸ˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‰©ÕÍÑ•Ìˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‰M½±¥¥ÑÕ‘•Ìˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‰Q…Í„‘”ƒ¥á¥Ñ¼ˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‰1…Ñ•¹¥„µ•‘¥„ˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‰I•¥½¹•ÌÙ¥ÍÑ…Ìˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‰A½ÈÅ×¤9•‰Õ±…AÉ½áäˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‰Q½‘¼Á…É„É½Ñ…ÈÑË…™¥¼ˆ°‰™•…Ğ¹ÍÕˆˆè‰U¸Í½±¼•¹‘Á½¥¹ĞÅÕ”•ÍÑ¥½¹„ÁÉ½Ù••‘½É•Ì°%AÌ°•¹…‰•é…‘½ÌäÍÑÉ•…µ¥¹œÁ½ÈÑ¤¸ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‰I•ÍÁ…±‘¼µÕ±Ñ¥ÁÉ½Ù••‘½Èˆ°‰™•…Ğ¹˜Ä¹ˆè‰M¤Õ¸ÁÉ½áä™…±±„°9•‰Õ±…AÉ½áäÉ•¥¹Ñ•¹Ñ„½¸½ÑÉ¼…ÕÑ½·…Ñ¥…µ•¹Ñ”ƒŠPÍ¥¸‡µ‘…Ì¸ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‰I½Ñ…§Í¸‘”Í•¥ÌÁ‡µÍ•Ìˆ°‰™•…Ğ¹˜È¹ˆè‰I½Ñ„±„Í…±¥‘„•¹ÑÉ”¸UT¸°I•¥¹¼U¹¥‘¼°±•µ…¹¥„°A½±½¹¥„°ÍÁ‡Å„ä)…ÃÍ¸¸ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‰½½­¥•Ìä•¹…‰•é…‘½Ìˆ°‰™•…Ğ¹˜Ì¹ˆè‰¹Ûµ„½½­¥•Ìä•¹…‰•é…‘½ÌÁ•ÉÍ½¹…±¥é…‘½Ì…°‘•ÍÑ¥¹¼ƒŠP½¹ÑÉ½°Ñ½Ñ…°‘”±„Í½±¥¥ÑÕ¸ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‰QÉ…¹Íµ¥Í§Í¸•¸Ù¥Ù¼ˆ°‰™•…Ğ¹˜Ğ¹ˆè‰QÉ…¹Íµ¥Ñ”É•ÍÁÕ•ÍÑ…Ì½¸MMÁ…É„ÅÕ”‘•Í…É…Ì±…É…Ì¹¼‰±½ÅÕ••¸ÑÔ±¥•¹Ñ”¸ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‰	¥¹…É¥¼Í•ÕÉ¼ˆ°‰™•…Ğ¹˜Ô¹ˆè‰%·…•¹•Ì°…É¡¥Ù½ÌäÁ…å±½…‘Ì‰¥¹…É¥½ÌÁ…Í…¸¥¹Ñ…Ñ½Ì½¸Í½Á½ÉÑ”‰…Í”ØĞ¸ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‰Õ…±ÅÕ¥•È±•¹Õ…©”ˆ°‰™•…Ğ¹˜Ø¹ˆè‰UÍ„UI0°AåÑ¡½¸°9½‘”¹©Ì¼Õ…±ÅÕ¥•È½Í„ÅÕ”¡…‰±”!QQ@¸U¸•¹‘Á½¥¹Ğ°Í¥¸M,¸ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‰A±…åÉ½Õ¹ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‰AÉÕ•‰„•°ÁÉ½áä•¸Ù¥Ù¼ˆ°‰Áœ¹ÍÕˆˆè‰¹Ûµ„Õ¹„Í½±¥¥ÑÕÁ½È±„ÁÕ•ÉÑ„‘”•¹±…””¥¹ÍÁ•¥½¹„±„É•ÍÁÕ•ÍÑ„½µÁ±•Ñ„¸ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‰UI0‘”‘•ÍÑ¥¹¼ˆ°‰Áœ¹½Õ¹ÑÉäˆè‰A‡µÌˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‰I•¥¹Ñ•¹Ñ½Ìˆ°‰Áœ¹µ•Ñ¡½ˆè‰7¥Ñ½‘¼ˆ°‰Áœ¹‰½‘äˆè‰Õ•ÉÁ¼€¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‰¹Ù¥…ÈÍ½±¥¥ÑÕˆ°‰Áœ¹¥‘±”ˆè‰1¥ÍÑ¼ˆ°‰Áœ¹¡¥¹Ğˆè‰1±•¹„±½Ì…µÁ½ÌäÁÉ•Í¥½¹„¹Ù¥…ÈÁ…É„Ù•È±„É•ÍÁÕ•ÍÑ„¸ˆ°‰Áœ¹…ÕÑ¼ˆè‰ÕÑ½·…Ñ¥¼€¡É½Ñ…È¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‰½Õµ•¹Ñ…§Í¸ˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‰I•™•É•¹¥„‘”A$ˆ°‰‘½Ì¹ÍÕˆˆè‰Q½‘¼±¼ÅÕ”¹••Í¥Ñ…ÌÁ…É„¥¹Ñ•É…È9•‰Õ±…AÉ½áä¸ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‰¹‘Á½¥¹ÑÌˆ°‰‘½Ì¹µ•Ñ¡½ˆè‰7¥Ñ½‘¼ˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‰¹‘Á½¥¹Ğˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‰•ÍÉ¥Á§Í¸ˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‰AÉ½áä‘”Õ¹„Í½±¥¥ÑÕÁ½ÈÕ¹„%@É½Ñ…Ñ¥Ù„ˆ°‰‘½Ì¹¥Àˆè‰=‰Ó¥¸ÑÔ%@‘”Í…±¥‘„…ÑÕ…°ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‰A…Ë…µ•ÑÉ½Ì‘”Í½±¥¥ÑÕˆ°‰‘½Ì¹™¥•±ˆè‰…µÁ¼ˆ°‰‘½Ì¹ÑåÁ”ˆè‰Q¥Á¼ˆ°‰‘½Ì¹É•Äˆè‰I•ÅÕ•É¥‘¼ˆ°‰‘½Ì¹‘•ÍŒÈˆè‰•ÍÉ¥Á§Í¸ˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‰1„UI0‘”‘•ÍÑ¥¹¼ˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‰7¥Ñ½‘¼!QQ@€¡PÁ½È‘•™•Ñ¼¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‰Í‘¥¼‘”Á‡µÌ‘”‘½Ì±•ÑÉ…Ì€¡¼p‰…ÕÑ½pˆ¤ˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‰I•¥¹Ñ•¹Ñ½Ì…¹Ñ”™…±±¼ˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‰¹…‰•é…‘½ÌÁ•ÉÍ½¹…±¥é…‘½Ì„É••¹Ù¥…Èˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‰½½­¥•Ì„…‘©Õ¹Ñ…Èˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‰Õ•ÉÁ¼€¡Á…É„A=MP½AUP½AQ ¤ˆ°‰‘½Ì¹À¹ˆØĞˆè‰M¤•°Õ•ÉÁ¼•ÍÓ„•¸‰…Í”ØĞˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‰5…¹Ñ•¹•È±„µ¥Íµ„%@ˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‰©•µÁ±½Ìˆ°‰‘½Ì¹É•Ìˆè‰I•ÍÁÕ•ÍÑ„ˆ°‰å•Ìˆè‰Ï´ˆ°‰¹¼ˆè‰¹¼ˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‰©ÕÍÑ•Ìˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‰½¹™¥ÕÉ…§Í¸ˆ°‰Í•Ğ¹ÍÕˆˆè‰©ÕÍÑ„ÑÕÌÁÉ•™•É•¹¥…Ìä•ÍÑ¥½¹„•°…•Í¼‘”…‘µ¥¹¥ÍÑÉ…‘½È¸ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‰•¹•É…°ˆ°‰Í•Ğ¹ÍÑ¥­äˆè‰M•Í¥½¹•Ì™¥©…Ìˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‰I•ÕÑ¥±¥é…È±„µ¥Íµ„%@•¹ÑÉ”Í½±¥¥ÑÕ‘•Ìˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‰MÑÉ•…µ¥¹œ€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‰QÉ…¹Íµ¥Ñ¥ÈÉ•ÍÁÕ•ÍÑ…Ì…°±±•…Èˆ°‰Í•Ğ¹‘…É¬ˆè‰Q•µ„½ÍÕÉ¼ˆ°‰Í•Ğ¹‘…É¬¹ˆè‰M¥•µÁÉ”…Ñ¥Ù¼•¸9•‰Õ±„ˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‰A‡µÌÁ½È‘•™•Ñ¼ˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‰M”ÕÍ„Õ…¹‘¼¹¼Í”•ÍÁ•¥™¥„Á‡µÌˆ°‰Í•Ğ¹…‘µ¥¸ˆè‰%¹¥¥¼‘”…‘µ¥¹¥ÍÑÉ…‘½Èˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‰%¹¥¥„Í•Í§Í¸Á…É„•ÍÑ¥½¹…ÈÁÉ½á¥•ÌäÙ•È•ÍÑ…“µÍÑ¥…Ì¸ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‰UÍÕ…É¥¼ˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‰½¹ÑÉ…Í—Å„ˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‰…‘µ¥¸ˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‰%¹¥¥…ÈÍ•Í§Í¸ˆ°‰Í•Ğ¹­•åÌˆè‰±…Ù•ÌA$ˆ°‰Í•Ğ¹­•åÌ¹ˆè‰I½Ñ„¼É•Ù½„±…Ù•Ì‘”±„ÁÕ•ÉÑ„‘”•¹±…”¸ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‰I½Ñ…È±…Ù”A$ˆ°‰Í•Ğ¹É•Ù½­”ˆè‰I•Ù½…ÈÑ½‘…Ìˆ°‰Í•Ğ¹‘•µ¼ˆè‰•µ¼ƒŠP±…Ì™Õ¹¥½¹•Ì‘”…‘µ¥¸É•ÅÕ¥•É•¸‰…­•¹¸ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‰M”É•ÅÕ¥•É”…•Í¼‘”…‘µ¥¹¥ÍÑÉ…‘½ÈƒŠP¥¹¥¥„Í•Í§Í¸ÁÉ¥µ•É¼¸ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‰!•¡¼Á…É„‘•Í…ÉÉ½±±…‘½É•ÌÅÕ”¹••Í¥Ñ…¸Õ¹„%@‘”Í…±¥‘„É½Ñ…Ñ¥Ù„Í¥¸½µÁ±¥…¥½¹•Ì¸ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‰É•‘•¹¥…±•Ì¥¹Û…±¥‘…Ì¸ˆ°‰±½¥¸¹½¬ˆè‰M•Í§Í¸¥¹¥¥…‘„¸ˆ(€ô°(€€‰™Èˆèì€‰¡•É¼¹‰…‘”ˆè‰A…ÍÍ•É•±±”•¸±¥¹”ˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‰…¥Ñ•ÌÑ½ÕÉ¹•Èˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‰Ù½ÑÉ”%@ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‹€¡…ÅÕ”É•Å×©Ñ”ˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áä•ÍĞÕ¹”Á…ÍÍ•É•±±”‘”ÁÉ½áäÉ½Ñ…Ñ¥˜¸¹Ù½å•èÕ¹”É•Å×©Ñ”°½‰Ñ•¹•èÕ¹”¹½ÕÙ•±±”%@Á…Éµ¤Í¥àÁ…åÌ•ĞÉ••Ù•è±„Ë¥Á½¹Í”ƒŠPÙ¥„Õ¸Í•Õ°•¹‘Á½¥¹Ğ¸ˆ°(€€€€‰¡•É¼¹Á±…äˆè‰=ÕÙÉ¥ÈA±…åÉ½Õ¹ˆ°‰¡•É¼¹‘½Ìˆè‰1¥É”±„‘½Õµ•¹Ñ…Ñ¥½¸ˆ°‰¡•É¼¹±¥Ù”ˆè‰MÑÉ•…µ¥¹œ•¸‘¥É•Ğˆ°‰¡•É¼¹½½­¥•Ìˆè‰½½­¥•Ì•Ğ•¸µÓ©Ñ•Ìˆ°(€€€€‰¹…Ø¹É•¥½¹ÌˆèˆØÁ…åÌˆ°‰¹…Ø¹¡½µ”ˆè‰Õ•¥°ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‰A±…åÉ½Õ¹ˆ°‰¹…Ø¹‘½Ìˆè‰½Õµ•¹Ñ…Ñ¥½¸ˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‰A…É…·¡ÑÉ•Ìˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‰I•Å×©Ñ•Ìˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‰Q…Õà‘”ÍÕ¡Ìˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‰1…Ñ•¹”µ½å•¹¹”ˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‰K¥¥½¹ÌÙÕ•Ìˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‰A½ÕÉÅÕ½¤9•‰Õ±…AÉ½áäˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‰Q½ÕĞÁ½ÕÈ™…¥É”Ñ½ÕÉ¹•È±”ÑÉ…™¥Œˆ°‰™•…Ğ¹ÍÕˆˆè‰U¸Í•Õ°•¹‘Á½¥¹ĞÅÕ¤Ÿ¡É”™½ÕÉ¹¥ÍÍ•ÕÉÌ°%@°•¸µÓ©Ñ•Ì•ĞÍÑÉ•…µ¥¹œÁ½ÕÈÙ½ÕÌ¸ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‰	…ÍÕ±”µÕ±Ñ¤µ™½ÕÉ¹¥ÍÍ•ÕÉÌˆ°‰™•…Ğ¹˜Ä¹ˆè‰M¤Õ¸ÁÉ½áäƒ¥¡½Õ”°9•‰Õ±…AÉ½áäË¥•ÍÍ…¥”Ù¥„Õ¸…ÕÑÉ”ƒŠP…ÕÕ¸Ñ•µÁÌ…ÉË©Ğ¸ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‰I½Ñ…Ñ¥½¸ÍÕÈÍ¥àÁ…åÌˆ°‰™•…Ğ¹˜È¹ˆè‰…¥Ñ•ÌÑ½ÕÉ¹•È±„Í½ÉÑ¥”•¹ÑÉ”±•Ìƒ%Ñ…ÑÌµU¹¥Ì°±”I½å…Õµ”µU¹¤°°±±•µ…¹”°±„A½±½¹”°°ÍÁ…¹”•Ğ±”)…Á½¸¸ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‰½½­¥•Ì•Ğ•¸µÓ©Ñ•Ìˆ°‰™•…Ğ¹˜Ì¹ˆè‰QÉ…¹Íµ•ÑÑ•è½½­¥•Ì•Ğ•¸µÓ©Ñ•ÌÁ•ÉÍ½¹¹…±¥Ï¥Ìƒ€±„¥‰±”¸ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‰MÑÉ•…µ¥¹œ•¸‘¥É•Ğˆ°‰™•…Ğ¹˜Ğ¹ˆè‰¥™™ÕÍ•è±•ÌË¥Á½¹Í•Ì…Ù•ŒMMÁ½ÕÈ¹”Á…Ì‰±½ÅÕ•ÈÙ½ÑÉ”±¥•¹Ğ¸ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‰	¥¹…¥É”ÏíÈˆ°‰™•…Ğ¹˜Ô¹ˆè‰%µ…•Ì°™¥¡¥•ÉÌ•ĞÁ…å±½…‘Ì‰¥¹…¥É•ÌÁ…ÍÍ•¹Ğ¥¹Ñ…ÑÌ…Ù•Œ±”ÍÕÁÁ½ÉĞ‰…Í”ØĞ¸ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‰Q½ÕĞ±…¹…”ˆ°‰™•…Ğ¹˜Ø¹ˆè‰UÑ¥±¥Í•èUI0°AåÑ¡½¸°9½‘”¹©Ì½ÔÑ½ÕĞ±¥•¹Ğ!QQ@¸U¸•¹‘Á½¥¹Ğ°ë¥É¼M,¸ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‰A±…åÉ½Õ¹ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‰Q•ÍÑ•è±”ÁÉ½áä•¸‘¥É•Ğˆ°‰Áœ¹ÍÕˆˆè‰¹Ù½å•èÕ¹”É•Å×©Ñ”Ù¥„±„Á…ÍÍ•É•±±”•Ğ¥¹ÍÁ•Ñ•è±„Ë¥Á½¹Í”¸ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‰UI0¥‰±”ˆ°‰Áœ¹½Õ¹ÑÉäˆè‰A…åÌˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‰Q•¹Ñ…Ñ¥Ù•Ìˆ°‰Áœ¹µ•Ñ¡½ˆè‰7¥Ñ¡½‘”ˆ°‰Áœ¹‰½‘äˆè‰½ÉÁÌ€¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‰¹Ù½å•Èˆ°‰Áœ¹¥‘±”ˆè‰AË©Ğˆ°‰Áœ¹¡¥¹Ğˆè‰I•µÁ±¥ÍÍ•è±”™½ÉµÕ±…¥É”•Ğ±¥ÅÕ•è¹Ù½å•È¸ˆ°‰Áœ¹…ÕÑ¼ˆè‰ÕÑ¼€¡É½Ñ…Ñ¥½¸¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‰½Õµ•¹Ñ…Ñ¥½¸ˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‰K¥›¥É•¹”A$ˆ°‰‘½Ì¹ÍÕˆˆè‰Q½ÕĞÁ½ÕÈ¥¹Ó¥É•È9•‰Õ±…AÉ½áä¸ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‰¹‘Á½¥¹ÑÌˆ°‰‘½Ì¹µ•Ñ¡½ˆè‰7¥Ñ¡½‘”ˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‰¹‘Á½¥¹Ğˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‰•ÍÉ¥ÁÑ¥½¸ˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‰AÉ½áäÕ¹”É•Å×©Ñ”Ù¥„%@É½Ñ…Ñ¥Ù”ˆ°‰‘½Ì¹¥Àˆè‰=‰Ñ•¹¥ÈÙ½ÑÉ”%@‘”Í½ÉÑ¥”…ÑÕ•±±”ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‰A…É…·¡ÑÉ•Ìˆ°‰‘½Ì¹™¥•±ˆè‰¡…µÀˆ°‰‘½Ì¹ÑåÁ”ˆè‰QåÁ”ˆ°‰‘½Ì¹É•Äˆè‰I•ÅÕ¥Ìˆ°‰‘½Ì¹‘•ÍŒÈˆè‰•ÍÉ¥ÁÑ¥½¸ˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‰0UI0ƒ€Ë¥ÕÃ¥É•Èˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‰7¥Ñ¡½‘”!QQ@€¡PÁ…È“¥™…ÕĞ¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‰½‘”Á…åÌ€¡½Ôp‰…ÕÑ½pˆ¤ˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‰Q•¹Ñ…Ñ¥Ù•Ì•¸…ÌŸ¥¡•Œˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‰¸µÓ©Ñ•Ìƒ€ÑÉ…¹Íµ•ÑÑÉ”ˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‰½½­¥•Ìƒ€©½¥¹‘É”ˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‰½ÉÁÌ€¡A=MP½AUP½AQ ¤ˆ°‰‘½Ì¹À¹ˆØĞˆè‰½ÉÁÌ•¹½“¤•¸‰…Í”ØĞˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‰…É‘•È±„·©µ”%@ˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‰á•µÁ±•Ìˆ°‰‘½Ì¹É•Ìˆè‰K¥Á½¹Í”ˆ°‰å•Ìˆè‰½Õ¤ˆ°‰¹¼ˆè‰¹½¸ˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‰A…É…·¡ÑÉ•Ìˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‰½¹™¥ÕÉ…Ñ¥½¸ˆ°‰Í•Ğ¹ÍÕˆˆè‰©ÕÍÑ•èÙ½ÌÁË¥›¥É•¹•Ì•ĞŸ¥É•è°…¡Ì…‘µ¥¸¸ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‰¥»¥É…°ˆ°‰Í•Ğ¹ÍÑ¥­äˆè‰M•ÍÍ¥½¹ÌÁ•ÉÍ¥ÍÑ…¹Ñ•Ìˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‰K¥ÕÑ¥±¥Í•È±„·©µ”%@ˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‰MÑÉ•…µ¥¹œ€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‰¥™™ÕÍ•È±•ÌË¥Á½¹Í•Ìˆ°‰Í•Ğ¹‘…É¬ˆè‰Q£¡µ”Í½µ‰É”ˆ°‰Í•Ğ¹‘…É¬¹ˆè‰Q½Õ©½ÕÉÌ…Ñ¥˜ˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‰A…åÌÁ…È“¥™…ÕĞˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‰UÑ¥±¥Ï¤Í¤…ÕÕ¸Á…åÌ¸•ÍĞÁË¥¥Ï¤ˆ°‰Í•Ğ¹…‘µ¥¸ˆè‰½¹¹•á¥½¸…‘µ¥¸ˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‰½¹¹•Ñ•èµÙ½ÕÌÁ½ÕÈŸ¥É•È±•ÌÁÉ½á¥•Ì¸ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‰UÑ¥±¥Í…Ñ•ÕÈˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‰5½Ğ‘”Á…ÍÍ”ˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‰…‘µ¥¸ˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‰M”½¹¹•Ñ•Èˆ°‰Í•Ğ¹­•åÌˆè‰³¥ÌA$ˆ°‰Í•Ğ¹­•åÌ¹ˆè‰I½Ñ•è½ÔË¥Ù½ÅÕ•è±•Ì³¥Ì¸ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‰I½Ñ•È±„³¤ˆ°‰Í•Ğ¹É•Ù½­”ˆè‰Q½ÕĞË¥Ù½ÅÕ•Èˆ°‰Í•Ğ¹‘•µ¼ˆè‰¥µ¼ƒŠP™½¹Ñ¥½¹Ì…‘µ¥¸»¥•ÍÍ¥Ñ…¹ĞÕ¸‰…­•¹¸ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‰¡Ì…‘µ¥¹¥ÍÑÉ…Ñ•ÕÈÉ•ÅÕ¥ÌƒŠP½¹¹•Ñ•èµÙ½ÕÌ…‰½É¸ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‰½»ÔÁ½ÕÈ±•Ì“¥Ù•±½ÁÁ•ÕÉÌÅÕ¤Ù•Õ±•¹ĞÕ¹”%@‘”Í½ÉÑ¥”É½Ñ…Ñ¥Ù”Í…¹ÌÑÉ……Ì¸ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‰%‘•¹Ñ¥™¥…¹ÑÌ¥¹Ù…±¥‘•Ì¸ˆ°‰±½¥¸¹½¬ˆè‰½¹¹•á¥½¸Ë¥ÕÍÍ¥”¸ˆ(€ô°(€€‰…Èˆèì€‰¡•É¼¹‰…‘”ˆè‹bŸfb£f#bŸb£b¤ƒfb«b×fb¤ˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‹ffƒb£b«b¿f#f+bÄˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‹bçff#bŸf%@ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‹ff(ƒffƒbßfb ˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áäƒff ƒb£f#bŸb£b¤ƒf#ff+fƒb¿f#fGbŸbÇb¤¸ƒbbÇbÏfƒbßfb£f/bŸb0ƒf#bŸb·b×fƒbçff$ƒbçff#bŸf%@ƒb³b¿f+b¼ƒffƒbÏb«fDƒb¿f#fb0ƒf#bŸbÏb«ffƒbŸfbÇb¼ƒŠPƒffƒffbßb¤ƒffbŸf+b¤ƒf#bŸb·b¿b¤¸ˆ°(€€€€‰¡•É¼¹Á±…äˆè‹bŸfb«b´ƒbŸfffbçb ˆ°‰¡•É¼¹‘½Ìˆè‹bŸfbÇbŒƒbŸfb«f#b¯f+fˆ°‰¡•É¼¹±¥Ù”ˆè‹b£b¬ƒfb£bŸbÓbÄˆ°‰¡•É¼¹½½­¥•Ìˆè‹fffbŸb¨ƒb«bçbÇf+fƒf#b«bÇf#f+bÏbŸb¨ˆ°(€€€€‰¹…Ø¹É•¥½¹ÌˆèˆØƒb¿f#fˆ°‰¹…Ø¹¡½µ”ˆè‹bŸfbÇb›f+bÏf+b¤ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‹bŸfffbçb ˆ°‰¹…Ø¹‘½Ìˆè‹bŸfb«f#b¯f+fˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‹bŸfb—bçb¿bŸb¿bŸb¨ˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‹bŸfbßfb£bŸb¨ˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‹fbÏb£b¤ƒbŸffb³bŸb´ˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‹fb«f#bÏbÜƒbŸfb«bb»f+bÄˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‹bŸfffbŸbßfƒbŸffbÇb×f#b¿b¤ˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‹ffbŸbÃbœ9•‰Õ±…AÉ½áäˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‹ffƒfbœƒb«b·b«bŸb³fƒfb«b¿f#f+bÄƒbŸfb·bÇfb¤ˆ°‰™•…Ğ¹ÍÕˆˆè‹ffbßb¤ƒffbŸf+b¤ƒf#bŸb·b¿b¤ƒb«b¿f+bÄƒbŸffbËf#fGb¿f+fƒf#bŸfbçfbŸf#f+fƒf#bŸfb«bÇf#f+bÏbŸb¨ƒf#bŸfb£b¬¸ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‹b£b¿f+fƒfb«bçb¿b¼ƒbŸffbËf#fGb¿f+fˆ°‰™•…Ğ¹˜Ä¹ˆè‹b—bÃbœƒfbÓfƒf#ff+fb0ƒf+bçf+b¼9•‰Õ±…AÉ½áäƒbŸffb·bŸf#fb¤ƒbçb£bÄƒb‹b»bÄƒŠPƒb£fbœƒb«f#ff¸ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‹b«b¿f#f+bÄƒbÏb¨ƒb¿f#fˆ°‰™•…Ğ¹˜È¹ˆè‹b¿bÄƒbŸfb·bÇfb¤ƒb£f+fƒbfbÇf+fbœƒf#b£bÇf+bßbŸff+bœƒf#bffbŸff+bœƒf#b£f#ffb¿bœƒf#b—bÏb£bŸff+bœƒf#bŸff+bŸb£bŸf¸ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‹fffbŸb¨ƒb«bçbÇf+fƒf#b«bÇf#f+bÏbŸb¨ˆ°‰™•…Ğ¹˜Ì¹ˆè‹fbÇbÄƒbŸfb«bÇf#f+bÏbŸb¨ƒf#fffbŸb¨ƒbŸfb«bçbÇf+fƒb—ff$ƒbŸffb¿f¸ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‹b£b¬ƒfb£bŸbÓbÄˆ°‰™•…Ğ¹˜Ğ¹ˆè‹b£b¬ƒbŸfbÇb¿f#b¼ƒbçb£bÄMMƒb·b«f$ƒfbœƒf+b·b³b ƒbŸfb«b·ff+fƒbŸfbßf#f+fƒbçff+ff¸ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‹b‹ffƒb¯fbŸb›f+f/bœˆ°‰™•…Ğ¹˜Ô¹ˆè‹b«fbÄƒbŸfb×f#bÄƒf#bŸffffbŸb¨ƒbÏff+fb¤ƒfbäƒb¿bçf‰…Í”ØĞ¸ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‹bf(ƒfbëb¤ˆ°‰™•…Ğ¹˜Ø¹ˆè‹bŸbÏb«b»b¿fUI0ƒbf AåÑ¡½¸ƒbf 9½‘”¹©Ì¸ƒffbßb¤ƒffbŸf+b¤ƒf#bŸb·b¿b¤ƒb£fbœM,¸ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‹bŸfffbçb ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‹bŸb»b«b£bÄƒbŸff#ff+fƒfb£bŸbÓbÇb¤ˆ°‰Áœ¹ÍÕˆˆè‹bbÇbÏfƒbßfb£f/bœƒbçb£bÄƒbŸfb£f#bŸb£b¤ƒf#bŸfb·bÔƒbŸfbÇb¼ƒfbŸfff/bœ¸ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‹bŸfbçff#bŸfƒbŸffb¿fˆ°‰Áœ¹½Õ¹ÑÉäˆè‹bŸfb¿f#fb¤ˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‹bŸffb·bŸf#fbŸb¨ˆ°‰Áœ¹µ•Ñ¡½ˆè‹bŸfbßbÇf+fb¤ˆ°‰Áœ¹‰½‘äˆè‹b³bÏfƒbŸfbßfb €¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‹b—bÇbÏbŸfˆ°‰Áœ¹¥‘±”ˆè‹b³bŸfbÈˆ°‰Áœ¹¡¥¹Ğˆè‹bŸffbŒƒbŸfb·ff#fƒb¯fƒbŸbÛbëbÜƒb—bÇbÏbŸf¸ˆ°‰Áœ¹…ÕÑ¼ˆè‹b«ffbŸb›f(€£b«b¿f#f+bÄ¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‹bŸfb«f#b¯f+fˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‹fbÇb³bäA$ˆ°‰‘½Ì¹ÍÕˆˆè‹ffƒfbœƒb«b·b«bŸb³fƒfb¿fb°9•‰Õ±…AÉ½áä¸ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‹bŸfffbŸbÜˆ°‰‘½Ì¹µ•Ñ¡½ˆè‹bŸfbßbÇf+fb¤ˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‹bŸfffbßb¤ˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‹bŸff#b×fˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‹f#ff+fƒbßfb ƒbçb£bÄƒbçff#bŸf%@ƒb¿f#fGbŸbÄˆ°‰‘½Ì¹¥Àˆè‹bŸfb·b×f#fƒbçff$ƒbçff#bŸf%@ƒbŸfb·bŸff(ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‹fbçbŸffbŸb¨ƒbŸfbßfb ˆ°‰‘½Ì¹™¥•±ˆè‹bŸfb·ffˆ°‰‘½Ì¹ÑåÁ”ˆè‹bŸfff#bäˆ°‰‘½Ì¹É•Äˆè‹fbßff#b ˆ°‰‘½Ì¹‘•ÍŒÈˆè‹bŸff#b×fˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‹bŸfbçff#bŸfƒbŸffbßff#b ƒb³fb£fˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‹bßbÇf+fb¤!QQ@€¡PƒbŸfb«bÇbŸbÛf+f/bœ¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‹bÇfbÈƒbŸfb¿f#fb¤ƒb£b·bÇff+fˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‹fb·bŸf#fbŸb¨ƒbçfb¼ƒbŸffbÓfˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‹b«bÇf#f+bÏbŸb¨ƒbŸffbÇf#bÄˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‹fffbŸb¨ƒbŸfb«bçbÇf+fˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‹b³bÏfƒbŸfbßfb ˆ°‰‘½Ì¹À¹ˆØĞˆè‹ffƒbŸfb³bÏfƒb£b«bÇff+bÈ‰…Í”ØĞˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‹bŸfb·fbŸbàƒbçff$ƒffbÌ%@ˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‹bfb¯fb¤ˆ°‰‘½Ì¹É•Ìˆè‹bŸfbÇb¼ˆ°‰å•Ìˆè‹fbçfˆ°‰¹¼ˆè‹fbœˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‹bŸfb—bçb¿bŸb¿bŸb¨ˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‹bŸfb«ff+b›b¤ˆ°‰Í•Ğ¹ÍÕˆˆè‹bŸbÛb£bÜƒb«fbÛf+fbŸb«fƒf#bb¿bÄƒf#b×f#fƒbŸffbÓbÇf¸ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‹bçbŸfˆ°‰Í•Ğ¹ÍÑ¥­äˆè‹b³fbÏbŸb¨ƒb¯bŸb£b«b¤ˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‹b—bçbŸb¿b¤ƒbŸbÏb«b»b¿bŸfƒffbÌ%@ˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‹bŸfb£b¬€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‹b£b¬ƒbŸfbÇb¿f#b¼ƒff#bÄƒf#b×f#ffbœˆ°‰Í•Ğ¹‘…É¬ˆè‹b¯f+fƒb¿bŸffˆ°‰Í•Ğ¹‘…É¬¹ˆè‹ffbçfGfƒb¿bŸb›ff/bœˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‹bŸfb¿f#fb¤ƒbŸfbŸfb«bÇbŸbÛf+b¤ˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‹b«f?bÏb«b»b¿fƒb—fƒffƒb«b·b¿b¼ƒb¿f#fb¤ˆ°‰Í•Ğ¹…‘µ¥¸ˆè‹b¿b»f#fƒbŸffbÓbÇfˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‹bÏb³fGfƒbŸfb¿b»f#fƒfb—b¿bŸbÇb¤ƒbŸfb£bÇf#fbÏf+bŸb¨¸ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‹bŸbÏfƒbŸffbÏb«b»b¿fˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‹fffb¤ƒbŸffbÇf#bÄˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‹fb¿f+bÄˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‹b«bÏb³f+fƒbŸfb¿b»f#fˆ°‰Í•Ğ¹­•åÌˆè‹ffbŸb«f+b´A$ˆ°‰Í•Ğ¹­•åÌ¹ˆè‹b¿bÄƒbf ƒbfbëf@ƒbŸfffbŸb«f+b´¸ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‹b«b¿f#f+bÄƒbŸfffb«bŸb´ˆ°‰Í•Ğ¹É•Ù½­”ˆè‹b—fbëbŸb„ƒbŸfffˆ°‰Í•Ğ¹‘•µ¼ˆè‹fbÏb»b¤ƒb«b³bÇf+b£f+b¤ƒŠPƒb«b·b«bŸb°ƒb»fff+b¤ƒfb«b×fb¤¸ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‹fbßff#b ƒf#b×f#fƒbŸffbÓbÇfƒŠPƒbÏb³fGfƒbŸfb¿b»f#fƒbf#fbŸf,¸ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‹b×f?fbäƒfffbßf#bÇf+fƒbŸfbÃf+fƒf+b·b«bŸb³f#fƒbçff#bŸf%@ƒb¿f#fGbŸbÇf/bœƒb£fbœƒbçfbŸb„¸ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‹b£f+bŸfbŸb¨ƒbëf+bÄƒb×b·f+b·b¤¸ˆ°‰±½¥¸¹½¬ˆè‹b«fƒb«bÏb³f+fƒbŸfb¿b»f#f¸ˆ(€ô°(€€‰ÉÔˆèì€‰¡•É¼¹‰…‘”ˆè‹B£BïF;BÜƒBûB÷BïBÃBçBôˆ°‰¡•É¼¹Ñ¥Ñ±”ˆè‹BsB×B÷F?BçFBÔˆ°‰¡•É¼¹Ñ¥Ñ±”Èˆè‹BãFFBûBÓF?F'BãBä%@ˆ°‰¡•É¼¹Ñ¥Ñ±”Ìˆè‹B÷BÀƒBëBÃBÛBÓF/BäƒBßBÃBÿFBûFˆ°(€€€€‰¡•É¼¹ÍÕˆˆè‰9•‰Õ±…AÉ½áäƒŠPƒF7FBøƒFBûFBÃFBãBûB÷B÷F/BäƒBÿFBûBëFBà·F#BïF;BÜ¸ƒB{FBÿFBÃBËF3FBÔƒBßBÃBÿFBûF°ƒBÿBûBïFFBãFBÔƒFBËB×BÛBãBä%@ƒBãBÜƒF#B×FFBàƒFFFBÃBôƒBàƒBÿFBãBóBãFBÔƒBûFBËB×FƒŠPƒFB×FB×BÜƒBûBÓBãBôƒF7B÷BÓBÿBûBãB÷F¸ˆ°(€€€€‰¡•É¼¹Á±…äˆè‹B{FBëFF/FF0A±…åÉ½Õ¹ˆ°‰¡•É¼¹‘½Ìˆè‹BŸBãFBÃFF0ƒBÓBûBëFBóB×B÷FBÃFBãF8ˆ°‰¡•É¼¹±¥Ù”ˆè‹BBûFBûBëBûBËBÃF<ƒBÿB×FB×BÓBÃFBÀˆ°‰¡•É¼¹½½­¥•Ìˆè‰½½­¥•ÌƒBàƒBßBÃBÏBûBïBûBËBëBàˆ°(€€€€‰¹…Ø¹É•¥½¹ÌˆèˆØƒFFFBÃBôˆ°‰¹…Ø¹¡½µ”ˆè‹BOBïBÃBËB÷BÃF<ˆ°‰¹…Ø¹Á±…åÉ½Õ¹ˆè‰A±…åÉ½Õ¹ˆ°‰¹…Ø¹‘½Ìˆè‹BSBûBëFBóB×B÷FBÃFBãF<ˆ°‰¹…Ø¹Í•ÑÑ¥¹Ìˆè‹BwBÃFFFBûBçBëBàˆ°(€€€€‰ÍÑ…Ğ¹É•ÅÕ•ÍÑÌˆè‹B_BÃBÿFBûFF,ˆ°‰ÍÑ…Ğ¹ÍÕ•ÍÌˆè‹BFBÿB×F#B÷BûFFF0ˆ°‰ÍÑ…Ğ¹±…Ñ•¹äˆè‹B‡FB×BÓB÷F?F<ƒBßBÃBÓB×FBÛBëBÀˆ°‰ÍÑ…Ğ¹É•¥½¹Ìˆè‹BƒB×BÏBãBûB÷F,ˆ°(€€€€‰™•…Ğ¹•å•‰É½Üˆè‹BBûFB×BóF9•‰Õ±…AÉ½áäˆ°‰™•…Ğ¹Ñ¥Ñ±”ˆè‹BKFFDƒBÓBïF<ƒFBûFBÃFBãBàƒFFBÃFBãBëBÀˆ°‰™•…Ğ¹ÍÕˆˆè‹B{BÓBãBôƒF7B÷BÓBÿBûBãB÷F°ƒBëBûFBûFF/BäƒFBÿFBÃBËBïF?B×FƒBÿFBûBËBÃBçBÓB×FBÃBóBà°%@°ƒBßBÃBÏBûBïBûBËBëBÃBóBàƒBàƒFFFBãBóBãB÷BÏBûBğ¸ˆ°(€€€€‰™•…Ğ¹˜Ä¹Ğˆè‹B“BûBïBÇF7BèƒB÷B×FBëBûBïF3BëBãFƒBÿFBûBËBÃBçBÓB×FBûBÈˆ°‰™•…Ğ¹˜Ä¹ˆè‹BWFBïBàƒBÿFBûBëFBàƒFBÇBûBãF°9•‰Õ±…AÉ½áäƒBÿBûBËFBûFBãFƒFB×FB×BÜƒBÓFFBÏBûBäƒŠPƒBÇB×BÜƒBÿFBûFFBûF<¸ˆ°(€€€€‰™•…Ğ¹˜È¹Ğˆè‹BƒBûFBÃFBãF<ƒF#B×FFBàƒFFFBÃBôˆ°‰™•…Ğ¹˜È¹ˆè‹B‡B£B@°ƒBKB×BïBãBëBûBÇFBãFBÃB÷BãF<°ƒBOB×FBóBÃB÷BãF<°ƒBBûBïF3F#BÀ°ƒBcFBÿBÃB÷BãF<ƒBàƒB¿BÿBûB÷BãF<¸ˆ°(€€€€‰™•…Ğ¹˜Ì¹Ğˆè‰½½­¥•ÌƒBàƒBßBÃBÏBûBïBûBËBëBàˆ°‰™•…Ğ¹˜Ì¹ˆè‹BB×FB×BÓBÃBËBÃBçFBÔƒFBËBûBà½½­¥•ÌƒBàƒBßBÃBÏBûBïBûBËBëBàƒFB×BïBà¸ˆ°(€€€€‰™•…Ğ¹˜Ğ¹Ğˆè‹BBûFBûBëBûBËBÃF<ƒBÿB×FB×BÓBÃFBÀˆ°‰™•…Ğ¹˜Ğ¹ˆè‹B‡FFBãBóF3FBÔƒBûFBËB×FF,ƒBÿBøMM¸ˆ°(€€€€‰™•…Ğ¹˜Ô¹Ğˆè‹BGBãB÷BÃFB÷BÃF<ƒBÇB×BßBûBÿBÃFB÷BûFFF0ˆ°‰™•…Ğ¹˜Ô¹ˆè‹BcBßBûBÇFBÃBÛB×B÷BãF<ƒBàƒFBÃBçBïF,ƒBÿFBûFBûBÓF?FƒBÇB×BÜƒBãBßBóB×B÷B×B÷BãBäƒFƒBÿBûBÓBÓB×FBÛBëBûBä‰…Í”ØĞ¸ˆ°(€€€€‰™•…Ğ¹˜Ø¹Ğˆè‹BoF;BÇBûBäƒF?BßF/Bèˆ°‰™•…Ğ¹˜Ø¹ˆè‰UI0°AåÑ¡½¸°9½‘”¹©ÌƒŠPƒBûBÓBãBôƒF7B÷BÓBÿBûBãB÷F°ƒBÇB×BÜM,¸ˆ°(€€€€‰Áœ¹•å•‰É½Üˆè‰A±…åÉ½Õ¹ˆ°‰Áœ¹Ñ¥Ñ±”ˆè‹BFBûBËB×FF3FBÔƒBÿFBûBëFBàˆ°‰Áœ¹ÍÕˆˆè‹B{FBÿFBÃBËF3FBÔƒBßBÃBÿFBûFƒFB×FB×BÜƒF#BïF;BÜ¸ˆ°(€€€€‰Áœ¹Ñ…É•Ğˆè‹B›B×BïB×BËBûBäUI0ˆ°‰Áœ¹½Õ¹ÑÉäˆè‹B‡FFBÃB÷BÀˆ°‰Áœ¹É•ÑÉ¥•Ìˆè‹BBûBËFBûFF,ˆ°‰Áœ¹µ•Ñ¡½ˆè‹BsB×FBûBĞˆ°‰Áœ¹‰½‘äˆè‹B‹B×BïBø€¡)M=8¤ˆ°(€€€€‰Áœ¹Í•¹ˆè‹B{FBÿFBÃBËBãFF0ˆ°‰Áœ¹¥‘±”ˆè‹BOBûFBûBËBøˆ°‰Áœ¹¡¥¹Ğˆè‹B_BÃBÿBûBïB÷BãFBÔƒFBûFBóFƒBàƒB÷BÃBÛBóBãFBÔƒB{FBÿFBÃBËBãFF0¸ˆ°‰Áœ¹…ÕÑ¼ˆè‹BCBËFBø€£FBûFBÃFBãF<¤ˆ°(€€€€‰‘½Ì¹•å•‰É½Üˆè‹BSBûBëFBóB×B÷FBÃFBãF<ˆ°‰‘½Ì¹Ñ¥Ñ±”ˆè‹B‡BÿFBÃBËBûFB÷BãBèA$ˆ°‰‘½Ì¹ÍÕˆˆè‹BKFFDƒBÓBïF<ƒBãB÷FB×BÏFBÃFBãBà9•‰Õ±…AÉ½áä¸ˆ°(€€€€‰‘½Ì¹•¹‘Á½¥¹ÑÌˆè‹B·B÷BÓBÿBûBãB÷FF,ˆ°‰‘½Ì¹µ•Ñ¡½ˆè‹BsB×FBûBĞˆ°‰‘½Ì¹•¹‘Á½¥¹Ğˆè‹B·B÷BÓBÿBûBãB÷Fˆ°‰‘½Ì¹‘•ÍÉ¥ÁÑ¥½¸ˆè‹B{BÿBãFBÃB÷BãBÔˆ°(€€€€‰‘½Ì¹ÁÉ½áäˆè‹BFBûBëFBàƒBßBÃBÿFBûFBÀƒFB×FB×BÜƒFBûFBÃFBãBûB÷B÷F/Bä%@ˆ°‰‘½Ì¹¥Àˆè‹B‹B×BëFF'BãBäƒBãFFBûBÓF?F'BãBä%@ˆ°(€€€€‰‘½Ì¹Á…É…µÌˆè‹BBÃFBÃBóB×FFF,ˆ°‰‘½Ì¹™¥•±ˆè‹BBûBïBÔˆ°‰‘½Ì¹ÑåÁ”ˆè‹B‹BãBüˆ°‰‘½Ì¹É•Äˆè‹B{BÇF?BßBÃFB×BïF3B÷Bøˆ°‰‘½Ì¹‘•ÍŒÈˆè‹B{BÿBãFBÃB÷BãBÔˆ°(€€€€‰‘½Ì¹À¹ÕÉ°ˆè‰UI0ƒBÓBïF<ƒBßBÃBÿFBûFBÀˆ°‰‘½Ì¹À¹µ•Ñ¡½ˆè‰!QQ@ƒBóB×FBûBĞ€¡PƒBÿBøƒFBóBûBïFBÃB÷BãF8¤ˆ°‰‘½Ì¹À¹½Õ¹ÑÉäˆè‹BkBûBĞƒFFFBÃB÷F,€£BãBïBàp‰…ÕÑ½pˆ¤ˆ°(€€€€‰‘½Ì¹À¹É•ÑÉ¥•Ìˆè‹BBûBËFBûFF,ƒBÿFBàƒFBÇBûBÔˆ°‰‘½Ì¹À¹¡•…‘•ÉÌˆè‹B_BÃBÏBûBïBûBËBëBàˆ°‰‘½Ì¹À¹½½­¥•Ìˆè‰½½­¥•Ìˆ°(€€€€‰‘½Ì¹À¹‰½‘äˆè‹B‹B×BïBø€¡A=MP½AUP½AQ ¤ˆ°‰‘½Ì¹À¹ˆØĞˆè‹B‹B×BïBøƒBÈ‰…Í”ØĞˆ°‰‘½Ì¹À¹ÍÑ¥­äˆè‹BSB×FBÛBÃFF0ƒFBûFƒBÛBÔ%@ˆ°(€€€€‰‘½Ì¹•á…µÁ±•Ìˆè‹BFBãBóB×FF,ˆ°‰‘½Ì¹É•Ìˆè‹B{FBËB×Fˆ°‰å•Ìˆè‹BÓBÀˆ°‰¹¼ˆè‹B÷B×Fˆ°(€€€€‰Í•Ğ¹•å•‰É½Üˆè‹BwBÃFFFBûBçBëBàˆ°‰Í•Ğ¹Ñ¥Ñ±”ˆè‹BkBûB÷FBãBÏFFBÃFBãF<ˆ°‰Í•Ğ¹ÍÕˆˆè‹BwBÃFFFBûBçFBÔƒBÿFB×BÓBÿBûFFB×B÷BãF<ƒBàƒFBÿFBÃBËBïF?BçFBÔƒBÓBûFFFBÿBûBğƒBÃBÓBóBãB÷BãFFFBÃFBûFBÀ¸ˆ°(€€€€‰Í•Ğ¹•¹•É…°ˆè‹B{BÇF'BãBÔˆ°‰Í•Ğ¹ÍÑ¥­äˆè‹BBûFFBûF?B÷B÷F/BÔƒFB×FFBãBàˆ°‰Í•Ğ¹ÍÑ¥­ä¹ˆè‹BcFBÿBûBïF3BßBûBËBÃFF0ƒFBûFƒBÛBÔ%@ˆ°(€€€€‰Í•Ğ¹ÍÑÉ•…´ˆè‹B‡FFBãBóBãB÷BÌ€¡MM¤ˆ°‰Í•Ğ¹ÍÑÉ•…´¹ˆè‹BBûFBûBèƒBûFBËB×FBûBÈˆ°‰Í•Ğ¹‘…É¬ˆè‹B‹FGBóB÷BÃF<ƒFB×BóBÀˆ°‰Í•Ğ¹‘…É¬¹ˆè‹BKFB×BÏBÓBÀƒBËBëBïF;FB×B÷BÀˆ°(€€€€‰Í•Ğ¹½Õ¹ÑÉäˆè‹B‡FFBÃB÷BÀƒBÿBøƒFBóBûBïFBÃB÷BãF8ˆ°‰Í•Ğ¹½Õ¹ÑÉä¹ˆè‹BWFBïBàƒFFFBÃB÷BÀƒB÷BÔƒFBëBÃBßBÃB÷BÀˆ°‰Í•Ğ¹…‘µ¥¸ˆè‹BKFBûBĞƒBÃBÓBóBãB÷BãFFFBÃFBûFBÀˆ°(€€€€‰Í•Ğ¹…‘µ¥¸¹ˆè‹BKBûBçBÓBãFBÔƒBÓBïF<ƒFBÿFBÃBËBïB×B÷BãF<ƒBÿFBûBëFBà¸ˆ°‰Í•Ğ¹ÕÍ•É¹…µ”ˆè‹BoBûBÏBãBôˆ°‰Í•Ğ¹Á…ÍÍİ½Éˆè‹BBÃFBûBïF0ˆ°(€€€€‰Í•Ğ¹ÕÍ•È¹Á ˆè‰…‘µ¥¸ˆ°‰Í•Ğ¹Á…ÍÌ¹Á ˆè‹Š‹Š‹Š‹Š‹Š‹Š‹Š‹Šˆˆ°‰Í•Ğ¹±½¥¸ˆè‹BKBûBçFBàˆ°‰Í•Ğ¹­•åÌˆè‹BkBïF;FBàA$ˆ°‰Í•Ğ¹­•åÌ¹ˆè‹BƒBûFBÃFBãF<ƒBãBïBàƒBûFBßF/BÈƒBëBïF;FB×Bä¸ˆ°(€€€€‰Í•Ğ¹É½Ñ…Ñ”ˆè‹BƒBûFBãFBûBËBÃFF0ƒBëBïF;Fˆ°‰Í•Ğ¹É•Ù½­”ˆè‹B{FBûBßBËBÃFF0ƒBËFBÔˆ°‰Í•Ğ¹‘•µ¼ˆè‹BSB×BóBøƒŠPƒB÷FBÛB×BôƒBÿBûBÓBëBïF;FFGB÷B÷F/BäƒBÇF7BëB×B÷BĞ¸ˆ°‰Í•Ğ¹¹••‘…‘µ¥¸ˆè‹B‹FB×BÇFB×FFF<ƒBÓBûFFFBüƒBÃBÓBóBãB÷BãFFFBÃFBûFBÀƒŠPƒFB÷BÃFBÃBïBÀƒBËBûBçBÓBãFBÔ¸ˆ°(€€€€‰™½½Ñ•È¹¹½Ñ”ˆè‹B‡BûBßBÓBÃBôƒBÓBïF<ƒFBÃBßFBÃBÇBûFFBãBëBûBÈ°ƒBëBûFBûFF/BğƒB÷FBÛB×BôƒFBãFFF/BäƒFBûFBÃFBãBûB÷B÷F/Bä%@ƒBÇB×BÜƒFBïBûBÿBûF¸ˆ°‰™½½Ñ•È¹Ñ…œˆè‰9•‰Õ±…AÉ½áäƒ
+ÜØÄ¸À¸Àˆ°(€€€€‰±½¥¸¹•ÉÈˆè‹BwB×BËB×FB÷F/BÔƒBÓBÃB÷B÷F/BÔ¸ˆ°‰±½¥¸¹½¬ˆè‹BKFBûBĞƒBËF/BÿBûBïB÷B×Bô¸ˆ(€ô)ôì()±•ĞUII9Q}19€ô±½…±MÑ½É…”¹•Ñ%Ñ•´ ‰¹Áá}±…¹œˆ¤ñğ€‰•¸ˆì)½¹ÍĞ€€ô€¡Ì±È¤ôø¡Éññ‘½Õµ•¹Ğ¤¹ÅÕ•ÉåM•±•Ñ½È¡Ì¤ì)½¹ÍĞ€€ô€¡Ì±È¤ôùÉÉ…ä¹™É½´ ¡Éññ‘½Õµ•¹Ğ¤¹ÅÕ•ÉåM•±•Ñ½É±°¡Ì¤¤ì()™Õ¹Ñ¥½¸…ÁÁ±å1…¹œ ¥ì(€½¹ÍĞ0€ôMQI%9MmUII9Q}19tñğMQI%9L¹•¸ì(€½¹ÍĞÉÑ°€ô$Äá8¹™¥¹¡¤ôù¤¹½‘”ôôõUII9Q}19¤ü¹ÉÑ°ì(€‘½Õµ•¹Ğ¹‘½Õµ•¹Ñ±•µ•¹Ğ¹±…¹œ€ôUII9Q}19ì(€‘½Õµ•¹Ğ¹‘½Õµ•¹Ñ±•µ•¹Ğ¹‘¥È€ôÉÑ°€ü€‰ÉÑ°ˆ€è€‰±ÑÈˆì(€‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±…¹1…‰•°ˆ¤¹Ñ•áÑ½¹Ñ•¹Ğ€ô$Äá8¹™¥¹¡¤ôù¤¹½‘”ôôõUII9Q}19¤¹±…‰•°ì(€€ ‰m‘…Ñ„µ¤Äá¹tˆ¤¹™½É… ¡•°ôùì(€€€½¹ÍĞ¬€ô•°¹•ÑÑÑÉ¥‰ÕÑ” ‰‘…Ñ„µ¤Äá¸ˆ¤ì(€€€¥˜¡1m­t„ôõÕ¹‘•™¥¹•¤•°¹Ñ•áÑ½¹Ñ•¹Ğ€ô1m­tì(€ô¤ì(€€ ‰m‘…Ñ„µ¤Äá¸µÁ¡tˆ¤¹™½É… ¡•°ôùì(€€€½¹ÍĞ¬€ô•°¹•ÑÑÑÉ¥‰ÕÑ” ‰‘…Ñ„µ¤Äá¸µÁ ˆ¤ì(€€€¥˜¡1m­t„ôõÕ¹‘•™¥¹•¤•°¹Í•ÑÑÑÉ¥‰ÕÑ” ‰Á±…•¡½±‘•Èˆ°1m­t¤ì(€ô¤ì)ô()™Õ¹Ñ¥½¸É•¹‘•É1…¹5•¹Ô ¥ì(€½¹ÍĞµ•¹Ô€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±…¹5•¹Ôˆ¤ì(€µ•¹Ô¹¥¹¹•É!Q50€ô€ˆˆì(€$Äá8¹™½É… ¡°ôùì(€€€½¹ÍĞˆ€ô‘½Õµ•¹Ğ¹É•…Ñ•±•µ•¹Ğ ‰‰ÕÑÑ½¸ˆ¤ì(€€€ˆ¹±…ÍÍ9…µ”€ô€‰±…¹œµ¥Ñ•´ˆ€¬€¡°¹½‘”ôôõUII9Q}19üˆ…Ñ¥Ù”ˆèˆˆ¤ì(€€€ˆ¹Ñ•áÑ½¹Ñ•¹Ğ€ô°¹±…‰•°ì(€€€ˆ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ° ¤ôùì(€€€€€UII9Q}19€ô°¹½‘”ì(€€€€€±½…±MÑ½É…”¹Í•Ñ%Ñ•´ ‰¹Áá}±…¹œˆ°°¹½‘”¤ì(€€€€€…ÁÁ±å1…¹œ ¤ìÉ•¹‘•É1…¹5•¹Ô ¤ì(€€€€€‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±…¹]É…Àˆ¤¹±…ÍÍ1¥ÍĞ¹É•µ½Ù” ‰½Á•¸ˆ¤ì(€€€ô¤ì(€€€µ•¹Ô¹…ÁÁ•¹‘¡¥±¡ˆ¤ì(€ô¤ì)ô)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±…¹	Ñ¸ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ±”ôùì(€”¹ÍÑ½ÁAÉ½Á……Ñ¥½¸ ¤ì(€‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±…¹]É…Àˆ¤¹±…ÍÍ1¥ÍĞ¹Ñ½±” ‰½Á•¸ˆ¤ì)ô¤ì)‘½Õµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ° ¤ôù‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±…¹]É…Àˆ¤¹±…ÍÍ1¥ÍĞ¹É•µ½Ù” ‰½Á•¸ˆ¤¤ì((¼¨€ôôôôôôôôôôôôôôôôôôôôQ…ˆ¹…Ù¥…Ñ¥½¸€ôôôôôôôôôôôôôôôôôôôô€¨¼)™Õ¹Ñ¥½¸¹…Ù¥…Ñ”¡Ñ…ˆ¥ì(€€ ˆ¹Á…”ˆ¤¹™½É… ¡ÀôùÀ¹±…ÍÍ1¥ÍĞ¹É•µ½Ù” ‰…Ñ¥Ù”ˆ¤¤ì(€½¹ÍĞÁ…”€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Á…”´ˆ­Ñ…ˆ¤ì(€¥˜¡Á…”¤Á…”¹±…ÍÍ1¥ÍĞ¹…‘ ‰…Ñ¥Ù”ˆ¤ì(€€ ˆ¹Ñ…ˆˆ¤¹™½É… ¡ĞôùĞ¹±…ÍÍ1¥ÍĞ¹Ñ½±” ‰…Ñ¥Ù”ˆ°Ğ¹•ÑÑÑÉ¥‰ÕÑ” ‰‘…Ñ„µ¹…Øˆ¤ôôõÑ…ˆ¤¤ì(€İ¥¹‘½Ü¹ÍÉ½±±Q¼¡íÑ½ÀèÀ±‰•¡…Ù¥½Èè‰Íµ½½Ñ ‰ô¤ì)ô( ‰m‘…Ñ„µ¹…Ùtˆ¤¹™½É… ¡•°ôùì(€•°¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ±”ôùì(€€€”¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ì(€€€¹…Ù¥…Ñ”¡•°¹•ÑÑÑÉ¥‰ÕÑ” ‰‘…Ñ„µ¹…Øˆ¤¤ì(€ô¤ì)ô¤ì((¼¨€ôôôôôôôôôôôôôôôôôôôôA±…åÉ½Õ¹€ôôôôôôôôôôôôôôôôôôôô€¨¼)±•ĞÍ•ÍÍ¥½¹MÑ…ÑÌ€ôìÉ•ÄèÀ°½¬èÀ°±…ÑMÕ´èÀ°É•¥½¹Ìé¹•ÜM•Ğ ¤ôì)±•ĞÕÉÉ•¹Ñ5•Ñ¡½€ô€‰Pˆì( ˆÁœµµ•Ñ¡½€¹µ•Ñ¡½ˆ¤¹™½É… ¡´ôùì(€´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ° ¤ôùì(€€€€ ˆÁœµµ•Ñ¡½€¹µ•Ñ¡½ˆ¤¹™½É… ¡àôùà¹±…ÍÍ1¥ÍĞ¹É•µ½Ù” ‰…Ñ¥Ù”ˆ¤¤ì(€€€´¹±…ÍÍ1¥ÍĞ¹…‘ ‰…Ñ¥Ù”ˆ¤ì(€€€ÕÉÉ•¹Ñ5•Ñ¡½€ô´¹•ÑÑÑÉ¥‰ÕÑ” ‰‘…Ñ„µ´ˆ¤ì(€ô¤ì)ô¤ì()…Íå¹Œ™Õ¹Ñ¥½¸…Á¥•Ñ ¡Á…Ñ °½ÁÑÌ¥ì(€½¹ÍĞÉ•Ì€ô…İ…¥Ğ™•Ñ ¡Á…Ñ °½ÁÑÌ¤ì(€½¹ÍĞĞ€ôÉ•Ì¹¡•…‘•ÉÌ¹•Ğ ‰½¹Ñ•¹ĞµÑåÁ”ˆ¥ñğˆˆì(€±•Ğ‘…Ñ„ì(€¥˜¡Ğ¹¥¹±Õ‘•Ì ‰…ÁÁ±¥…Ñ¥½¸½©Í½¸ˆ¤¤‘…Ñ„€ô…İ…¥ĞÉ•Ì¹©Í½¸ ¤ì(€•±Í”‘…Ñ„€ô…İ…¥ĞÉ•Ì¹Ñ•áĞ ¤ì(€€¼¼MÑ…Ñ¥Œ¡½ÍÑÌ€¡”¹œ¸¥Ñ!ÕˆA…•Ì¤É•ÑÕÉ¸…¸!Q50€ĞÀĞ¼ĞÀÔÁ…”™½È€½…Á¤¼¨(€€¼¼¥¹ÍÑ•…½˜)M=8ƒŠPÍÕÉ™…”Ñ¡…Ğ…Ì„±•…¸…Ñ•İ…ä•ÉÉ½ÈÑ¼Ñ¡”ÕÍ•È¸(€¥˜ …Ğ¹¥¹±Õ‘•Ì ‰…ÁÁ±¥…Ñ¥½¸½©Í½¸ˆ¤¥ì(€€€½¹ÍĞ½‘”€ôÉ•Ì¹ÍÑ…ÑÕÌì(€€€Ñ¡É½Ü¹•ÜÉÉ½È ‰…Ñ•İ…äÉ•ÑÕÉ¹•!QQ@€ˆ€¬½‘”€¬€ˆ€ ˆ€¬Ğ¹ÍÁ±¥Ğ ˆìˆ¥lÁt€¬€ˆ¤¸9¼‰…­•¹¥ÌÉ•…¡…‰±”½¸Ñ¡¥ÌÍÑ…Ñ¥Œ¡½ÍĞƒŠPÑ¡”€½…Á¤¼¨ÁÉ½áä½¹±äİ½É­Ìİ¡•¸Ñ¡”±½Õ‘™±…É”]½É­•È¥Ì‘•Á±½å•¸ˆ¤ì(€ô(€É•ÑÕÉ¸ìÍÑ…ÑÕÌéÉ•Ì¹ÍÑ…ÑÕÌ°‘…Ñ„ôì)ô()™Õ¹Ñ¥½¸™µÑ1…Ñ•¹ä¡µÌ¥ì(€¥˜¡µÌ€ğ€ÄÀÀÀ¤É•ÑÕÉ¸µÌ€¬€ˆµÌˆì(€É•ÑÕÉ¸€¡µÌ¼ÄÀÀÀ¤¹Ñ½¥á• È¤€¬€ˆÌˆì)ô()™Õ¹Ñ¥½¸ÕÁ‘…Ñ•MÑ…ÑÌ¡±…ÍÑ1…Ñ•¹ä¥ì(€Í•ÍÍ¥½¹MÑ…ÑÌ¹É•Ä¬¬ì(€¥˜¡±…ÍÑ1…Ñ•¹ä„ôõÕ¹‘•™¥¹•¥ì(€€€Í•ÍÍ¥½¹MÑ…ÑÌ¹±…ÑMÕ´€¬ô±…ÍÑ1…Ñ•¹äì(€€€€ ˆÍÑ…Ğµ±…Ğˆ¤¹Ñ•áÑ½¹Ñ•¹Ğ€ô™µÑ1…Ñ•¹ä¡5…Ñ ¹É½Õ¹¡Í•ÍÍ¥½¹MÑ…ÑÌ¹±…ÑMÕ´½Í•ÍÍ¥½¹MÑ…ÑÌ¹É•Ä¤¤ì(€ô(€€ ˆÍÑ…ĞµÉ•Äˆ¤¹Ñ•áÑ½¹Ñ•¹Ğ€ôÍ•ÍÍ¥½¹MÑ…ÑÌ¹É•Äì)ô()‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰ÁœµÍ•¹ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ°…Íå¹Œ ¤ôùì(€½¹ÍĞ‰Ñ¸€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰ÁœµÍ•¹ˆ¤ì(€½¹ÍĞÉ•ÍÀ€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰ÁœµÉ•ÍÁ½¹Í”ˆ¤ì(€½¹ÍĞÕÉ°€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰ÁœµÕÉ°ˆ¤¹Ù…±Õ”¹ÑÉ¥´ ¤ì(€½¹ÍĞ½Õ¹ÑÉä€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Áœµ½Õ¹ÑÉäˆ¤¹Ù…±Õ”ì(€½¹ÍĞÉ•ÑÉ¥•Ì€ôÁ…ÉÍ•%¹Ğ¡‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰ÁœµÉ•ÑÉ¥•Ìˆ¤¹Ù…±Õ”°ÄÀ¤ì(€½¹ÍĞ‰½‘åI…Ü€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Áœµ‰½‘äˆ¤¹Ù…±Õ”ì((€¥˜ …ÕÉ°¥ìÉ•ÍÀ¹¥¹¹•É!Q50€ô€œñÍÁ…¸±…ÍÌô‰ÍÑ…ÑÕÌµÑ…œÍÑ…ÑÕÌ´ÑáàˆøĞÀÀğ½ÍÁ…¸øñ‰ÈùA±•…Í”•¹Ñ•È„Ñ…É•ĞUI0¸œìÉ•ÑÕÉ¸ìô((€½¹ÍĞÁ…å±½…€ôìÕÉ°°µ•Ñ¡½èÕÉÉ•¹Ñ5•Ñ¡½°É•ÑÉ¥•Ì°ÁÉ½áå}½Õ¹ÑÉäè½Õ¹ÑÉäôì(€±•Ğ‰½‘ä€ô‰½‘åI…Üì(€¥˜¡‰½‘åI…Ü¥ì(€€€ÑÉåì‰½‘ä€ô)M=8¹Á…ÉÍ”¡‰½‘åI…Ü¤ìõ…Ñ ¡”¥ì€¼¨­••À…ÌÍÑÉ¥¹œ€¨¼ô(€€€Á…å±½…¹‰½‘ä€ô‰½‘äì(€ô((€‰Ñ¸¹‘¥Í…‰±•€ôÑÉÕ”ì(€É•ÍÀ¹¥¹¹•É!Q50€ô€œñÍÁ…¸±…ÍÌô‰ÍÑ…ÑÕÌµÑ…œÍÑ…ÑÕÌµ¥‘±”ˆû
+ß
+ß
+Üğ½ÍÁ…¸øñ‰ÈùM•¹‘¥¹œÉ•ÅÕ•ÍÓŠ˜œì(€½¹ÍĞĞÀ€ôÁ•É™½Éµ…¹”¹¹½Ü ¤ì((€ÑÉåì(€€€½¹ÍĞ½ÕĞ€ô…İ…¥Ğ…Á¥•Ñ  ˆ½…Á¤½ÁÉ½áäˆ°ì(€€€€€µ•Ñ¡½è‰A=MPˆ°(€€€€€¡•…‘•ÉÌéì‰½¹Ñ•¹ĞµQåÁ”ˆè‰…ÁÁ±¥…Ñ¥½¸½©Í½¸‰ô°(€€€€€‰½‘äè)M=8¹ÍÑÉ¥¹¥™ä¡Á…å±½…¤(€€€ô¤ì(€€€½¹ÍĞ±…Ğ€ô5…Ñ ¹É½Õ¹¡Á•É™½Éµ…¹”¹¹½Ü ¤µĞÀ¤ì(€€€½¹ÍĞÍŒ€ô½ÕĞ¹ÍÑ…ÑÕÌì(€€€½¹ÍĞ±Ì€ôÍŒøôÈÀÀ˜™ÍŒğÌÀÀ€ü€‰ÍÑ…ÑÕÌ´Éáàˆ€è€¡ÍŒøôĞÀÀ€ü€¡ÍŒøôÔÀÀü‰ÍÑ…ÑÕÌ´Õáàˆè‰ÍÑ…ÑÕÌ´Ñáàˆ¤€è€ˆˆ¤ì(€€€½¹ÍĞ‘…Ñ„€ô½ÕĞ¹‘…Ñ„ì(€€€½¹ÍĞ•áÑÉ„€ômtì(€€€¥˜¡‘…Ñ„€˜˜‘…Ñ„¹•±…ÁÍ•‘}µÌ„ôõÕ¹‘•™¥¹•¤•áÑÉ„¹ÁÕÍ  ‹Š>Ä€ˆ­™µÑ1…Ñ•¹ä¡‘…Ñ„¹•±…ÁÍ•‘}µÌ¤¤ì(€€€¥˜¡‘…Ñ„€˜˜‘…Ñ„¹ÁÉ½áå½Õ¹ÑÉä¤•áÑÉ„¹ÁÕÍ  ‹Â~24€ˆ­‘…Ñ„¹ÁÉ½áå½Õ¹ÑÉä¹Ñ½UÁÁ•É…Í” ¤¤ì(€€€¥˜¡‘…Ñ„€˜˜‘…Ñ„¹…ÑÑ•µÁĞ„ôõÕ¹‘•™¥¹•¤•áÑÉ„¹ÁÕÍ  ‰…ÑÑ•µÁĞ€Œˆ­‘…Ñ„¹…ÑÑ•µÁĞ¤ì(€€€É•ÍÀ¹¥¹¹•É!Q50€ô€œñÍÁ…¸±…ÍÌô‰ÍÑ…ÑÕÌµÑ…œ€œ­±Ì¬œˆøœ­ÍŒ¬œğ½ÍÁ…¸øœ€¬€¡•áÑÉ„¹±•¹Ñ üˆ€ˆ­•áÑÉ„¹©½¥¸ ˆƒ
+Ü€ˆ¤èˆˆ¤€¬(€€€€€€œñ‰ÈøñÁÉ”ÍÑå±”ô‰µ…É¥¸µÑ½ÀèáÁàíİ¡¥Ñ”µÍÁ…”éÁÉ”µİÉ…Àíİ½Éµ‰É•…¬é‰É•…¬µİ½Éˆøœ­•Í…Á•!Ñµ°¡ÑåÁ•½˜‘…Ñ„ôôô‰ÍÑÉ¥¹œˆı‘…Ñ„é)M=8¹ÍÑÉ¥¹¥™ä¡‘…Ñ„±¹Õ±°°È¤¤¬œğ½ÁÉ”øœì(€€€ÕÁ‘…Ñ•MÑ…ÑÌ¡±…Ğ¤ì(€€€¥˜¡‘…Ñ„€˜˜‘…Ñ„¹ÁÉ½áå½Õ¹ÑÉä¥ìÍ•ÍÍ¥½¹MÑ…ÑÌ¹É•¥½¹Ì¹…‘¡‘…Ñ„¹ÁÉ½áå½Õ¹ÑÉä¤ì€ ˆÍÑ…ĞµÉ•œˆ¤¹Ñ•áÑ½¹Ñ•¹Ğ€ôÍ•ÍÍ¥½¹MÑ…ÑÌ¹É•¥½¹Ì¹Í¥é”ìô(€€€¥˜¡ÍŒøôÈÀÀ˜™ÍŒğÌÀÀ¤Í•ÍÍ¥½¹MÑ…ÑÌ¹½¬¬¬ì(€€€€ ˆÍÑ…Ğµ½¬ˆ¤¹Ñ•áÑ½¹Ñ•¹Ğ€ô5…Ñ ¹É½Õ¹¡Í•ÍÍ¥½¹MÑ…ÑÌ¹½¬½Í•ÍÍ¥½¹MÑ…ÑÌ¹É•Ä¨ÄÀÀ¤€¬€ˆ”ˆì(€õ…Ñ ¡”¥ì(€€€É•ÍÀ¹¥¹¹•É!Q50€ô€œñÍÁ…¸±…ÍÌô‰ÍÑ…ÑÕÌµÑ…œÍÑ…ÑÕÌ´ÕáàˆùIHğ½ÍÁ…¸øñ‰Èøœ­•Í…Á•!Ñµ°¡”¹µ•ÍÍ…”¤¬œñ‰Èøñ‰Èøñ•´ùQ¥ÀèÑ¡¥ÌU$¥ÌÕÉÉ•¹Ñ±ä½¸„ÍÑ…Ñ¥Œ¡½ÍĞ¸•Á±½äÑ¡”‰Õ¹‘±•±½Õ‘™±…É”]½É­•È€¡İÉ…¹±•È‘•Á±½ä¤…¹Í•ĞÑ¡”UAMQI5}UI0Í•É•ĞÑ¼É•… Ñ¡”É•…°…Ñ•İ…äƒŠPÑ¡•¸M•¹İ¥±°İ½É¬¸ğ½•´øœì(€€€ÕÁ‘…Ñ•MÑ…ÑÌ¡Õ¹‘•™¥¹•¤ì(€€€€ ˆÍÑ…Ğµ½¬ˆ¤¹Ñ•áÑ½¹Ñ•¹Ğ€ô5…Ñ ¹É½Õ¹¡Í•ÍÍ¥½¹MÑ…ÑÌ¹½¬½Í•ÍÍ¥½¹MÑ…ÑÌ¹É•Ä¨ÄÀÀ¤€¬€ˆ”ˆì(€õ™¥¹…±±åì(€€€‰Ñ¸¹‘¥Í…‰±•€ô™…±Í”ì(€ô)ô¤ì()™Õ¹Ñ¥½¸•Í…Á•!Ñµ°¡Ì¥ìÉ•ÑÕÉ¸Ì¹É•Á±…” ½l˜ğø‰t½œ±Œôø¡ìˆ˜ˆèˆ™…µÀìˆ°ˆğˆèˆ™±Ğìˆ°ˆøˆèˆ™Ğìˆ°œˆœèˆ™ÅÕ½Ğì‰õmt¤¤ìô((¼¨€ôôôôôôôôôôôôôôôôôôôôM•ÑÑ¥¹Ì€ôôôôôôôôôôôôôôôôôôôô€¨¼)™Õ¹Ñ¥½¸…ÁÁ±åQ¡•µ”¡Ñ¡•µ”¥ì(€½¹ÍĞ‘…É¬€ôÑ¡•µ”€„ôô€‰±¥¡Ğˆì(€‘½Õµ•¹Ğ¹‘½Õµ•¹Ñ±•µ•¹Ğ¹Í•ÑÑÑÉ¥‰ÕÑ” ‰‘…Ñ„µÑ¡•µ”ˆ°‘…É¬€ü€‰‘…É¬ˆ€è€‰±¥¡Ğˆ¤ì(€½¹ÍĞ•°€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•Ğµ‘…É¬ˆ¤ì(€¥˜¡•°¤•°¹¡•­•€ô‘…É¬ì)ô)™Õ¹Ñ¥½¸Á•ÉÍ¥ÍÑM•ÑÑ¥¹Ì ¥ì(€½¹ÍĞÌ€ôì(€€€ÍÑ¥­äè‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•ĞµÍÑ¥­äˆ¤¹¡•­•°(€€€ÍÑÉ•…´è‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•ĞµÍÑÉ•…´ˆ¤¹¡•­•°(€€€½Õ¹ÑÉäè‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•Ğµ½Õ¹ÑÉäˆ¤¹Ù…±Õ”°(€€€Ñ¡•µ”è‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•Ğµ‘…É¬ˆ¤¹¡•­•€ü€‰‘…É¬ˆ€è€‰±¥¡Ğˆ(€ôì(€±½…±MÑ½É…”¹Í•Ñ%Ñ•´ ‰¹Áá}Í•ÑÑ¥¹Ìˆ°)M=8¹ÍÑÉ¥¹¥™ä¡Ì¤¤ì(€…ÁÁ±åQ¡•µ”¡Ì¹Ñ¡•µ”¤ì)ô)™Õ¹Ñ¥½¸±½…‘M•ÑÑ¥¹Ì ¥ì(€ÑÉåì(€€€½¹ÍĞÌ€ô)M=8¹Á…ÉÍ”¡±½…±MÑ½É…”¹•Ñ%Ñ•´ ‰¹Áá}Í•ÑÑ¥¹Ìˆ¥ñğ‰íôˆ¤ì(€€€€ ˆÍ•ĞµÍÑ¥­äˆ¤¹¡•­•€ô€„…Ì¹ÍÑ¥­äì(€€€€ ˆÍ•ĞµÍÑÉ•…´ˆ¤¹¡•­•€ôÌ¹ÍÑÉ•…´„ôõ™…±Í”ì(€€€€ ˆÍ•Ğµ½Õ¹ÑÉäˆ¤¹Ù…±Õ”€ôÌ¹½Õ¹ÑÉäñğ€‰…ÕÑ¼ˆì(€€€…ÁÁ±åQ¡•µ”¡Ì¹Ñ¡•µ”ñğ€‰‘…É¬ˆ¤ì(€õ…Ñ ¡”¥ì…ÁÁ±åQ¡•µ” ‰‘…É¬ˆ¤ìô)ô)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•ĞµÍÑ¥­äˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰¡…¹”ˆ±Á•ÉÍ¥ÍÑM•ÑÑ¥¹Ì¤ì)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•ĞµÍÑÉ•…´ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰¡…¹”ˆ±Á•ÉÍ¥ÍÑM•ÑÑ¥¹Ì¤ì)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•Ğµ½Õ¹ÑÉäˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰¡…¹”ˆ±Á•ÉÍ¥ÍÑM•ÑÑ¥¹Ì¤ì)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Í•Ğµ‘…É¬ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰¡…¹”ˆ±Á•ÉÍ¥ÍÑM•ÑÑ¥¹Ì¤ì()‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±½¥¸µ™½É´ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰ÍÕ‰µ¥Ğˆ±”ôùì(€”¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ì(€½¹ÍĞÔ€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±½¥¸µÕÍ•Èˆ¤¹Ù…±Õ”¹ÑÉ¥´ ¤ì(€½¹ÍĞÀ€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰±½¥¸µÁ…ÍÌˆ¤¹Ù…±Õ”ì(€¥˜¡Ô€˜˜À¥ì(€€€±½…±MÑ½É…”¹Í•Ñ%Ñ•´ ‰¹Áá}…‘µ¥¸ˆ°Ô¤ì(€€€Í¡½İQ½…ÍĞ¡MQI%9MmUII9Q}19ul‰±½¥¸¹½¬‰t°€‰½¬ˆ¤ì(€õ•±Í•ì(€€€Í¡½İQ½…ÍĞ¡MQI%9MmUII9Q}19ul‰±½¥¸¹•ÉÈ‰t°€‰‰…ˆ¤ì(€ô)ô¤ì)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰‰Ñ¸µÉ½Ñ…Ñ”ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ° ¤ôùÍ¡½İQ½…ÍĞ¡MQI%9MmUII9Q}19ul‰Í•Ğ¹¹••‘…‘µ¥¸‰t°€‰İ…É¸ˆ¤¤ì)‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰‰Ñ¸µÉ•Ù½­”ˆ¤¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ° ¤ôùÍ¡½İQ½…ÍĞ¡MQI%9MmUII9Q}19ul‰Í•Ğ¹¹••‘…‘µ¥¸‰t°€‰İ…É¸ˆ¤¤ì()±•ĞÑ½…ÍÑQ¥µ•Èì)™Õ¹Ñ¥½¸Í¡½İQ½…ÍĞ¡µÍœ°ÑåÁ”¥ì(€½¹ÍĞĞ€ô‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰Ñ½…ÍĞˆ¤ì(€Ğ¹Ñ•áÑ½¹Ñ•¹Ğ€ôµÍœì(€Ğ¹±…ÍÍ9…µ”€ô€‰Ñ½…ÍĞÍ¡½Üˆ€¬€¡ÑåÁ”€ü€ˆÑ½…ÍĞ´ˆ€¬ÑåÁ”€è€ˆˆ¤ì(€±•…ÉQ¥µ•½ÕĞ¡Ñ½…ÍÑQ¥µ•È¤ì(€Ñ½…ÍÑQ¥µ•È€ôÍ•ÑQ¥µ•½ÕĞ  ¤ôùĞ¹±…ÍÍ9…µ”€ô€‰Ñ½…ÍĞˆ°€ÈØÀÀ¤ì)ô((¼¨€ôôôôôôôôôôôôôôôôôôôô½Áä‰ÕÑÑ½¹Ì€ôôôôôôôôôôôôôôôôôôôô€¨¼( ‰m‘…Ñ„µ½Áåtˆ¤¹™½É… ¡ˆôùì(€ˆ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ‰±¥¬ˆ° ¤ôùì(€€€½¹ÍĞ½‘”€ôˆ¹±½Í•ÍĞ ˆ¹½‘”ˆ¤¹ÅÕ•ÉåM•±•Ñ½È ‰½‘”ˆ¤¹¥¹¹•ÉQ•áĞì(€€€¹…Ù¥…Ñ½È¹±¥Á‰½…É¹İÉ¥Ñ•Q•áĞ¡½‘”¤¹Ñ¡•¸  ¤ôùì(€€€€€½¹ÍĞ½±€ôˆ¹Ñ•áÑ½¹Ñ•¹Ğìˆ¹Ñ•áÑ½¹Ñ•¹Ğ€ô€‰½Á¥•„ˆì(€€€€€Í•ÑQ¥µ•½ÕĞ  ¤ôùˆ¹Ñ•áÑ½¹Ñ•¹Ğõ½±°€ÄÔÀÀ¤ì(€€€ô¤ì(€ô¤ì)ô¤ì((¼¨€ôôôôôôôôôôôôôôôôôôôô%¹¥Ğ€ôôôôôôôôôôôôôôôôôôôô€¨¼)±½…‘M•ÑÑ¥¹Ì ¤ì)…ÁÁ±å1…¹œ ¤ì)É•¹‘•É1…¹5•¹Ô ¤ì((¼¨¡•…‘±¥¹”½Õ¹ĞµÕÀ™½ÈÍÑ…ÑÌ€¨¼)™Õ¹Ñ¥½¸½Õ¹ÑUÀ¡•°°Ñ…É•Ğ°ÍÕ™™¥à¥ì(€±•ĞÕÈ€ô€Àì(€½¹ÍĞÍÑ•À€ô5…Ñ ¹µ…à Ä°5…Ñ ¹É½Õ¹¡Ñ…É•Ğ¼ĞÀ¤¤ì(€½¹ÍĞĞ€ôÍ•Ñ%¹Ñ•ÉÙ…°  ¤ôùì(€€€ÕÈ€¬ôÍÑ•Àì(€€€¥˜¡ÕÈøõÑ…É•Ğ¥ìÕÈõÑ…É•Ğì±•…É%¹Ñ•ÉÙ…°¡Ğ¤ìô(€€€•°¹Ñ•áÑ½¹Ñ•¹Ğ€ôÕÈ¹Ñ½1½…±•MÑÉ¥¹œ ¤€¬€¡ÍÕ™™¥áñğˆˆ¤ì(€ô°€ÈÀ¤ì)ô)½Õ¹ÑUÀ¡‘½Õµ•¹Ğ¹•Ñ±•µ•¹Ñ	å% ‰ÍÑ…ĞµÉ•Äˆ¤°€ÄÈĞàÀ¤ì(ğ½ÍÉ¥ÁĞø(ğ½‰½‘äø(ğ½¡Ñµ°ø
