@@ -1,13 +1,17 @@
 // ============================================================================
-// NebulaProxy — Cloudflare Worker
+// NebulaProxy — Cloudflare Worker (jsonbin auto-sync version)
 // Serves the static UI AND hides the real backend by forwarding /api/* server-side.
-// The upstream URL lives ONLY here (as a secret) — never exposed to the browser.
+// The backend URL is resolved LIVE from a jsonbin.io bin that tunnel.py keeps
+// updated — so when the Quick tunnel restarts and gets a new URL, the website
+// keeps working automatically (no manual re-deploy needed).
 // ============================================================================
 
-// Point this at your real rotating proxy backend. Set via:
-//   wrangler secret put UPSTREAM_URL
-// or change the fallback below. It must be a full https:// origin.
-const UPSTREAM = "https://your-backend.example.com";
+// jsonbin.io bin id (public read). tunnel.py PUTs the current URL here.
+const JSONBIN_BIN = "6aae4b01ac6210605adf2988";
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest";
+
+// Fallback if jsonbin is unreachable (last known good URL).
+const FALLBACK_UPSTREAM = "https://flu-demand-poly-appointment.trycloudflare.com";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -16,9 +20,42 @@ const CORS = {
   "Access-Control-Expose-Headers": "*",
 };
 
+let _cache = { url: null, ts: 0 };
+const CACHE_TTL = 30 * 1000; // 30s
+
+async function resolveUpstream(env) {
+  if (env.UPSTREAM_URL) return env.UPSTREAM_URL;
+
+  const bin = env.JSONBIN_BIN || JSONBIN_BIN;
+  const binUrl = bin
+    ? "https://api.jsonbin.io/v3/b/" + bin + "/latest"
+    : (env.JSONBIN_URL || JSONBIN_URL);
+
+  if (!bin && !env.JSONBIN_URL) return FALLBACK_UPSTREAM;
+
+  if (_cache.url && Date.now() - _cache.ts < CACHE_TTL) {
+    return _cache.url;
+  }
+
+  try {
+    const res = await fetch(binUrl, {
+      headers: { "User-Agent": "nebulaproxy-worker" },
+    });
+    if (!res.ok) throw new Error("jsonbin status " + res.status);
+    const data = await res.json();
+    const url = (data && data.record && (data.record.url || data.record.upstream)) || null;
+    if (!url || typeof url !== "string" || !/^https?:\/\//.test(url)) {
+      throw new Error("bad url in bin");
+    }
+    _cache = { url, ts: Date.now() };
+    return url;
+  } catch (err) {
+    return _cache.url || FALLBACK_UPSTREAM;
+  }
+}
+
 export default {
   async fetch(request, env) {
-    const upstream = env.UPSTREAM_URL || UPSTREAM;
     const url = new URL(request.url);
     const pathname = url.pathname;
 
@@ -27,6 +64,7 @@ export default {
         return new Response(null, { headers: CORS });
       }
       try {
+        const upstream = await resolveUpstream(env);
         const target = upstream.replace(/\/$/, "") + pathname + url.search;
         const method = request.method;
         let body = null;
