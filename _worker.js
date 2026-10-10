@@ -1,57 +1,115 @@
 // ============================================================================
-// NebulaProxy — Cloudflare Worker (jsonbin auto-sync version)
-// Serves the static UI AND hides the real backend by forwarding /api/* server-side.
-// The backend URL is resolved LIVE from a jsonbin.io bin that tunnel.py keeps
-// updated — so when the Quick tunnel restarts and gets a new URL, the website
-// keeps working automatically (no manual re-deploy needed).
+// NebulaProxy — Cloudflare Worker (Native Fetch Proxy Edition - v1.1.0)
+// ----------------------------------------------------------------------------
+// Serves the static UI (public/index.html) and provides a versatile edge proxy:
+//   - GET  /api/health   -> Health check { status: "ok", version: "1.0.0" }
+//   - GET  /api/version  -> Version info { version: "1.0.0", name: "nebulaproxy" }
+//   - ANY  /api/proxy    -> Fetch target URL (GET query or POST body)
+//                           Supports auto/text/json/base64/stream modes, Range
+//                           forwarding, optional API_TOKEN protection, chunked b64.
 // ============================================================================
 
-// jsonbin.io bin id (public read). tunnel.py PUTs the current URL here.
-const JSONBIN_BIN = "6aae4b01ac6210605adf2988";
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest";
-
-// Fallback if jsonbin is unreachable (last known good URL).
-const FALLBACK_UPSTREAM = "https://flu-demand-poly-appointment.trycloudflare.com";
-
-const CORS = {
+const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS",
   "Access-Control-Allow-Headers": "*",
   "Access-Control-Expose-Headers": "*",
+  "Access-Control-Max-Age": "86400",
 };
 
-let _cache = { url: null, ts: 0 };
-const CACHE_TTL = 30 * 1000; // 30s
+const DEFAULT_TIMEOUT = 30000;
 
-async function resolveUpstream(env) {
-  if (env.UPSTREAM_URL) return env.UPSTREAM_URL;
+// Admin brute-force protection: lock an IP out for 2 minutes after a wrong
+// username/password attempt. In-memory (resets on cold start); the client also
+// enforces its own 2-minute lockout, so both layers apply.
+const ADMIN_LOCKOUT_MS = 2 * 60 * 1000; // 2 minutes
+const adminLoginFails = new Map(); // key -> { count, lockedUntil }
 
-  const bin = env.JSONBIN_BIN || JSONBIN_BIN;
-  const binUrl = bin
-    ? "https://api.jsonbin.io/v3/b/" + bin + "/latest"
-    : (env.JSONBIN_URL || JSONBIN_URL);
+const BINARY_CONTENT_TYPES = [
+  "image/",
+  "video/",
+  "audio/",
+  "application/octet-stream",
+  "application/pdf",
+  "application/zip",
+  "application/x-zip",
+  "application/x-zip-compressed",
+  "application/x-rar-compressed",
+  "application/x-7z-compressed",
+  "application/gzip",
+  "application/x-tar",
+  "font/",
+];
 
-  if (!bin && !env.JSONBIN_URL) return FALLBACK_UPSTREAM;
+function isBinaryContentType(ct) {
+  if (!ct) return false;
+  const lower = ct.toLowerCase();
+  return BINARY_CONTENT_TYPES.some((prefix) => lower.startsWith(prefix));
+}
 
-  if (_cache.url && Date.now() - _cache.ts < CACHE_TTL) {
-    return _cache.url;
-  }
+function jsonResponse(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...CORS_HEADERS,
+    },
+  });
+}
 
-  try {
-    const res = await fetch(binUrl, {
-      headers: { "User-Agent": "nebulaproxy-worker" },
-    });
-    if (!res.ok) throw new Error("jsonbin status " + res.status);
-    const data = await res.json();
-    const url = (data && data.record && (data.record.url || data.record.upstream)) || null;
-    if (!url || typeof url !== "string" || !/^https?:\/\//.test(url)) {
-      throw new Error("bad url in bin");
+// Convert ArrayBuffer to base64 safely in chunks to prevent call-stack or memory blowup
+function arrayBufferToBase64Chunked(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const CHUNK_SIZE = 8192;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, i + CHUNK_SIZE);
+    let chunkStr = "";
+    for (let j = 0; j < chunk.length; j++) {
+      chunkStr += String.fromCharCode(chunk[j]);
     }
-    _cache = { url, ts: Date.now() };
-    return url;
-  } catch (err) {
-    return _cache.url || FALLBACK_UPSTREAM;
+    binary += chunkStr;
   }
+  return btoa(binary);
+}
+
+function logRequest(env, method, target, status, elapsed) {
+  if (env.ENABLE_LOGGING === "true" || env.ENABLE_LOGGING === true) {
+    console.log(`[NebulaProxy] ${method} ${target} -> ${status} (${elapsed}ms)`);
+  }
+}
+
+// Resolve a client's IP for rate-limit keying (falls back to a constant).
+function clientKey(request) {
+  let ip = request.headers.get("CF-Connecting-IP") ||
+           request.headers.get("X-Forwarded-For") ||
+           request.headers.get("X-Real-IP") ||
+           "unknown";
+  return String(ip).split(",")[0].trim();
+}
+
+// Check whether a client is currently locked out of admin login.
+function adminLoginLocked(ip) {
+  const rec = adminLoginFails.get(ip);
+  if (!rec) return 0;
+  if (rec.lockedUntil && rec.lockedUntil > Date.now()) {
+    return rec.lockedUntil - Date.now();
+  }
+  if (rec.lockedUntil && rec.lockedUntil <= Date.now()) {
+    adminLoginFails.delete(ip);
+  }
+  return 0;
+}
+
+function recordAdminLoginFail(ip) {
+  adminLoginFails.set(ip, {
+    count: 1,
+    lockedUntil: Date.now() + ADMIN_LOCKOUT_MS,
+  });
+}
+
+function clearAdminLoginFail(ip) {
+  adminLoginFails.delete(ip);
 }
 
 export default {
@@ -59,56 +117,409 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    if (pathname.startsWith("/api/")) {
-      if (request.method === "OPTIONS") {
-        return new Response(null, { headers: CORS });
-      }
-      try {
-        const upstream = await resolveUpstream(env);
-        const target = upstream.replace(/\/$/, "") + pathname + url.search;
-        const method = request.method;
-        let body = null;
-        if (method !== "GET" && method !== "HEAD") {
-          body = await request.arrayBuffer();
-        }
-
-        const upstreamRes = await fetch(target, {
-          method,
-          headers: {
-            "Content-Type": request.headers.get("Content-Type") || "application/json",
-            "User-Agent": request.headers.get("User-Agent") || "",
-            "X-Nebula-Forwarded": "1",
-          },
-          body: method !== "GET" && method !== "HEAD" ? body : undefined,
-        });
-
-        const resp = new Response(upstreamRes.body, {
-          status: upstreamRes.status,
-          statusText: upstreamRes.statusText,
-        });
-
-        ["content-type", "set-cookie", "cache-control", "content-length"].forEach((h) => {
-          const v = upstreamRes.headers.get(h);
-          if (v) resp.headers.set(h, v);
-        });
-        Object.entries(CORS).forEach(([k, v]) => resp.headers.set(k, v));
-
-        return resp;
-      } catch (err) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error_type: "gateway_error",
-            details: String(err && err.message ? err.message : err),
-          }),
-          { status: 502, headers: { "Content-Type": "application/json", ...CORS } }
-        );
-      }
+    // Handle CORS preflight for all routes
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: CORS_HEADERS,
+      });
     }
 
+    if (pathname.startsWith("/api/")) {
+      // 1. Health & Version endpoints
+      if (pathname === "/api/health") {
+        return jsonResponse({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
+      }
+      if (pathname === "/api/version") {
+        return jsonResponse({ version: "1.0.0", name: "nebulaproxy", engine: "cloudflare-worker" });
+      }
+
+      // 1b. Admin login (with brute-force rate limiting)
+      if (pathname === "/api/admin/login") {
+        if (request.method !== "POST") {
+          return jsonResponse({ error: "Method not allowed", code: 405 }, 405);
+        }
+
+        const ip = clientKey(request);
+        const remainingLock = adminLoginLocked(ip);
+        if (remainingLock > 0) {
+          return jsonResponse(
+            {
+              error: "Too many failed attempts. Try again later.",
+              code: 429,
+              suggestion: "Rate limit exceeded. Slow down requests.",
+              retry_after_ms: Math.ceil(remainingLock),
+            },
+            429
+          );
+        }
+
+        const adminUser = (env.ADMIN_USER || "admin").trim();
+        const adminPass = (env.ADMIN_PASSWORD || "").trim();
+
+        let body = {};
+        try {
+          body = await request.json();
+        } catch (_) {
+          /* fall through; body stays {} */
+        }
+        const username = String(body.username || "").trim();
+        const password = String(body.password || "");
+
+        // If no admin password is configured, admin login is disabled.
+        if (!adminPass) {
+          return jsonResponse(
+            {
+              error: "Admin login is not configured. Set ADMIN_PASSWORD.",
+              code: 403,
+              suggestion: "Configure admin credentials via Worker environment variables.",
+            },
+            403
+          );
+        }
+
+        const ok = username === adminUser && password === adminPass;
+        if (ok) {
+          clearAdminLoginFail(ip);
+          const session = crypto.randomUUID();
+          return jsonResponse({
+            ok: true,
+            user: adminUser,
+            session,
+            expires_in_ms: 0, // client persists session in localStorage
+          });
+        }
+
+        recordAdminLoginFail(ip);
+        logRequest(env, "POST", "/api/admin/login", 401, 0);
+        return jsonResponse(
+          {
+            error: "Invalid username or password.",
+            code: 401,
+            suggestion: "Login locked for 2 minutes after a failed attempt.",
+            retry_after_ms: ADMIN_LOCKOUT_MS,
+          },
+          401
+        );
+      }
+
+      // 2. Main Proxy endpoint
+      if (pathname === "/api/proxy") {
+        // --- Authentication (OPTIONAL: only enforced if env.API_TOKEN is set) ---
+        const configuredToken = (env.API_TOKEN || "").trim();
+        if (configuredToken.length > 0) {
+          const authHeader = request.headers.get("Authorization") || "";
+          const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+          const queryToken = (url.searchParams.get("token") || "").trim();
+
+          if (bearer !== configuredToken && queryToken !== configuredToken) {
+            return jsonResponse(
+              {
+                error: "Unauthorized: Invalid or missing API token",
+                code: 401,
+                suggestion: "API key required or invalid. Check Settings.",
+              },
+              401
+            );
+          }
+        }
+
+        // --- Parameter parsing (GET query params or POST body) ---
+        let params = {};
+        for (const key of [
+          "url", "method", "headers", "body", "body_b64", "mode",
+          "timeout", "follow_redirects", "cookies", "filename",
+        ]) {
+          const v = url.searchParams.get(key);
+          if (v !== null) params[key] = v;
+        }
+
+        if (request.method === "POST" || request.method === "PUT" || request.method === "PATCH") {
+          const ct = request.headers.get("Content-Type") || "";
+          if (ct.includes("application/json")) {
+            try {
+              const bodyJson = await request.json();
+              if (bodyJson && typeof bodyJson === "object") {
+                params = { ...params, ...bodyJson };
+              }
+            } catch (e) {
+              return jsonResponse(
+                {
+                  error: "Invalid JSON in request body",
+                  code: 400,
+                  suggestion: "Ensure the POST body is valid JSON.",
+                },
+                400
+              );
+            }
+          } else if (ct.includes("application/x-www-form-urlencoded")) {
+            try {
+              const form = await request.formData();
+              for (const [k, v] of form.entries()) params[k] = v;
+            } catch (e) {
+              // ignore form parse error
+            }
+          } else {
+            try {
+              const raw = await request.text();
+              if (raw.trim().startsWith("{") && raw.trim().endsWith("}")) {
+                try { params = { ...params, ...JSON.parse(raw) }; } catch (_) {}
+              }
+            } catch (_) {}
+          }
+        }
+
+        // Target URL validation
+        const targetUrlRaw = params.url || url.searchParams.get("url");
+        if (!targetUrlRaw || typeof targetUrlRaw !== "string" || !targetUrlRaw.trim()) {
+          return jsonResponse(
+            {
+              error: "Missing 'url' parameter",
+              code: 400,
+              suggestion: "Provide a target URL via query string or body JSON.",
+            },
+            400
+          );
+        }
+
+        let targetUrl;
+        try {
+          targetUrl = new URL(targetUrlRaw.trim()).toString();
+        } catch (e) {
+          return jsonResponse(
+            {
+              error: `Invalid URL format: ${targetUrlRaw}`,
+              code: 400,
+              suggestion: "Target must start with http:// or https:// and be a valid URL.",
+            },
+            400
+          );
+        }
+
+        const method = (params.method || request.method === "POST" ? (params.method || "GET") : "GET").toUpperCase();
+        const mode = (params.mode || "auto").toLowerCase();
+        const followRedirects = params.follow_redirects !== undefined
+          ? (String(params.follow_redirects) !== "false" && params.follow_redirects !== false)
+          : true;
+        const timeout = parseInt(params.timeout, 10) > 0 ? parseInt(params.timeout, 10) : DEFAULT_TIMEOUT;
+
+        // --- Build upstream headers ---
+        const upstreamHeaders = new Headers();
+        if (params.headers && typeof params.headers === "object") {
+          for (const [k, v] of Object.entries(params.headers)) {
+            if (v !== undefined && v !== null) upstreamHeaders.set(k, String(v));
+          }
+        }
+
+        // Cookies
+        if (params.cookies) {
+          if (typeof params.cookies === "string") {
+            upstreamHeaders.set("Cookie", params.cookies);
+          } else if (typeof params.cookies === "object") {
+            const pairs = Object.entries(params.cookies)
+              .map(([k, v]) => `${k}=${v}`)
+              .join("; ");
+            if (pairs) upstreamHeaders.set("Cookie", pairs);
+          }
+        }
+
+        // Range header forwarding for audio/video streaming & seek
+        const clientRange = request.headers.get("Range");
+        if (clientRange && !upstreamHeaders.has("Range")) {
+          upstreamHeaders.set("Range", clientRange);
+        }
+
+        // Accept header default if absent
+        if (!upstreamHeaders.has("Accept")) {
+          upstreamHeaders.set("Accept", "*/*");
+        }
+
+        // --- Build upstream body ---
+        let upstreamBody = undefined;
+        if (method !== "GET" && method !== "HEAD") {
+          if (params.body !== undefined && params.body !== null && params.body !== "") {
+            if (params.body_b64 || params.bodyIsBase64) {
+              try {
+                const bin = atob(String(params.body));
+                const bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                upstreamBody = bytes;
+              } catch (e) {
+                return jsonResponse({ error: "Failed to decode base64 body", code: 400 }, 400);
+              }
+            } else if (typeof params.body === "string") {
+              upstreamBody = params.body;
+            } else {
+              upstreamBody = JSON.stringify(params.body);
+              if (!upstreamHeaders.has("Content-Type")) {
+                upstreamHeaders.set("Content-Type", "application/json");
+              }
+            }
+          }
+        }
+
+        // --- Upstream Fetch with Timeout (AbortController) ---
+        const t0 = Date.now();
+        let upstreamRes;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout);
+
+        try {
+          upstreamRes = await fetch(targetUrl, {
+            method,
+            headers: upstreamHeaders,
+            body: upstreamBody,
+            redirect: followRedirects ? "follow" : "manual",
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+        } catch (e) {
+          clearTimeout(timer);
+          const elapsed = Date.now() - t0;
+          if (e && (e.name === "AbortError" || e.message?.includes("aborted"))) {
+            logRequest(env, method, targetUrl, 504, elapsed);
+            return jsonResponse(
+              {
+                error: `Gateway Timeout: target did not respond within ${timeout}ms`,
+                code: 504,
+                suggestion: "Request took too long. Try increasing timeout in Settings or check target server.",
+                elapsed_ms: elapsed,
+              },
+              504
+            );
+          }
+          logRequest(env, method, targetUrl, 502, elapsed);
+          return jsonResponse(
+            {
+              error: `Target unreachable: ${e.message || String(e)}`,
+              code: 502,
+              suggestion: "Target unreachable. Check URL or try again.",
+              elapsed_ms: elapsed,
+            },
+            502
+          );
+        }
+
+        const elapsedMs = Date.now() - t0;
+        const status = upstreamRes.status;
+        const ct = upstreamRes.headers.get("content-type") || "";
+        logRequest(env, method, targetUrl, status, elapsedMs);
+
+        // HEAD: Return headers only without body
+        if (method === "HEAD") {
+          const respHeaders = new Headers(upstreamRes.headers);
+          Object.entries(CORS_HEADERS).forEach(([k, v]) => respHeaders.set(k, v));
+          return new Response(null, {
+            status,
+            statusText: upstreamRes.statusText,
+            headers: respHeaders,
+          });
+        }
+
+        const forceStream = mode === "stream";
+        const forceBase64 = mode === "base64";
+        const forceText = mode === "text";
+        const forceJson = mode === "json";
+        const isBinary = isBinaryContentType(ct);
+
+        // --- 1. Stream Mode OR Auto-detected Binary Stream ---
+        if (forceStream || (isBinary && mode === "auto")) {
+          const respHeaders = new Headers();
+          const passHeaders = [
+            "content-type", "content-length", "content-range",
+            "accept-ranges", "cache-control", "content-disposition",
+            "content-encoding", "last-modified", "etag",
+          ];
+          for (const h of passHeaders) {
+            const val = upstreamRes.headers.get(h);
+            if (val) respHeaders.set(h, val);
+          }
+          Object.entries(CORS_HEADERS).forEach(([k, v]) => respHeaders.set(k, v));
+
+          if (params.filename) {
+            const cleanName = String(params.filename).replace(/["\\]/g, "");
+            respHeaders.set("Content-Disposition", `attachment; filename="${cleanName}"`);
+          }
+
+          // Return raw stream directly without consuming or buffering
+          return new Response(upstreamRes.body, {
+            status,
+            statusText: upstreamRes.statusText,
+            headers: respHeaders,
+          });
+        }
+
+        // --- 2. Envelope Path: Text, JSON, or Base64 ---
+        const buf = await upstreamRes.arrayBuffer();
+        const sizeBytes = buf.byteLength;
+
+        // Collect response headers object
+        const responseHeadersObj = {};
+        for (const [hk, hv] of upstreamRes.headers.entries()) {
+          responseHeadersObj[hk] = hv;
+        }
+
+        // Base64 forced or auto-detected binary in base64 mode
+        if (forceBase64 || (isBinary && !forceText && !forceJson)) {
+          const data_b64 = arrayBufferToBase64Chunked(buf);
+          return jsonResponse(
+            {
+              status,
+              statusText: upstreamRes.statusText,
+              data: null,
+              data_b64,
+              content_type: ct,
+              headers: responseHeadersObj,
+              proxy_host: "cloudflare-edge",
+              attempt: 1,
+              elapsed_ms: elapsedMs,
+              size_bytes: sizeBytes,
+              filename: params.filename || null,
+            },
+            status
+          );
+        }
+
+        // Text or JSON
+        const text = new TextDecoder().decode(buf);
+        let data = text;
+        const looksJson = forceJson || ct.includes("json") ||
+          (mode === "auto" && text.trim().startsWith("{") && text.trim().endsWith("}")) ||
+          (mode === "auto" && text.trim().startsWith("[") && text.trim().endsWith("]"));
+
+        if (looksJson || forceJson) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            // Keep as string if parsing fails
+            data = text;
+          }
+        }
+
+        return jsonResponse(
+          {
+            status,
+            statusText: upstreamRes.statusText,
+            data,
+            data_b64: null,
+            content_type: ct,
+            headers: responseHeadersObj,
+            proxy_host: "cloudflare-edge",
+            attempt: 1,
+            elapsed_ms: elapsedMs,
+            size_bytes: sizeBytes,
+          },
+          status
+        );
+      }
+
+      return jsonResponse({ error: "Endpoint not found", code: 404 }, 404);
+    }
+
+    // Static assets (UI)
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);
     }
-    return new Response("Not found", { status: 404, headers: CORS });
+    return new Response("Not found", { status: 404, headers: CORS_HEADERS });
   },
 };
