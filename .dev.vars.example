@@ -1,0 +1,11 @@
+# NebulaProxy local development environment variables
+# Note: API_TOKEN is OPTIONAL. If unset or empty, auth is disabled.
+# API_TOKEN=your-optional-secret-token
+
+# Admin login (Settings page). If ADMIN_PASSWORD is unset/empty, admin login
+# is disabled. A wrong username/password locks the client out for 2 minutes.
+# ADMIN_USER=admin
+# ADMIN_PASSWORD=your-strong-admin-password
+
+# Set to true to enable Cloudflare Worker request logging in console
+ENABLE_LOGGING=false

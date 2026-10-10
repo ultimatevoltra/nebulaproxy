@@ -1,0 +1,12 @@
+{
+  "name": "nebulaproxy",
+  "version": "1.0.0",
+  "description": "NebulaProxy — multi-purpose proxy gateway on Cloudflare Workers (native fetch)",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

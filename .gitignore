@@ -1,6 +1,4 @@
+# Node modules / build output
 node_modules/
-.env
-data/*.json
-!data/*.example.json
-logs/*
-!data/.gitkeep
+.wrangler/
+.dev.vars
