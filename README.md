@@ -11,7 +11,7 @@ A fast, versatile edge proxy gateway running on **Cloudflare Workers** with the 
 - **Optional API Key Authentication:** By default, public mode is enabled (no API key required). Set `API_TOKEN` in Cloudflare to lock down access instantly.
 - **CORS Preflight & Bypass:** Seamlessly fetch third-party APIs from browser applications with proper OPTIONS handling and open CORS headers.
 - **7-Language i18n:** Full UI translation for English, বাংলা, हिन्दी, Español, Français, العربية, and Русский — with RTL support for Arabic and instant switching without reload.
-- **Standalone Batch tab:** Fire the same request N times (custom count) with a live progress bar, per-request status, and Export JSON/CSV.
+- **Batch Mode (in Playground):** Send multiple URLs in sequence, or repeat each URL N times, with a live progress bar, per-request status, and Export JSON/CSV.
 - **Request History tab:** Every request is auto-saved locally (re-run or inspect anytime), with configurable auto-save and max-history size.
 - **Smart Media Rendering:** Responses are auto-detected by Content-Type — images render in `<img>`, audio in `<audio>`, video in `<video>`, and other binaries as download links.
 - **Proxy Mode (CORS bypass):** Every request egresses through the Cloudflare Worker edge to bypass CORS and reach blocked origins, with seamless in-page rendering.
@@ -49,6 +49,8 @@ The Settings tab admin login is protected against brute-force attacks:
    - `wrangler secret put ADMIN_PASSWORD` (and optionally `wrangler secret put ADMIN_USER`).
 
 ---
+
+The Playground includes a **Batch Mode** section where you can paste multiple URLs (one per line) or set a **Repeat count** to fire the same URL many times, with a configurable delay between requests.
 
 ## ⚙️ Settings Reference
 
@@ -229,8 +231,8 @@ npm run deploy
 ## 📝 Changelog (v1.0.0)
 
 - **7-Language i18n:** Full translations for English, বাংলা, हिन्दी, Español, Français, العربية, Русский with RTL support for Arabic and instant switching.
-- **Full feature set:** Playground, Batch, History, Docs, and Settings tabs with the original Ember-themed layout restored.
-- **Standalone Batch tab:** Send the same request N times with a live progress bar and Export JSON/CSV.
+- **Full feature set:** Playground (with merged Batch Mode), History, Docs, and Settings pages with the original Ember-themed layout.
+- **Batch Mode in Playground:** Send multiple URLs or repeat each URL N times with a live progress bar and Export JSON/CSV.
 - **Request History:** Auto-save requests locally, re-run or inspect anytime, with configurable auto-save and max-history.
 - **Media Rendering:** Auto-detect Content-Type and render images/audio/video inline; binaries become download links.
 - **Real Statistics:** Dashboard metrics seeded from 12,400+ historical requests, incremented and persisted (`nebula_stats`) on every new request.
