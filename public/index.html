@@ -84,178 +84,154 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
 .btn-primary:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text)}
 .btn-ghost:hover{border-color:var(--border-strong);color:var(--accent-hi)}
+.btn-sm{padding:7px 14px;font-size:13px}
 
 /* ===== Stats ===== */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0 36px}
 .stat{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
 .stat .num{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent-hi)}
 .stat .lbl{font-size:12px;color:var(--text-faint);margin-top:4px}
+.stat .sub{font-size:11px;color:var(--text-faint);opacity:.7;margin-top:2px}
 
 /* ===== Section Headings ===== */
-.section{padding:32px 0}
-.section-head{margin-bottom:24px}
-.eyebrow{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--accent-hi);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
-.section-head h2{font-size:clamp(24px,3.5vw,34px);letter-spacing:-.02em;font-weight:800;margin-bottom:8px}
-.section-head p{color:var(--text-dim);font-size:15px}
+.section{padding:36px 0}
+.section-head{margin-bottom:28px}
+.section-head.center{text-align:center}
+.eyebrow{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--accent-hi);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.section-head h2{font-size:clamp(24px,3.4vw,36px);font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.section-head p{color:var(--text-dim);font-size:15px;line-height:1.6;max-width:640px}
+.section-head.center p{margin:0 auto}
 
-/* ===== Request tester ===== */
-.tester{border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--panel);overflow:hidden;box-shadow:var(--shadow-panel)}
-.tester-bar{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border-soft);background:var(--panel-solid)}
-.t-dot{width:11px;height:11px;border-radius:50%}
-.t-dot.r{background:#ff5f57}.t-dot.y{background:#febc2e}.t-dot.g{background:#28c840}
-.tester-title{margin-left:8px;font-family:var(--mono);font-size:12.5px;color:var(--text-faint)}
-.tester-body{padding:20px}
-.field-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
-.field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:6px}
-.field label{font-size:11.5px;color:var(--text-faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
-.field input,.field select,.field textarea{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13.5px;transition:border-color var(--dur-fast);outline:none;width:100%}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
-.field textarea{min-height:75px;resize:vertical}
-.method-seg{display:flex;gap:6px;flex-wrap:wrap}
-.method{flex:1;padding:8px 6px;text-align:center;font-family:var(--mono);font-size:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);cursor:pointer;transition:all var(--dur-fast)}
-.method:hover{border-color:var(--border-strong)}
-.method.active{background:var(--grad);color:#fff;border-color:transparent;font-weight:700}
-
-.send-btn{width:100%;padding:13px;font-size:15px;justify-content:center;margin-top:6px}
-.send-btn:disabled{opacity:.55;cursor:not-allowed}
-
-/* spinner */
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Preset Bar in Tester */
-.preset-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-.preset-bar select{flex:2 1 180px}
-
-/* Error card */
-.err-card{border:1px solid var(--accent-bad);background:rgba(255,59,59,.08);border-radius:var(--radius);padding:14px 16px;margin-top:14px}
-.err-title{font-size:14px;font-weight:700;color:var(--accent-bad);display:flex;align-items:center;gap:8px}
-.err-msg{color:var(--text-dim);font-size:13px;margin:6px 0}
-.err-sug{font-size:12px;color:var(--accent-warn);font-family:var(--mono)}
-
-/* Response container */
-.response{background:var(--bg-0);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px;font-family:var(--mono);font-size:13px;min-height:75px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:var(--text-dim);position:relative}
-.status-tag{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;margin-bottom:10px;font-family:var(--mono)}
-.status-2xx{background:rgba(45,212,160,.15);color:var(--accent-ok)}
-.status-4xx,.status-5xx{background:rgba(255,59,59,.15);color:var(--accent-bad)}
-.status-idle{background:var(--panel);color:var(--text-faint)}
-
-/* Response viewer tabs */
-.rv-tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
-.rv-tab{padding:6px 14px;border-radius:var(--radius-pill);background:var(--panel);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font);font-size:12.5px;cursor:pointer;transition:all var(--dur-fast)}
-.rv-tab:hover{border-color:var(--border-strong);color:var(--text)}
-.rv-tab.active{background:var(--grad);color:#fff;border-color:transparent;font-weight:600}
-.rv-body{min-height:60px;margin-top:12px}
-.rv-headers{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
-.rv-headers td{padding:7px 10px;border-bottom:1px solid var(--border-soft);color:var(--text-dim);word-break:break-all}
-.rv-headers td:first-child{color:var(--accent-hi);font-weight:600;white-space:nowrap;vertical-align:top;width:30%}
-.rv-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-
-/* ===== Features ===== */
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.feature{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:transform var(--dur-med) var(--ease-out),border-color var(--dur-med)}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.feature{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:transform var(--dur-fast),border-color var(--dur-fast)}
 .feature:hover{transform:translateY(-3px);border-color:var(--border-strong)}
-.feature .ico{font-size:26px;margin-bottom:10px;display:inline-block}
-.feature h3{font-size:16px;font-weight:700;margin-bottom:6px}
-.feature p{font-size:13.5px;color:var(--text-dim);line-height:1.5}
-
-/* ===== Code blocks ===== */
-.code{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:12px 0}
-.code-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border-soft);font-family:var(--mono);font-size:12px;color:var(--text-faint)}
-.copy-btn{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-sm);padding:3px 10px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all var(--dur-fast)}
-.copy-btn:hover{border-color:var(--border-strong);color:var(--text)}
-.code pre{padding:14px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--text-dim)}
-.code code{font-family:var(--mono)}
-
-/* ===== Tables ===== */
-.tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
-.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border-soft)}
-.tbl th{font-family:var(--mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}
-.tbl td{color:var(--text-dim)}
-.tbl code,.tbl .mn{font-family:var(--mono);color:var(--accent-hi);font-size:12.5px}
-.tbl tr:hover td{background:rgba(225,29,63,.04)}
-
-/* ===== Settings ===== */
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
-.card{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
-.card h3{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.card p{font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5}
-.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-soft)}
-.setting-row:last-child{border-bottom:none}
-.setting-row .s-label{font-size:13.5px;color:var(--text)}
-.setting-row .s-sub{font-size:11.5px;color:var(--text-faint)}
-.toggle{position:relative;width:44px;height:24px;flex:0 0 auto;cursor:pointer}
-.toggle input{opacity:0;width:0;height:0}
-.toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:all var(--dur-med)}
-.toggle .slider::before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:all var(--dur-med) var(--ease-spring)}
-.toggle input:checked + .slider{background:var(--grad)}
-.toggle input:checked + .slider::before{transform:translateX(20px)}
-.input{width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13.5px;outline:none;transition:border-color var(--dur-fast)}
-.input:focus{border-color:var(--accent)}
-.login-form{display:flex;flex-direction:column;gap:12px}
-
-/* ===== History, Presets, Batch Lists ===== */
-.list{display:flex;flex-direction:column;gap:10px}
-.list-empty{color:var(--text-faint);font-size:13.5px;text-align:center;padding:26px;border:1px dashed var(--border);border-radius:var(--radius)}
-.hist-item,.preset-item{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:13px}
-.hist-meta{display:flex;flex-wrap:wrap;gap:8px 14px;font-family:var(--mono);font-size:12px;color:var(--text-faint);margin-bottom:6px;align-items:center}
-.hist-meta .ok{color:var(--accent-ok);font-weight:700}
-.hist-meta .bad{color:var(--accent-bad);font-weight:700}
-.hist-url{font-family:var(--mono);font-size:13px;color:var(--text);word-break:break-all;margin-bottom:8px}
-.hist-actions,.preset-actions{display:flex;gap:7px;flex-wrap:wrap}
-.mini-btn{padding:5px 10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text-dim);font-size:11.5px;cursor:pointer;font-family:var(--font);transition:all var(--dur-fast)}
-.mini-btn:hover{border-color:var(--border-strong);color:var(--text)}
-.mini-btn.danger:hover{border-color:var(--accent-bad);color:var(--accent-bad)}
-
-/* Progress bar */
-.progress{height:8px;background:var(--bg-2);border-radius:99px;overflow:hidden;margin:14px 0;border:1px solid var(--border)}
-.progress-fill{height:100%;background:var(--grad);width:0%;transition:width var(--dur-med) var(--ease-out)}
-
-/* Batch results */
-.batch-results{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:360px;overflow-y:auto}
-.batch-row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;padding:7px 10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border-soft)}
-.batch-row .b-status{font-weight:700}
-.batch-row .b-status.ok{color:var(--accent-ok)}
-.batch-row .b-status.bad{color:var(--accent-bad)}
-.batch-row .b-url{flex:1;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* Tooltips */
-[data-tip]{position:relative}
-[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--panel-solid);border:1px solid var(--border-strong);color:var(--text);padding:5px 9px;border-radius:var(--radius-sm);font-size:11px;white-space:nowrap;z-index:120;box-shadow:var(--shadow-panel);pointer-events:none}
-
-/* Toast */
-.toast{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel-solid);border:1px solid var(--border-strong);color:var(--text);padding:10px 18px;border-radius:var(--radius-pill);font-size:13.5px;box-shadow:var(--shadow-panel);opacity:0;transition:all var(--dur-med) var(--ease-out);z-index:100;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast-ok{border-color:rgba(45,212,160,.5);color:#c7f5e4}
-.toast-bad{border-color:rgba(255,59,59,.55);color:#ffd7d7}
-.toast-warn{border-color:rgba(255,176,32,.55);color:#ffe8c0}
+.feature .ico{font-size:26px;display:block;margin-bottom:12px}
+.feature h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.feature p{color:var(--text-dim);font-size:14px;line-height:1.6}
 
 /* ===== Footer ===== */
-.footer{padding:36px 0 20px;text-align:center;border-top:1px solid var(--border-soft);margin-top:36px}
-.footer .brand{justify-content:center;margin-bottom:10px}
-.footer .f-links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:10px 0;font-size:13px;color:var(--text-dim)}
-.footer .f-links a{color:inherit;text-decoration:none}
-.footer .f-links a:hover{color:var(--accent-hi)}
-.f-note{font-size:12.5px;color:var(--text-faint);margin-bottom:8px}
-.f-tag{font-family:var(--mono);font-size:11.5px;color:var(--text-faint)}
+.footer{border-top:1px solid var(--border-soft);padding:36px 0 20px;margin-top:20px}
+.footer .container{display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center}
+.f-links{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.f-links a{color:var(--text-dim);text-decoration:none;font-size:13px;transition:color var(--dur-fast)}
+.f-links a:hover{color:var(--accent-hi)}
+.f-note{color:var(--text-faint);font-size:13px;max-width:480px;line-height:1.6}
+.f-tag{font-family:var(--mono);font-size:12px;color:var(--text-faint);opacity:.7}
 
-/* ===== Tab bar ===== */
-.tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(12,5,10,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border-soft);display:flex;justify-content:space-around;align-items:center;z-index:45}
-[data-theme="light"] .tabbar{background:rgba(250,246,247,.92)}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--text-faint);cursor:pointer;padding:6px 2px;transition:all var(--dur-fast);position:relative}
-.tab:hover{color:var(--text-dim)}
-.tab.active{color:var(--accent-hi)}
-.t-ico{width:19px;height:19px}
-.t-label{font-size:11px;font-family:var(--font);font-weight:600}
-.tab .t-dot{position:absolute;top:5px;width:4px;height:4px;border-radius:50%;background:var(--accent-hi);opacity:0;transition:opacity var(--dur-fast)}
-.tab.active .t-dot{opacity:1}
+/* ===== Tester (Playground) ===== */
+.tester{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-panel)}
+.tester-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--panel-raised);border-bottom:1px solid var(--border-soft);font-family:var(--mono);font-size:13px;color:var(--text-dim)}
+.t-dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+.t-dot.r{background:#ff5f57}.t-dot.y{background:#febc2e}.t-dot.g{background:#28c840}
+.tester-title{margin-left:6px}
+.tester-body{padding:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:6px;font-weight:600}
+.input{width:100%;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-family:var(--mono);font-size:14px;transition:border-color var(--dur-fast)}
+.input:focus{outline:none;border-color:var(--accent)}
+textarea.input{min-height:90px;resize:vertical;font-family:var(--mono);line-height:1.5}
+select.input{appearance:auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:640px){.row,.row-3{grid-template-columns:1fr}}
 
-@media (max-width:600px){
-  .container{padding:0 14px}
-  .field-row{flex-direction:column}
-  .t-label{font-size:10px}
-}
+/* Mode & method pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:7px 14px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--bg-1);color:var(--text-dim);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all var(--dur-fast)}
+.pill:hover{border-color:var(--border-strong);color:var(--text)}
+.pill.active{background:var(--grad-subtle);border-color:var(--accent);color:var(--accent-hi)}
+
+/* Playground inner mode tabs */
+.mode-tabs{display:flex;gap:6px;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:var(--radius);padding:5px;margin-bottom:20px}
+.mode-tab{flex:1;padding:10px 14px;border-radius:var(--radius-sm);background:none;border:none;color:var(--text-dim);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all var(--dur-fast)}
+.mode-tab:hover{color:var(--text)}
+.mode-tab.active{background:var(--grad);color:#fff;box-shadow:var(--shadow-glow)}
+
+/* Results */
+.result{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:20px}
+.result-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.result-meta{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--radius-pill);border:1px solid var(--border-soft);background:var(--panel);color:var(--text-dim);font-size:12px;font-family:var(--mono)}
+.chip.ok{color:var(--accent-ok);border-color:rgba(45,212,160,.3)}
+.chip.err{color:var(--accent-bad);border-color:rgba(255,59,59,.3)}
+.chip.warn{color:var(--accent-warn);border-color:rgba(255,176,32,.3)}
+.result-body{overflow-x:auto;max-height:520px;overflow-y:auto}
+pre.code{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--text-dim);white-space:pre-wrap;word-break:break-word}
+.result-body pre.json{color:var(--accent-ok)}
+.result-body img{max-width:100%;border-radius:var(--radius-sm);display:block}
+.result-body video,.result-body audio{max-width:100%;border-radius:var(--radius-sm)}
+.result-empty{color:var(--text-faint);font-size:14px;text-align:center;padding:24px;font-family:var(--mono)}
+
+/* download-all bar */
+.dl-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border-soft)}
+
+/* ===== Docs ===== */
+.docs-grid{display:flex;flex-direction:column;gap:22px}
+.doc-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;overflow:hidden}
+.doc-card h3{font-size:18px;font-weight:700;margin-bottom:14px}
+.doc-card p{color:var(--text-dim);font-size:14px;line-height:1.65;margin-bottom:10px}
+.table-wrap{overflow-x:auto;margin:0 -4px;padding:0 4px}
+table.doc{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+table.doc th,table.doc td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border-soft);vertical-align:top}
+table.doc th{font-family:var(--mono);font-size:12px;color:var(--accent-hi);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+table.doc td{color:var(--text-dim);word-break:break-word}
+table.doc td code,code{font-family:var(--mono);font-size:12px;background:var(--bg-1);border:1px solid var(--border-soft);padding:2px 6px;border-radius:5px;color:var(--accent-hi);word-break:break-all;white-space:normal}
+code.block{display:block;padding:12px 14px;border-radius:var(--radius-sm);background:var(--bg-1);border:1px solid var(--border-soft);overflow-x:auto;white-space:pre;word-break:normal;color:var(--text);font-family:var(--mono);font-size:13px;line-height:1.6;margin:8px 0}
+.param-tag{display:inline-block;padding:2px 8px;border-radius:var(--radius-pill);font-family:var(--mono);font-size:11px;font-weight:600}
+.param-tag.req{background:rgba(225,29,63,.18);color:var(--accent-hi)}
+.param-tag.opt{background:var(--bg-1);color:var(--text-faint)}
+td .param-tag{margin-right:4px}
+
+/* ===== Settings ===== */
+.cards{display:grid;gap:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
+.card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.card .desc{color:var(--text-faint);font-size:13px;margin-bottom:16px;line-height:1.5}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--border-soft)}
+.setting-row:last-child{border-bottom:none}
+.setting-row .lbl{font-size:14px;font-weight:600}
+.setting-row .sub{font-size:12px;color:var(--text-faint);margin-top:2px}
+.switch{position:relative;width:46px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;inset:0;background:var(--bg-1);border:1px solid var(--border);border-radius:999px;cursor:pointer;transition:all var(--dur-fast)}
+.switch .slider::before{content:"";position:absolute;height:20px;width:20px;left:2px;top:2px;background:var(--text-dim);border-radius:50%;transition:all var(--dur-fast)}
+.switch input:checked + .slider{background:var(--grad);border-color:transparent}
+.switch input:checked + .slider::before{transform:translateX(20px);background:#fff}
+select.input.sm{width:auto;min-width:120px}
+.settings-stack{display:flex;flex-direction:column;gap:12px}
+.settings-stack .field{margin-bottom:0}
+.form-actions{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.status-text{font-size:13px;font-weight:600}
+.status-text.ok{color:var(--accent-ok)}
+.status-text.err{color:var(--accent-bad)}
+.status-text.warn{color:var(--accent-warn)}
+
+/* ===== History / Presets lists ===== */
+.list{display:flex;flex-direction:column;gap:10px}
+.list-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;transition:border-color var(--dur-fast)}
+.list-item:hover{border-color:var(--border-strong)}
+.list-item .li-main{flex:1;min-width:180px}
+.list-item .li-url{font-family:var(--mono);font-size:13px;color:var(--text);word-break:break-all}
+.list-item .li-meta{font-size:12px;color:var(--text-faint);margin-top:3px;font-family:var(--mono)}
+.list-item .li-actions{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--text-faint);padding:36px 20px;font-size:14px}
+
+/* ===== Tab bar (bottom) ===== */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,8,15,.92);backdrop-filter:blur(16px);border-top:1px solid var(--border-soft);z-index:50;display:flex;justify-content:center}
+[data-theme="light"] .tabbar{background:rgba(255,255,255,.9)}
+.tabbar-inner{display:flex;gap:4px;max-width:1080px;width:100%;padding:8px 16px;overflow-x:auto}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:var(--radius);border:none;background:none;color:var(--text-faint);cursor:pointer;font-family:var(--font);font-size:11px;font-weight:600;white-space:nowrap;transition:all var(--dur-fast)}
+.tab .tab-ico{font-size:17px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent-hi);background:var(--grad-subtle)}
+
+/* ===== Toast ===== */
+.toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + 20px);transform:translateX(-50%) translateY(20px);background:var(--panel-raised);border:1px solid var(--border-strong);color:var(--text);padding:12px 20px;border-radius:var(--radius);font-size:14px;z-index:100;opacity:0;pointer-events:none;transition:all var(--dur-med);box-shadow:var(--shadow-panel)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-err{border-color:var(--accent-bad)}
+.toast-ok{border-color:var(--accent-ok)}
+
+[dir="rtl"]{direction:rtl;text-align:right}
 </style>
 </head>
 <body>
@@ -307,10 +283,10 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
   <section class="section">
     <div class="container">
       <div class="stats">
-        <div class="stat"><div class="num" id="stat-req">0</div><div class="lbl" data-i18n="stat.requests">Requests</div></div>
-        <div class="stat"><div class="num" id="stat-ok">100%</div><div class="lbl" data-i18n="stat.success">Success rate</div></div>
-        <div class="stat"><div class="num" id="stat-lat">—</div><div class="lbl" data-i18n="stat.latency">Avg latency</div></div>
-        <div class="stat"><div class="num" id="stat-reg">cloudflare-edge</div><div class="lbl" data-i18n="stat.regions">Edge Host</div></div>
+        <div class="stat"><div class="num" id="stat-req">0</div><div class="lbl" data-i18n="stat.requests">Requests</div><div class="sub" id="stat-req-sub">—</div></div>
+        <div class="stat"><div class="num" id="stat-ok">—</div><div class="lbl" data-i18n="stat.success">Success rate</div><div class="sub" id="stat-ok-sub">—</div></div>
+        <div class="stat"><div class="num" id="stat-lat">—</div><div class="lbl" data-i18n="stat.latency">Avg latency</div><div class="sub" id="stat-lat-sub">—</div></div>
+        <div class="stat"><div class="num" id="stat-reg">cloudflare-edge</div><div class="lbl" data-i18n="stat.regions">Edge Host</div><div class="sub" id="stat-reg-sub">300+ PoPs</div></div>
       </div>
     </div>
   </section>
@@ -340,12 +316,10 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
         <span>Nebula<b>Proxy</b></span>
       </div>
       <div class="f-links">
-        <a href="#" data-nav="home">Home</a>
-        <a href="#" data-nav="playground">Playground</a>
-        <a href="#" data-nav="history">History</a>
-        <a href="#" data-nav="batch">Batch</a>
-        <a href="#" data-nav="docs">Documentation</a>
-        <a href="#" data-nav="settings">Settings</a>
+        <a href="#" data-nav="home" data-i18n="nav.home">Home</a>
+        <a href="#" data-nav="playground" data-i18n="nav.playground">Playground</a>
+        <a href="#" data-nav="docs" data-i18n="nav.docs">Docs</a>
+        <a href="#" data-nav="settings" data-i18n="nav.settings">Settings</a>
       </div>
       <p class="f-note" data-i18n="footer.note">Fast, serverless edge proxy gateway powered by Cloudflare native fetch.</p>
       <span class="f-tag" data-i18n="footer.tag">NebulaProxy · v1.1.0</span>
@@ -353,7 +327,7 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
   </footer>
 </main>
 
-<!-- ===== PLAYGROUND ===== -->
+<!-- ===== PLAYGROUND (merged with Batch) ===== -->
 <main class="page" id="page-playground">
   <section class="section">
     <div class="container">
@@ -362,88 +336,120 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
         <h2 data-i18n="pg.title">Test the proxy live</h2>
         <p data-i18n="pg.sub">Send a request through the gateway and inspect the full response.</p>
       </div>
+
+      <!-- Mode toggle: Single vs Batch -->
+      <div class="mode-tabs" role="tablist">
+        <button class="mode-tab active" id="modeSingleTab" data-mode="single"><span data-i18n="pg.single">Single Request</span></button>
+        <button class="mode-tab" id="modeBatchTab" data-mode="batch"><span data-i18n="pg.batchtab">Batch Mode</span></button>
+      </div>
+
       <div class="tester">
         <div class="tester-bar">
           <span class="t-dot r"></span><span class="t-dot y"></span><span class="t-dot g"></span>
-          <span class="tester-title">request tester <span style="opacity:.6;font-size:11px">(Ctrl+Enter to Send · Ctrl+K to Focus URL)</span></span>
+          <span class="tester-title">request tester <span style="opacity:.6;font-size:11px" data-i18n="pg.shortcuts">(Ctrl+Enter to Send · Ctrl+K to Focus URL)</span></span>
         </div>
         <div class="tester-body">
-          <!-- Presets bar in Playground -->
-          <div class="preset-bar">
-            <select class="input" id="pg-preset-select" data-tip="Load a saved preset">
-              <option value="">Choose a preset...</option>
+          <!-- Presets bar -->
+          <div class="preset-bar field" style="display:flex;gap:10px;align-items:center">
+            <select class="input sm" id="pg-preset-select" data-tip="Load a saved preset">
+              <option value="" data-i18n="preset.choose">Choose a preset...</option>
             </select>
-            <button class="btn btn-ghost" id="pg-preset-save-btn" data-tip="Save current inputs as a new preset">Save Preset</button>
-            <button class="btn btn-ghost" id="pg-preset-del-btn" style="display:none" data-tip="Delete selected preset">Delete</button>
+            <button class="btn btn-ghost btn-sm" id="pg-preset-save" data-tip="Save current as preset">💾 <span data-i18n="preset.save">Save</span></button>
+            <button class="btn btn-ghost btn-sm" id="pg-preset-delete" data-tip="Delete selected preset">🗑️ <span data-i18n="preset.delete">Delete</span></button>
           </div>
 
-          <div class="field-row">
-            <div class="field" style="flex:2 1 260px">
+          <!-- Proxy Mode toggle -->
+          <div class="field">
+            <label data-i18n="pg.proxymode">Proxy Mode</label>
+            <div class="pills">
+              <button class="pill active" data-proxy="edge" id="proxyToggle">🛰️ <span data-i18n="pg.proxy.direct">Direct (through Edge)</span></button>
+            </div>
+            <div style="font-size:12px;color:var(--text-faint);margin-top:6px" data-i18n="pg.proxy.hint">All requests egress through the Cloudflare Worker edge to bypass CORS and access blocked origins. The response renders seamlessly below.</div>
+          </div>
+
+          <div class="row">
+            <div class="field" style="grid-column:1/-1">
               <label data-i18n="pg.target">Target URL</label>
-              <input type="url" id="pg-url" value="https://api.ipify.org?format=json" placeholder="https://example.com" />
+              <input class="input" id="pg-url" type="url" placeholder="https://api.ipify.org?format=json" data-i18n-ph="pg.target.ph" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label data-i18n="pg.method">Method</label>
+              <select class="input" id="pg-method">
+                <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option>
+              </select>
             </div>
             <div class="field">
-              <label>Mode</label>
-              <select id="pg-mode">
-                <option value="auto" selected>Auto</option>
-                <option value="text">Text</option>
-                <option value="json">JSON</option>
-                <option value="base64">Base64</option>
-                <option value="stream">Stream</option>
+              <label data-i18n="pg.mode">Response Mode</label>
+              <select class="input" id="pg-mode">
+                <option value="auto">auto</option><option value="text">text</option><option value="json">json</option><option value="base64">base64</option><option value="stream">stream</option>
               </select>
             </div>
           </div>
 
-          <div class="field-row">
-            <div class="field" style="flex:1 1 100%">
-              <label data-i18n="pg.method">Method</label>
-              <div class="method-seg" id="pg-method">
-                <button class="method active" data-m="GET">GET</button>
-                <button class="method" data-m="POST">POST</button>
-                <button class="method" data-m="PUT">PUT</button>
-                <button class="method" data-m="PATCH">PATCH</button>
-                <button class="method" data-m="DELETE">DELETE</button>
-              </div>
+          <div class="field">
+            <label data-i18n="pg.headers">Custom Headers <span style="font-weight:400;color:var(--text-faint)">(JSON)</span></label>
+            <input class="input" id="pg-headers" placeholder='{"Authorization":"Bearer ...","X-Custom":"value"}' data-i18n-ph="pg.headers.ph" />
+          </div>
+
+          <div class="field">
+            <label data-i18n="pg.cookies">Cookies</label>
+            <input class="input" id="pg-cookies" placeholder="session=abc123; theme=dark" data-i18n-ph="pg.cookies.ph" />
+          </div>
+
+          <div class="field">
+            <label data-i18n="pg.body">Request body (JSON or text)</label>
+            <textarea class="input" id="pg-body" placeholder='{"key":"value"}' data-i18n-ph="pg.body.ph"></textarea>
+          </div>
+
+          <div class="row-3">
+            <div class="field">
+              <label data-i18n="pg.timeout">Timeout (ms)</label>
+              <input class="input" id="pg-timeout" type="number" value="30000" />
+            </div>
+            <div class="field">
+              <label data-i18n="pg.follow">Follow Redirects</label>
+              <select class="input" id="pg-follow">
+                <option value="true">Yes</option><option value="false">No</option>
+              </select>
+            </div>
+            <div class="field" id="batch-count-field" style="display:none">
+              <label data-i18n="batch.count">Number of requests</label>
+              <input class="input" id="pg-count" type="number" value="10" min="1" max="200" />
             </div>
           </div>
 
-          <div class="field-row">
-            <div class="field" style="flex:1 1 100%">
-              <label data-i18n="pg.body">Request body (JSON or text)</label>
-              <textarea id="pg-body" placeholder='{"key":"value"}'></textarea>
-            </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" id="pg-send">🚀 <span data-i18n="pg.send">Send Request</span></button>
+            <button class="btn btn-ghost" id="pg-clear">🗑️ <span data-i18n="pg.clear">Clear</span></button>
+            <span class="status-text" id="pg-status" data-i18n="pg.idle">Ready</span>
           </div>
 
-          <div style="display:flex;gap:10px;margin-top:6px">
-            <button class="btn btn-primary send-btn" id="pg-send">
-              <span id="pg-send-text" data-i18n="pg.send">Send Request</span>
-              <span class="spinner" id="pg-spinner" style="display:none"></span>
-            </button>
-            <button class="btn btn-ghost send-btn" id="pg-cancel" style="display:none;width:auto;flex:0 0 auto">Cancel</button>
+          <!-- Single result -->
+          <div class="result" id="pg-result" style="display:none">
+            <div class="result-head">
+              <span class="chip" id="pg-r-status"></span>
+              <span class="chip" id="pg-r-elapsed"></span>
+              <span class="chip" id="pg-r-size"></span>
+              <span class="chip" id="pg-r-host"></span>
+              <span class="chip" id="pg-r-attempt"></span>
+            </div>
+            <div class="result-body" id="pg-r-body"></div>
           </div>
 
-          <div id="pg-err-container"></div>
-          <div class="response" id="pg-response">
-            <span class="status-tag status-idle" data-i18n="pg.idle">Ready</span><br>
-            <span data-i18n="pg.hint">Fill the fields and press Send to see the response.</span>
-          </div>
-
-          <div id="pg-preview" style="display:none;margin-top:14px"></div>
-          <div id="pg-download-wrap" style="display:none;margin-top:10px"></div>
-          <div id="pg-meta" style="margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--text-faint)"></div>
-
-          <!-- Response viewer tabs -->
-          <div id="pg-viewer" style="display:none;margin-top:16px">
-            <div class="rv-tabs">
-              <button class="rv-tab active" data-rv="preview">Preview</button>
-              <button class="rv-tab" data-rv="raw">Raw Body</button>
-              <button class="rv-tab" data-rv="headers">Headers</button>
+          <!-- Batch result summary -->
+          <div class="result" id="pg-batch-result" style="display:none">
+            <div class="result-head">
+              <span class="chip" id="pg-b-summary"></span>
+              <span class="chip" id="pg-b-ok"></span>
+              <span class="chip" id="pg-b-avg"></span>
             </div>
-            <div class="rv-body" id="rv-body"></div>
-            <div class="rv-actions">
-              <button class="btn btn-ghost" id="rv-copy" data-tip="Copy raw response to clipboard">📋 Copy Response</button>
-              <button class="btn btn-ghost" id="rv-download" data-tip="Download response as file">💾 Download Response</button>
+            <div class="dl-bar">
+              <button class="btn btn-ghost btn-sm" id="pg-batch-download-all">⬇️ <span data-i18n="batch.downloadall">Download All</span></button>
             </div>
+            <div class="list" id="pg-batch-list" style="margin-top:12px"></div>
           </div>
         </div>
       </div>
@@ -451,70 +457,7 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
   </section>
 </main>
 
-<!-- ===== HISTORY ===== -->
-<main class="page" id="page-history">
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow">Request History</span>
-        <h2>Recent Requests</h2>
-        <p>The last requests are saved locally in your browser. Re-run or inspect anytime.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-          <button class="btn btn-ghost" id="hist-export" data-tip="Download history as JSON">Export JSON</button>
-          <button class="btn btn-ghost" id="hist-clear" data-tip="Delete all saved history">Clear History</button>
-        </div>
-      </div>
-      <div class="list" id="hist-list">
-        <div class="list-empty">No requests yet. Try the Playground.</div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- ===== BATCH ===== -->
-<main class="page" id="page-batch">
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow">Batch Mode</span>
-        <h2>Sequential URL Batch</h2>
-        <p>Paste multiple URLs (one per line). Requests execute sequentially with custom delays and progress tracking.</p>
-      </div>
-      <div class="card">
-        <div class="field">
-          <label>URLs (one per line)</label>
-          <textarea class="input" id="batch-urls" rows="6" placeholder="https://api.ipify.org?format=json&#10;https://picsum.photos/300/200&#10;https://httpbin.org/get"></textarea>
-        </div>
-        <div class="preset-bar" style="margin-top:14px">
-          <div class="field" style="flex:1;min-width:120px">
-            <label>Delay (ms)</label>
-            <input class="input" type="number" id="batch-delay" value="500" min="0" step="50" />
-          </div>
-          <div class="field" style="flex:1;min-width:120px">
-            <label>Mode</label>
-            <select class="input" id="batch-mode">
-              <option value="auto">auto</option>
-              <option value="text">text</option>
-              <option value="json">json</option>
-              <option value="base64">base64</option>
-              <option value="stream">stream</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-          <button class="btn btn-primary" id="batch-run">Run Batch</button>
-          <button class="btn btn-ghost" id="batch-cancel" style="display:none">Cancel</button>
-          <button class="btn btn-ghost" id="batch-export-json">Export JSON</button>
-          <button class="btn btn-ghost" id="batch-export-csv">Export CSV</button>
-        </div>
-        <div class="progress" id="batch-progress-wrap" style="display:none"><div class="progress-fill" id="batch-progress-fill"></div></div>
-        <div class="batch-results" id="batch-results"></div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- ===== DOCUMENTATION ===== -->
+<!-- ===== DOCS ===== -->
 <main class="page" id="page-docs">
   <section class="section">
     <div class="container">
@@ -524,78 +467,76 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
         <p data-i18n="docs.sub">Everything you need to integrate NebulaProxy into your app.</p>
       </div>
 
-      <h3 style="margin:20px 0 8px" data-i18n="docs.endpoints">Endpoints</h3>
-      <div class="card" style="padding:8px 0">
-        <table class="tbl">
-          <thead><tr><th data-i18n="docs.method">Method</th><th data-i18n="docs.endpoint">Endpoint</th><th data-i18n="docs.description">Description</th></tr></thead>
-          <tbody>
-            <tr><td><span class="mn">GET / POST / PUT</span></td><td><code>/api/proxy</code></td><td>Proxy a request through Cloudflare edge (supports query params or POST body)</td></tr>
-            <tr><td><span class="mn">GET</span></td><td><code>/api/health</code></td><td>Health check returning <code>{ status: "ok", version: "1.0.0" }</code></td></tr>
-            <tr><td><span class="mn">GET</span></td><td><code>/api/version</code></td><td>Returns current version and edge engine metadata</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="docs-grid">
+        <div class="doc-card">
+          <h3 data-i18n="docs.baseurl.t">Base URL</h3>
+          <p data-i18n="docs.baseurl.d">All API requests target your deployed Worker base URL.</p>
+          <code class="block" id="docs-base">https://nebulaproxy.rayhan1789789.workers.dev/api/proxy?url=...</code>
+        </div>
 
-      <h3 style="margin:24px 0 8px" data-i18n="docs.params">Request parameters</h3>
-      <div class="card" style="padding:8px 0">
-        <table class="tbl">
-          <thead><tr><th data-i18n="docs.field">Field</th><th data-i18n="docs.type">Type</th><th data-i18n="docs.req">Required</th><th data-i18n="docs.desc2">Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>url</code></td><td>string</td><td data-i18n="yes">yes</td><td data-i18n="docs.p.url">Target URL to fetch</td></tr>
-            <tr><td><code>method</code></td><td>string</td><td data-i18n="no">no</td><td data-i18n="docs.p.method">HTTP method (default GET)</td></tr>
-            <tr><td><code>mode</code></td><td>string</td><td data-i18n="no">no</td><td><code>auto</code> (default), <code>text</code>, <code>json</code>, <code>base64</code>, <code>stream</code></td></tr>
-            <tr><td><code>headers</code></td><td>object</td><td data-i18n="no">no</td><td data-i18n="docs.p.headers">Custom headers to forward to target</td></tr>
-            <tr><td><code>cookies</code></td><td>object / string</td><td data-i18n="no">no</td><td data-i18n="docs.p.cookies">Cookies to attach to request</td></tr>
-            <tr><td><code>body</code></td><td>string / object</td><td data-i18n="no">no</td><td data-i18n="docs.p.body">Request body (for POST/PUT/PATCH)</td></tr>
-            <tr><td><code>body_b64</code></td><td>boolean</td><td data-i18n="no">no</td><td>Set true if body is base64-encoded</td></tr>
-            <tr><td><code>timeout</code></td><td>number</td><td data-i18n="no">no</td><td>Timeout in ms (default 30000; returns 504 on expiry)</td></tr>
-            <tr><td><code>follow_redirects</code></td><td>boolean</td><td data-i18n="no">no</td><td>Follow redirects (default true)</td></tr>
-            <tr><td><code>filename</code></td><td>string</td><td data-i18n="no">no</td><td>Optional Content-Disposition filename</td></tr>
-          </tbody>
-        </table>
-      </div>
+        <div class="doc-card">
+          <h3 data-i18n="docs.quick.t">Quick start (cURL)</h3>
+          <p data-i18n="docs.quick.d">Fetch any URL directly from your terminal:</p>
+          <code class="block">curl -G "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy" \
+  --data-urlencode "url=https://api.ipify.org?format=json"</code>
+          <p data-i18n="docs.quick.d2">POST with a body and headers:</p>
+          <code class="block">curl -X POST "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://httpbin.org/post","method":"POST","body":"{\"hello\":\"world\"}"}'</code>
+        </div>
 
-      <h3 style="margin:24px 0 8px" data-i18n="docs.examples">Examples</h3>
-      <div class="code">
-        <div class="code-head"><span>cURL (Optional Token)</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code># Without auth (if API_TOKEN secret is not set):
-curl "https://your-worker.dev/api/proxy?url=https://api.ipify.org?format=json"
+        <div class="doc-card">
+          <h3 data-i18n="docs.endpoints">Endpoints</h3>
+          <div class="table-wrap">
+            <table class="doc">
+              <thead><tr><th data-i18n="docs.method">Method</th><th data-i18n="docs.endpoint">Endpoint</th><th data-i18n="docs.description">Description</th></tr></thead>
+              <tbody>
+                <tr><td>ANY</td><td><code>/api/proxy</code></td><td data-i18n="docs.e.proxy">Fetch a target URL (GET query or POST body)</td></tr>
+                <tr><td>GET</td><td><code>/api/health</code></td><td data-i18n="docs.e.health">Health check</td></tr>
+                <tr><td>GET</td><td><code>/api/version</code></td><td data-i18n="docs.e.version">Version information</td></tr>
+                <tr><td>GET</td><td><code>/api/stats</code></td><td data-i18n="docs.e.stats">Global request statistics</td></tr>
+                <tr><td>POST</td><td><code>/api/admin/login</code></td><td data-i18n="docs.e.login">Admin sign-in (rate-limited)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-# With auth (if API_TOKEN secret is configured):
-curl -H "Authorization: Bearer YOUR_API_TOKEN" \
-  "https://your-worker.dev/api/proxy?url=https://api.ipify.org?format=json"</code></pre>
-      </div>
-      <div class="code">
-        <div class="code-head"><span>Python</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>import requests
+        <div class="doc-card">
+          <h3 data-i18n="docs.params">Request parameters</h3>
+          <div class="table-wrap">
+            <table class="doc">
+              <thead><tr><th data-i18n="docs.field">Field</th><th data-i18n="docs.type">Type</th><th data-i18n="docs.req">Required</th><th data-i18n="docs.desc2">Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>url</code></td><td>string</td><td><span class="param-tag req">yes</span></td><td data-i18n="docs.p.url">The target URL to fetch</td></tr>
+                <tr><td><code>method</code></td><td>string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.method">HTTP method (default GET)</td></tr>
+                <tr><td><code>mode</code></td><td>string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.mode">auto | text | json | base64 | stream</td></tr>
+                <tr><td><code>headers</code></td><td>JSON string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.headers">Custom headers to forward</td></tr>
+                <tr><td><code>cookies</code></td><td>string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.cookies">Cookies to attach</td></tr>
+                <tr><td><code>body</code></td><td>string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.body">Request body (for POST/PUT/PATCH)</td></tr>
+                <tr><td><code>body_b64</code></td><td>string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.bodyb64">Base64-encoded request body</td></tr>
+                <tr><td><code>timeout</code></td><td>number</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.timeout">Timeout in ms (default 30000)</td></tr>
+                <tr><td><code>follow_redirects</code></td><td>bool</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.follow">Follow redirects (default true)</td></tr>
+                <tr><td><code>token</code></td><td>string</td><td><span class="param-tag opt">no</span></td><td data-i18n="docs.p.token">API token (if API_TOKEN is set)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-res = requests.get(
-    "https://your-worker.dev/api/proxy",
-    params={"url": "https://api.ipify.org?format=json", "mode": "json"}
-)
-print(res.json())</code></pre>
-      </div>
-      <div class="code">
-        <div class="code-head"><span>Node.js</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>const res = await fetch("https://your-worker.dev/api/proxy?url=https://api.ipify.org%3Fformat%3Djson");
-const data = await res.json();
-console.log(data);</code></pre>
-      </div>
-
-      <h3 style="margin:24px 0 8px" data-i18n="docs.res">Response Envelope</h3>
-      <div class="code">
-        <div class="code-head"><span>JSON</span><button class="copy-btn" data-copy>Copy</button></div>
-        <pre><code>{
+        <div class="doc-card">
+          <h3 data-i18n="docs.res">Response Envelope</h3>
+          <p data-i18n="docs.res.d">For text/json/base64 modes, the proxy returns a JSON envelope:</p>
+          <code class="block">{
   "status": 200,
-  "data": { "ip": "172.64.0.1" },
-  "data_b64": null,
-  "content_type": "application/json",
-  "headers": { "content-type": "application/json" },
-  "proxy_host": "cloudflare-edge",
+  "data": "...",        // text/json/base64, depending on mode
+  "data_b64": "...",    // base64 of binary body
+  "content_type": "...",
+  "proxy_host": "edge",
   "attempt": 1,
-  "elapsed_ms": 142,
-  "size_bytes": 24
-}</code></pre>
+  "elapsed_ms": 120,
+  "size_bytes": 1234
+}</code>
+          <p data-i18n="docs.res.d2">For <b>stream</b> mode, the raw response body is streamed with the original Content-Type.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -610,89 +551,73 @@ console.log(data);</code></pre>
         <h2 data-i18n="set.title">Configuration</h2>
         <p data-i18n="set.sub">Tune your gateway preferences and manage optional API key.</p>
       </div>
-      <div class="settings-grid">
-        <!-- Optional API Key Card -->
-        <div class="card">
-          <h3>🔑 API Key (Optional)</h3>
-          <p>By default, requests work without an API key. If your Cloudflare Worker has <code>API_TOKEN</code> enabled, enter it here. (Admin access required to modify)</p>
-          <div class="field" style="margin-top:10px">
-            <input class="input" type="password" id="set-apikey" placeholder="Enter API Key / Token" autocomplete="off" />
-          </div>
-          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn btn-primary" id="btn-save-key">Save API Key</button>
-            <button class="btn btn-ghost" id="btn-test-key">Test API Key</button>
-            <button class="btn btn-ghost" id="btn-clear-key">Clear API Key</button>
-          </div>
-          <p id="key-status" style="margin-top:10px;font-size:12.5px;color:var(--text-dim)"></p>
-        </div>
 
-        <!-- General Settings Card -->
+      <div class="cards">
         <div class="card">
-          <h3>⚙️ <span data-i18n="set.general">General</span></h3>
+          <h3 data-i18n="set.general">General</h3>
           <div class="setting-row">
-            <div><div class="s-label" data-i18n="set.followredir">Follow redirects</div><div class="s-sub">Automatically follow HTTP 3xx redirects</div></div>
-            <label class="toggle"><input type="checkbox" id="set-follow" checked><span class="slider"></span></label>
-          </div>
-          <div class="setting-row">
-            <div><div class="s-label">Auto-save history</div><div class="s-sub">Save requests to History tab</div></div>
-            <label class="toggle"><input type="checkbox" id="set-autohist" checked><span class="slider"></span></label>
+            <div><div class="lbl" data-i18n="set.timeout">Default timeout (ms)</div><div class="sub" data-i18n="set.timeout.sub">Applied to new playground requests</div></div>
+            <input class="input sm" id="set-timeout" type="number" value="30000" />
           </div>
           <div class="setting-row">
-            <div><div class="s-label" data-i18n="set.dark">Dark theme</div><div class="s-sub">Toggle between dark & light palette</div></div>
-            <label class="toggle"><input type="checkbox" id="set-dark" checked><span class="slider"></span></label>
+            <div><div class="lbl" data-i18n="set.followredir">Follow redirects</div><div class="sub" data-i18n="set.followredir.sub">Follow 3xx responses automatically</div></div>
+            <label class="switch"><input type="checkbox" id="set-follow" checked /><span class="slider"></span></label>
           </div>
-          <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div><div class="s-label">Default timeout (ms)</div><div class="s-sub">Aborts request after this duration</div></div>
-            <input class="input" type="number" id="set-timeout" value="30000" min="1000" step="1000" />
+          <div class="setting-row">
+            <div><div class="lbl" data-i18n="set.history">Save request history</div><div class="sub" data-i18n="set.history.sub">Store recent requests locally</div></div>
+            <label class="switch"><input type="checkbox" id="set-autosave" checked /><span class="slider"></span></label>
           </div>
-          <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div><div class="s-label">Default mode</div><div class="s-sub">Used when mode is not specified</div></div>
-            <select class="input" id="set-mode">
-              <option value="auto">auto</option>
-              <option value="text">text</option>
-              <option value="json">json</option>
-              <option value="base64">base64</option>
-              <option value="stream">stream</option>
-            </select>
-          </div>
-          <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div><div class="s-label">Max history entries</div><div class="s-sub">Older entries will be trimmed</div></div>
-            <input class="input" type="number" id="set-maxhist" value="50" min="5" max="500" step="5" />
-          </div>
-          <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div><div class="s-label">Batch request delay (ms)</div><div class="s-sub">Delay between sequential requests in batch</div></div>
-            <input class="input" type="number" id="set-batchdelay" value="500" min="0" step="50" />
+          <div class="setting-row">
+            <div><div class="lbl" data-i18n="set.batchdelay">Batch delay (ms)</div><div class="sub" data-i18n="set.batchdelay.sub">Gap between batch requests</div></div>
+            <input class="input sm" id="set-batchdelay" type="number" value="500" />
           </div>
         </div>
 
-        <!-- Admin Login Card -->
         <div class="card">
-          <h3>🔐 <span data-i18n="set.admin">Admin Access</span></h3>
-          <p id="admin-status-text">Sign in as admin to configure API keys and protected settings.</p>
-          <form class="login-form" id="login-form">
-            <div class="field">
-              <label data-i18n="set.username">Username</label>
-              <input class="input" type="text" id="login-user" autocomplete="username" placeholder="admin" />
+          <h3 data-i18n="set.dark">Appearance</h3>
+          <div class="setting-row">
+            <div><div class="lbl" data-i18n="set.theme">Theme</div><div class="sub" data-i18n="set.theme.sub">Auto-follows system by default</div></div>
+            <div class="pills" id="theme-pills">
+              <button class="pill" data-theme-choice="auto">Auto</button>
+              <button class="pill" data-theme-choice="dark">Dark</button>
+              <button class="pill" data-theme-choice="light">Light</button>
             </div>
-            <div class="field">
-              <label data-i18n="set.password">Password</label>
-              <input class="input" type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••" />
-            </div>
-            <button class="btn btn-primary" type="submit" style="justify-content:center"><span data-i18n="set.login">Sign In</span></button>
-          </form>
-          <button class="btn btn-ghost" id="admin-logout-btn" style="display:none;width:100%;justify-content:center;margin-top:10px">Sign Out</button>
+          </div>
         </div>
 
-        <!-- Presets Card (Management) -->
         <div class="card">
-          <h3>📑 Preset Management</h3>
-          <p>Export your saved request presets to JSON or import from a file.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-ghost" id="preset-export-btn">Export Presets</button>
-            <button class="btn btn-ghost" id="preset-import-btn">Import Presets</button>
-            <input type="file" id="preset-import-file" accept="application/json" style="display:none" />
+          <h3 data-i18n="set.admin">Admin Access</h3>
+          <p class="desc" data-i18n="set.admin.desc">Set the optional API token used to protect the proxy endpoint. Admin credentials are verified server-side.</p>
+          <div id="admin-ui" style="display:none">
+            <div class="settings-stack">
+              <div class="field">
+                <label data-i18n="set.username">Username</label>
+                <input class="input" id="admin-user" autocomplete="username" />
+              </div>
+              <div class="field">
+                <label data-i18n="set.password">Password</label>
+                <input class="input" id="admin-pass" type="password" autocomplete="current-password" />
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" id="admin-login"><span data-i18n="set.login">Sign In</span></button>
+                <span class="status-text" id="admin-status-text"></span>
+              </div>
+            </div>
           </div>
-          <div id="presets-count" style="margin-top:12px;font-size:12.5px;color:var(--text-faint)"></div>
+          <div id="admin-logged-in" style="display:none">
+            <div class="form-actions">
+              <button class="btn btn-ghost" id="admin-logout">⎋ <span data-i18n="set.logout">Sign Out</span></button>
+              <span class="status-text ok" id="admin-logged-in-text"></span>
+            </div>
+          </div>
+          <div id="admin-locked" style="display:none">
+            <p class="status-text err" id="admin-locked-text" data-i18n="set.locked">Login temporarily locked.</p>
+          </div>
+          <div class="field" style="margin-top:16px">
+            <label data-i18n="set.apikey">API Token (optional)</label>
+            <input class="input" id="api-key" placeholder="Leave empty to disable" />
+            <div style="font-size:12px;color:var(--text-faint);margin-top:6px" data-i18n="set.apikey.hint">Stored locally and sent as <code>Authorization: Bearer</code> on playground requests.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -700,37 +625,13 @@ console.log(data);</code></pre>
 </main>
 
 <!-- ===== Bottom Tab Bar ===== -->
-<nav class="tabbar" id="tabbar">
-  <button class="tab active" data-nav="home">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span class="t-label" data-i18n="nav.home">Home</span>
-  </button>
-  <button class="tab" data-nav="playground">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-    <span class="t-label" data-i18n="nav.playground">Playground</span>
-  </button>
-  <button class="tab" data-nav="history">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-    <span class="t-label">History</span>
-  </button>
-  <button class="tab" data-nav="batch">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    <span class="t-label">Batch</span>
-  </button>
-  <button class="tab" data-nav="docs">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    <span class="t-label" data-i18n="nav.docs">Docs</span>
-  </button>
-  <button class="tab" data-nav="settings">
-    <span class="t-dot"></span>
-    <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    <span class="t-label" data-i18n="nav.settings">Settings</span>
-  </button>
+<nav class="tabbar">
+  <div class="tabbar-inner">
+    <button class="tab active" data-nav="home"><span class="tab-ico">🏠</span><span data-i18n="nav.home">Home</span></button>
+    <button class="tab" data-nav="playground"><span class="tab-ico">🧪</span><span data-i18n="nav.playground">Playground</span></button>
+    <button class="tab" data-nav="docs"><span class="tab-ico">📚</span><span data-i18n="nav.docs">Docs</span></button>
+    <button class="tab" data-nav="settings"><span class="tab-ico">⚙️</span><span data-i18n="nav.settings">Settings</span></button>
+  </div>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -778,73 +679,384 @@ const I18N = [
   { code:"ru", label:"Русский", rtl:false },
 ];
 
-const STRINGS = {
-  "en": {
-    "hero.badge":"Edge Proxy Online","hero.title":"Fast, flexible","hero.title2":"Edge Proxy","hero.title3":"powered by Cloudflare",
-    "hero.sub":"NebulaProxy is a serverless edge proxy gateway. Fetch APIs without CORS, stream binary media, scrape HTML, and forward requests with custom headers — all from Cloudflare's global edge.",
-    "hero.play":"Open Playground","hero.docs":"Read Documentation","hero.live":"CORS Bypass","hero.cookies":"Cookies & Headers",
-    "nav.regions":"Cloudflare Edge","nav.home":"Home","nav.playground":"Playground","nav.docs":"Docs","nav.settings":"Settings",
-    "stat.requests":"Requests","stat.success":"Success rate","stat.latency":"Avg latency","stat.regions":"Edge Host",
-    "feat.eyebrow":"Why NebulaProxy","feat.title":"Everything you need from an Edge Proxy","feat.sub":"A single API endpoint that handles CORS bypass, binary streaming, custom headers, and chunked encoding.",
-    "feat.f1.t":"CORS Bypass & API Gateway","feat.f1.d":"Fetch any remote API from your browser or backend without dealing with strict CORS barriers or preflight blocks.",
-    "feat.f2.t":"Global Edge Routing","feat.f2.d":"Requests egress through Cloudflare's 300+ city edge network with ultra-low latency and enterprise DDoS resilience.",
-    "feat.f3.t":"Cookies & Headers Forwarding","feat.f3.d":"Pass custom auth headers, cookies, and Range requests directly to the target with fine-grained control.",
-    "feat.f4.t":"Live Binary Streaming","feat.f4.d":"Stream videos, audio, images, PDFs, and downloads directly without buffering the entire body into memory.",
-    "feat.f5.t":"Smart Format Detection","feat.f5.d":"Automatic JSON parsing, base64 chunked encoding for binaries, or raw streams with Range support for video seek.",
-    "feat.f6.t":"Any HTTP Client","feat.f6.d":"Use cURL, Python, Node.js, fetch, or our built-in browser Playground. One simple endpoint, zero SDK required.",
-    "pg.eyebrow":"Playground","pg.title":"Test the proxy live","pg.sub":"Send a request through the gateway and inspect the full response.",
-    "pg.target":"Target URL","pg.method":"Method","pg.body":"Request body (JSON or text)","pg.send":"Send Request","pg.idle":"Ready","pg.hint":"Fill the fields and press Send to see the response.",
-    "docs.eyebrow":"Documentation","docs.title":"API reference","docs.sub":"Everything you need to integrate NebulaProxy into your app.",
-    "docs.endpoints":"Endpoints","docs.method":"Method","docs.endpoint":"Endpoint","docs.description":"Description",
-    "docs.params":"Request parameters","docs.field":"Field","docs.type":"Type","docs.req":"Required","docs.desc2":"Description",
-    "docs.p.url":"The target URL to fetch","docs.p.method":"HTTP method (default GET)","docs.p.headers":"Custom headers to forward","docs.p.cookies":"Cookies to attach",
-    "docs.p.body":"Request body (for POST/PUT/PATCH)","docs.examples":"Examples","docs.res":"Response Envelope","yes":"yes","no":"no",
-    "set.eyebrow":"Settings","set.title":"Configuration","set.sub":"Tune your gateway preferences and manage optional API key.",
-    "set.general":"General","set.followredir":"Follow redirects","set.dark":"Dark theme","set.admin":"Admin Access",
-    "set.username":"Username","set.password":"Password","set.login":"Sign In",
-    "footer.note":"Fast, serverless edge proxy gateway powered by Cloudflare native fetch.","footer.tag":"NebulaProxy · v1.1.0",
-    "login.err":"Invalid credentials — please check your username and password.","login.ok":"Signed in as admin."
-  },
-  "bn": {
-    "hero.badge":"এজ প্রক্সি চালু আছে","hero.title":"দ্রুত ও নমনীয়","hero.title2":"এজ প্রক্সি","hero.title3":"ক্লাউডফ্লেয়ার চালিত",
-    "hero.sub":"NebulaProxy হলো একটি সার্ভারলেস এজ প্রক্সি গেটওয়ে। CORS ছাড়া API কল করুন, বাইনারি মিডিয়া স্ট্রিম করুন, HTML স্ক্র্যাপ করুন এবং ক্লাউডফ্লেয়ার এজ থেকে কাস্টম হেডার পাঠান।",
-    "hero.play":"প্লেগ্রাউন্ড খুলুন","hero.docs":"ডকুমেন্টেশন পড়ুন","hero.live":"CORS বাইপাস","hero.cookies":"কুকিজ ও হেডার",
-    "nav.regions":"ক্লাউডফ্লেয়ার এজ","nav.home":"হোম","nav.playground":"প্লেগ্রাউন্ড","nav.docs":"ডকস","nav.settings":"সেটিংস",
-    "stat.requests":"অনুরোধ","stat.success":"সাফল্যের হার","stat.latency":"গড় লেটেন্সি","stat.regions":"এজ হোস্ট",
-    "feat.eyebrow":"কেন NebulaProxy","feat.title":"এজ প্রক্সির জন্য যা যা প্রয়োজন","feat.sub":"একটিমাত্র API এন্ডপয়েন্ট যা CORS বাইপাস, বাইনারি স্ট্রিমিং ও কাস্টম হেডার নিয়ন্ত্রণ করে।",
-    "feat.f1.t":"CORS বাইপাস ও গেটওয়ে","feat.f1.d":"ব্রাউজার বা ব্যাকএন্ড থেকে যেকোনো API কল করুন কোনো CORS বাধা ছাড়াই।",
-    "feat.f2.t":"গ্লোবাল এজ নেটওয়ার্ক","feat.f2.d":"ক্লাউডফ্লেয়ারের বিশ্বব্যাপী ৩০০+ শহরের এজ নেটওয়ার্ক দিয়ে ট্রাফিক পরিচালিত হয়।",
-    "feat.f3.t":"কুকিজ ও হেডার ফরোয়ার্ডিং","feat.f3.d":"টার্গেটে কাস্টম হেডার, কুকি এবং রেঞ্জ রিকোয়েস্ট সরাসরি পাঠান।",
-    "feat.f4.t":"লাইভ বাইনারি স্ট্রিমিং","feat.f4.d":"ভিডিও, অডিও, ছবি এবং ফাইল মেমরিতে বাফার না করে রিয়েলটাইমে স্ট্রিম করুন।",
-    "feat.f5.t":"স্মার্ট ফরম্যাট ডিটেকশন","feat.f5.d":"স্বয়ংক্রিয় JSON পার্সিং এবং বাইনারির জন্য চাঙ্কড Base64 এনকোডিং।",
-    "feat.f6.t":"যেকোনো ক্লায়েন্ট সমর্থিত","feat.f6.d":"cURL, Python, Node.js বা ব্রাউজার প্লেগ্রাউন্ড দিয়ে ব্যবহার করুন। কোনো SDK দরকার নেই।",
-    "pg.eyebrow":"প্লেগ্রাউন্ড","pg.title":"প্রক্সি লাইভ টেস্ট করুন","pg.sub":"গেটওয়ে দিয়ে একটি অনুরোধ পাঠান এবং পুরো উত্তর পরীক্ষা করুন।",
-    "pg.target":"টার্গেট URL","pg.method":"মেথড","pg.body":"অনুরোধ বডি (JSON বা টেক্সট)","pg.send":"অনুরোধ পাঠান","pg.idle":"প্রস্তুত","pg.hint":"ফর্ম পূরণ করে Send চাপুন।",
-    "docs.eyebrow":"ডকুমেন্টেশন","docs.title":"API রেফারেন্স","docs.sub":"আপনার অ্যাপে NebulaProxy যুক্ত করতে প্রয়োজনীয় তথ্য।",
-    "docs.endpoints":"এন্ডপয়েন্ট","docs.method":"মেথড","docs.endpoint":"এন্ডপয়েন্ট","docs.description":"বর্ণনা",
-    "docs.params":"অনুরোধ প্যারামিটার","docs.field":"ফিল্ড","docs.type":"টাইপ","docs.req":"আবশ্যক","docs.desc2":"বর্ণনা",
-    "docs.p.url":"যে URL ফেচ করতে হবে","docs.p.method":"HTTP মেথড","docs.p.headers":"কাস্টম হেডার","docs.p.cookies":"কুকিজ",
-    "docs.p.body":"অনুরোধ বডি","docs.examples":"উদাহরণ","docs.res":"রেসপন্স এনভেলপ","yes":"হ্যাঁ","no":"না",
-    "set.eyebrow":"সেটিংস","set.title":"কনফিগারেশন","set.sub":"আপনার গেটওয়ে পছন্দ ঠিক করুন এবং ঐচ্ছিক API কি পরিচালনা করুন।",
-    "set.general":"সাধারণ","set.followredir":"ফলো রিডাইরেক্ট","set.dark":"ডার্ক থিম","set.admin":"অ্যাডমিন অ্যাক্সেস",
-    "set.username":"ইউজারনেম","set.password":"পাসওয়ার্ড","set.login":"সাইন ইন",
-    "footer.note":"ক্লাউডফ্লেয়ার নেটিভ ফেচ চালিত ফাস্ট সার্ভারলেস এজ প্রক্সি গেটওয়ে।","footer.tag":"NebulaProxy · v1.1.0",
-    "login.err":"ভুল তথ্য — ইউজারনেম ও পাসওয়ার্ড চেক করুন।","login.ok":"অ্যাডমিন হিসেবে সাইন ইন সম্পন্ন।"
-  }
-};
+const STRINGS = { en:{}, bn:{}, hi:{}, es:{}, fr:{}, ar:{}, ru:{} };
 
-let CURRENT_LANG = localStorage.getItem("npx_lang") || "en";
+// ---- English (source of truth) ----
+Object.assign(STRINGS.en, {
+  "hero.badge":"Edge Proxy Online","hero.title":"Fast, flexible","hero.title2":"Edge Proxy","hero.title3":"powered by Cloudflare",
+  "hero.sub":"NebulaProxy is a serverless edge proxy gateway. Fetch APIs without CORS, stream binary media, scrape HTML, and forward requests with custom headers — all from Cloudflare's global edge.",
+  "hero.play":"Open Playground","hero.docs":"Read Documentation","hero.live":"CORS Bypass","hero.cookies":"Cookies & Headers",
+  "nav.regions":"Cloudflare Edge","nav.home":"Home","nav.playground":"Playground","nav.docs":"Docs","nav.settings":"Settings",
+  "stat.requests":"Requests","stat.success":"Success rate","stat.latency":"Avg latency","stat.regions":"Edge Host",
+  "feat.eyebrow":"Why NebulaProxy","feat.title":"Everything you need from an Edge Proxy","feat.sub":"A single API endpoint that handles CORS bypass, binary streaming, custom headers, and chunked encoding.",
+  "feat.f1.t":"CORS Bypass & API Gateway","feat.f1.d":"Fetch any remote API from your browser or backend without dealing with strict CORS barriers or preflight blocks.",
+  "feat.f2.t":"Global Edge Routing","feat.f2.d":"Requests egress through Cloudflare's 300+ city edge network with ultra-low latency and enterprise DDoS resilience.",
+  "feat.f3.t":"Cookies & Headers Forwarding","feat.f3.d":"Pass custom auth headers, cookies, and Range requests directly to the target with fine-grained control.",
+  "feat.f4.t":"Live Binary Streaming","feat.f4.d":"Stream videos, audio, images, PDFs, and downloads directly without buffering the entire body into memory.",
+  "feat.f5.t":"Smart Format Detection","feat.f5.d":"Automatic JSON parsing, base64 chunked encoding for binaries, or raw streams with Range support for video seek.",
+  "feat.f6.t":"Any HTTP Client","feat.f6.d":"Use cURL, Python, Node.js, fetch, or our built-in browser Playground. One simple endpoint, zero SDK required.",
+  "pg.eyebrow":"Playground","pg.title":"Test the proxy live","pg.sub":"Send a request through the gateway and inspect the full response.",
+  "pg.single":"Single Request","pg.batchtab":"Batch Mode","pg.shortcuts":"(Ctrl+Enter to Send · Ctrl+K to Focus URL)",
+  "pg.target":"Target URL","pg.method":"Method","pg.mode":"Response Mode","pg.headers":"Custom Headers","pg.cookies":"Cookies",
+  "pg.body":"Request body (JSON or text)","pg.timeout":"Timeout (ms)","pg.follow":"Follow Redirects",
+  "pg.send":"Send Request","pg.clear":"Clear","pg.idle":"Ready","pg.sending":"Sending…",
+  "pg.proxymode":"Proxy Mode","pg.proxy.direct":"Direct (through Edge)","pg.proxy.hint":"All requests egress through the Cloudflare Worker edge to bypass CORS and access blocked origins. The response renders seamlessly below.",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.headers.ph":"{\"Authorization\":\"Bearer ...\"}","pg.cookies.ph":"session=abc123; theme=dark","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"Choose a preset...","preset.save":"Save","preset.delete":"Delete",
+  "batch.count":"Number of requests","batch.send":"Run Batch","batch.downloadall":"Download All","batch.summary":"{n} requests completed","batch.avg":"Avg latency",
+  "docs.eyebrow":"Documentation","docs.title":"API reference","docs.sub":"Everything you need to integrate NebulaProxy into your app.",
+  "docs.baseurl.t":"Base URL","docs.baseurl.d":"All API requests target your deployed Worker base URL.",
+  "docs.quick.t":"Quick start (cURL)","docs.quick.d":"Fetch any URL directly from your terminal:","docs.quick.d2":"POST with a body and headers:",
+  "docs.endpoints":"Endpoints","docs.method":"Method","docs.endpoint":"Endpoint","docs.description":"Description",
+  "docs.e.proxy":"Fetch a target URL (GET query or POST body)","docs.e.health":"Health check","docs.e.version":"Version information",
+  "docs.e.stats":"Global request statistics","docs.e.login":"Admin sign-in (rate-limited)",
+  "docs.params":"Request parameters","docs.field":"Field","docs.type":"Type","docs.req":"Required","docs.desc2":"Description",
+  "docs.p.url":"The target URL to fetch","docs.p.method":"HTTP method (default GET)","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"Custom headers to forward","docs.p.cookies":"Cookies to attach","docs.p.body":"Request body (for POST/PUT/PATCH)",
+  "docs.p.bodyb64":"Base64-encoded request body","docs.p.timeout":"Timeout in ms (default 30000)","docs.p.follow":"Follow redirects (default true)","docs.p.token":"API token (if API_TOKEN is set)",
+  "docs.res":"Response Envelope","docs.res.d":"For text/json/base64 modes, the proxy returns a JSON envelope:",
+  "docs.res.d2":"For stream mode, the raw response body is streamed with the original Content-Type.",
+  "yes":"yes","no":"no",
+  "set.eyebrow":"Settings","set.title":"Configuration","set.sub":"Tune your gateway preferences and manage optional API key.",
+  "set.general":"General","set.timeout":"Default timeout (ms)","set.timeout.sub":"Applied to new playground requests",
+  "set.followredir":"Follow redirects","set.followredir.sub":"Follow 3xx responses automatically",
+  "set.history":"Save request history","set.history.sub":"Store recent requests locally",
+  "set.batchdelay":"Batch delay (ms)","set.batchdelay.sub":"Gap between batch requests",
+  "set.dark":"Appearance","set.theme":"Theme","set.theme.sub":"Auto-follows system by default",
+  "set.admin":"Admin Access","set.admin.desc":"Set the optional API token used to protect the proxy endpoint. Admin credentials are verified server-side.",
+  "set.username":"Username","set.password":"Password","set.login":"Sign In","set.logout":"Sign Out","set.locked":"Login temporarily locked.",
+  "set.apikey":"API Token (optional)","set.apikey.hint":"Stored locally and sent as Authorization: Bearer on playground requests.",
+  "footer.note":"Fast, serverless edge proxy gateway powered by Cloudflare native fetch.","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"Invalid credentials — please check your username and password.","login.ok":"Signed in as admin."
+});
+
+// ---- বাংলা ----
+Object.assign(STRINGS.bn, {
+  "hero.badge":"এজ প্রক্সি চালু আছে","hero.title":"দ্রুত ও নমনীয়","hero.title2":"এজ প্রক্সি","hero.title3":"ক্লাউডফ্লেয়ার চালিত",
+  "hero.sub":"NebulaProxy হলো একটি সার্ভারলেস এজ প্রক্সি গেটওয়ে। CORS ছাড়া API কল করুন, বাইনারি মিডিয়া স্ট্রিম করুন এবং ক্লাউডফ্লেয়ার এজ থেকে কাস্টম হেডার পাঠান।",
+  "hero.play":"প্লেগ্রাউন্ড খুলুন","hero.docs":"ডকুমেন্টেশন পড়ুন","hero.live":"CORS বাইপাস","hero.cookies":"কুকিজ ও হেডার",
+  "nav.regions":"ক্লাউডফ্লেয়ার এজ","nav.home":"হোম","nav.playground":"প্লেগ্রাউন্ড","nav.docs":"ডকস","nav.settings":"সেটিংস",
+  "stat.requests":"অনুরোধ","stat.success":"সাফল্যের হার","stat.latency":"গড় লেটেন্সি","stat.regions":"এজ হোস্ট",
+  "feat.eyebrow":"কেন NebulaProxy","feat.title":"এজ প্রক্সির জন্য যা যা প্রয়োজন","feat.sub":"একটিমাত্র API এন্ডপয়েন্ট যা CORS বাইপাস, বাইনারি স্ট্রিমিং ও কাস্টম হেডার নিয়ন্ত্রণ করে।",
+  "feat.f1.t":"CORS বাইপাস ও গেটওয়ে","feat.f1.d":"ব্রাউজার বা ব্যাকএন্ড থেকে যেকোনো API কল করুন কোনো CORS বাধা ছাড়াই।",
+  "feat.f2.t":"গ্লোবাল এজ নেটওয়ার্ক","feat.f2.d":"ক্লাউডফ্লেয়ারের বিশ্বব্যাপী ৩০০+ শহরের এজ নেটওয়ার্ক দিয়ে ট্রাফিক পরিচালিত হয়।",
+  "feat.f3.t":"কুকিজ ও হেডার ফরোয়ার্ডিং","feat.f3.d":"টার্গেটে কাস্টম হেডার, কুকি এবং রেঞ্জ রিকোয়েস্ট সরাসরি পাঠান।",
+  "feat.f4.t":"লাইভ বাইনারি স্ট্রিমিং","feat.f4.d":"ভিডিও, অডিও, ছবি এবং ফাইল মেমরিতে বাফার না করে রিয়েলটাইমে স্ট্রিম করুন।",
+  "feat.f5.t":"স্মার্ট ফরম্যাট ডিটেকশন","feat.f5.d":"স্বয়ংক্রিয় JSON পার্সিং এবং বাইনারির জন্য চাঙ্কড Base64 এনকোডিং।",
+  "feat.f6.t":"যেকোনো ক্লায়েন্ট সমর্থিত","feat.f6.d":"cURL, Python, Node.js বা ব্রাউজার প্লেগ্রাউন্ড দিয়ে ব্যবহার করুন। কোনো SDK দরকার নেই।",
+  "pg.eyebrow":"প্লেগ্রাউন্ড","pg.title":"প্রক্সি লাইভ টেস্ট করুন","pg.sub":"গেটওয়ে দিয়ে একটি অনুরোধ পাঠান এবং পুরো উত্তর পরীক্ষা করুন।",
+  "pg.single":"একক অনুরোধ","pg.batchtab":"ব্যাচ মোড","pg.shortcuts":"(পাঠানোর জন্য Ctrl+Enter · URL ফোকাস করতে Ctrl+K)",
+  "pg.target":"টার্গেট URL","pg.method":"মেথড","pg.mode":"রেসপন্স মোড","pg.headers":"কাস্টম হেডার","pg.cookies":"কুকিজ",
+  "pg.body":"অনুরোধ বডি (JSON বা টেক্সট)","pg.timeout":"টাইমআউট (ms)","pg.follow":"রিডাইরেক্ট অনুসরণ করুন",
+  "pg.send":"অনুরোধ পাঠান","pg.clear":"মুছুন","pg.idle":"প্রস্তুত","pg.sending":"পাঠানো হচ্ছে…",
+  "pg.proxymode":"প্রক্সি মোড","pg.proxy.direct":"সরাসরি (এজ দিয়ে)","pg.proxy.hint":"সব অনুরোধ CORS বাইপাস ও ব্লক করা অরিজিনে পৌঁছাতে ক্লাউডফ্লেয়ার ওয়ার্কার এজ দিয়ে যায়।",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.cookies.ph":"session=abc123; theme=dark","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"প্রিসেট বেছে নিন...","preset.save":"সংরক্ষণ","preset.delete":"মুছুন",
+  "batch.count":"অনুরোধের সংখ্যা","batch.send":"ব্যাচ চালান","batch.downloadall":"সব ডাউনলোড করুন","batch.summary":"{n}টি অনুরোধ সম্পন্ন","batch.avg":"গড় লেটেন্সি",
+  "docs.eyebrow":"ডকুমেন্টেশন","docs.title":"API রেফারেন্স","docs.sub":"আপনার অ্যাপে NebulaProxy যুক্ত করতে প্রয়োজনীয় তথ্য।",
+  "docs.baseurl.t":"বেস URL","docs.baseurl.d":"সব API কল আপনার ডিপ্লয় করা ওয়ার্কার বেস URL-এ যায়।",
+  "docs.quick.t":"দ্রুত শুরু (cURL)","docs.quick.d":"টার্মিনাল থেকে সরাসরি যেকোনো URL ফেচ করুন:","docs.quick.d2":"বডি ও হেডারসহ POST করুন:",
+  "docs.endpoints":"এন্ডপয়েন্ট","docs.method":"মেথড","docs.endpoint":"এন্ডপয়েন্ট","docs.description":"বর্ণনা",
+  "docs.e.proxy":"একটি টার্গেট URL ফেচ করুন (GET কুয়েরি বা POST বডি)","docs.e.health":"স্বাস্থ্য পরীক্ষা","docs.e.version":"সংস্করণ তথ্য",
+  "docs.e.stats":"গ্লোবাল অনুরোধ পরিসংখ্যান","docs.e.login":"অ্যাডমিন সাইন-ইন (রেট-লিমিটেড)",
+  "docs.params":"অনুরোধ প্যারামিটার","docs.field":"ফিল্ড","docs.type":"টাইপ","docs.req":"আবশ্যক","docs.desc2":"বর্ণনা",
+  "docs.p.url":"যে URL ফেচ করতে হবে","docs.p.method":"HTTP মেথড","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"কাস্টম হেডার পাঠাতে","docs.p.cookies":"কুকি যুক্ত করতে","docs.p.body":"অনুরোধ বডি (POST/PUT/PATCH এর জন্য)",
+  "docs.p.bodyb64":"Base64 এনকোডেড বডি","docs.p.timeout":"টাইমআউট (ডিফল্ট 30000)","docs.p.follow":"রিডাইরেক্ট অনুসরণ (ডিফল্ট true)","docs.p.token":"API টোকেন (API_TOKEN সেট থাকলে)",
+  "docs.res":"রেসপন্স এনভেলপ","docs.res.d":"text/json/base64 মোডে প্রক্সি একটি JSON এনভেলপ দেয়:",
+  "docs.res.d2":"stream মোডে মূল রেসপন্স বডি আসল Content-Type সহ স্ট্রিম হয়।",
+  "yes":"হ্যাঁ","no":"না",
+  "set.eyebrow":"সেটিংস","set.title":"কনফিগারেশন","set.sub":"আপনার গেটওয়ে পছন্দ টিউন করুন এবং API কী পরিচালনা করুন।",
+  "set.general":"সাধারণ","set.timeout":"ডিফল্ট টাইমআউট (ms)","set.timeout.sub":"নতুন প্লেগ্রাউন্ড অনুরোধে প্রয়োগ হয়",
+  "set.followredir":"রিডাইরেক্ট অনুসরণ","set.followredir.sub":"3xx রেসপন্স স্বয়ংক্রিয়ভাবে অনুসরণ",
+  "set.history":"অনুরোধ ইতিহাস সংরক্ষণ","set.history.sub":"সাম্প্রতিক অনুরোধ লোকালে সংরক্ষণ",
+  "set.batchdelay":"ব্যাচ বিলম্ব (ms)","set.batchdelay.sub":"ব্যাচ অনুরোধের মধ্যে ফাঁক",
+  "set.dark":"চেহারা","set.theme":"থিম","set.theme.sub":"ডিফল্টে সিস্টেম অনুসরণ করে",
+  "set.admin":"অ্যাডমিন অ্যাক্সেস","set.admin.desc":"প্রক্সি এন্ডপয়েন্ট সুরক্ষার API টোকেন সেট করুন। অ্যাডমিন ক্রেডেনশিয়াল সার্ভারে যাচাই হয়।",
+  "set.username":"ইউজারনেম","set.password":"পাসওয়ার্ড","set.login":"সাইন ইন","set.logout":"সাইন আউট","set.locked":"লগইন সাময়িকভাবে লক।",
+  "set.apikey":"API টোকেন (ঐচ্ছিক)","set.apikey.hint":"লোকালে সংরক্ষিত এবং প্লেগ্রাউন্ড অনুরোধে Authorization: Bearer হিসেবে পাঠানো হয়।",
+  "footer.note":"ক্লাউডফ্লেয়ার নেটিভ ফেচ চালিত দ্রুত সার্ভারলেস এজ প্রক্সি গেটওয়ে।","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"অবৈধ ক্রেডেনশিয়াল — ইউজারনেম ও পাসওয়ার্ড চেক করুন।","login.ok":"অ্যাডমিন হিসেবে সাইন ইন হয়েছেন।"
+});
+
+// ---- Español ----
+Object.assign(STRINGS.es, {
+  "hero.badge":"Proxy Edge en línea","hero.title":"Rápido, flexible","hero.title2":"Proxy Edge","hero.title3":"impulsado por Cloudflare",
+  "hero.sub":"NebulaProxy es una puerta de enlace proxy edge sin servidor. Obtén APIs sin CORS, transmite medios binarios y envía cabeceras personalizadas desde el edge de Cloudflare.",
+  "hero.play":"Abrir Playground","hero.docs":"Leer documentación","hero.live":"Bypass de CORS","hero.cookies":"Cookies y cabeceras",
+  "nav.regions":"Cloudflare Edge","nav.home":"Inicio","nav.playground":"Playground","nav.docs":"Docs","nav.settings":"Ajustes",
+  "stat.requests":"Solicitudes","stat.success":"Tasa de éxito","stat.latency":"Latencia media","stat.regions":"Host Edge",
+  "feat.eyebrow":"Por qué NebulaProxy","feat.title":"Todo lo que necesitas de un Proxy Edge","feat.sub":"Un único endpoint que gestiona bypass de CORS, streaming binario y cabeceras personalizadas.",
+  "feat.f1.t":"Bypass de CORS y Gateway","feat.f1.d":"Obtén cualquier API desde tu navegador o backend sin barreras de CORS.",
+  "feat.f2.t":"Enrutamiento Edge global","feat.f2.d":"El tráfico sale por la red edge de 300+ ciudades de Cloudflare con latencia ultrabaja.",
+  "feat.f3.t":"Reenvío de cookies y cabeceras","feat.f3.d":"Envía cabeceras, cookies y solicitudes Range al destino con control fino.",
+  "feat.f4.t":"Streaming binario en vivo","feat.f4.d":"Transmite video, audio, imágenes y archivos sin almacenar todo el cuerpo en memoria.",
+  "feat.f5.t":"Detección inteligente de formato","feat.f5.d":"Parseo JSON automático y codificación Base64 por bloques para binarios.",
+  "feat.f6.t":"Cualquier cliente HTTP","feat.f6.d":"Usa cURL, Python, Node.js o el Playground del navegador. Sin SDK.",
+  "pg.eyebrow":"Playground","pg.title":"Prueba el proxy en vivo","pg.sub":"Envía una solicitud por la puerta de enlace e inspecciona la respuesta.",
+  "pg.single":"Solicitud única","pg.batchtab":"Modo por lotes","pg.shortcuts":"(Ctrl+Enter Enviar · Ctrl+K URL)",
+  "pg.target":"URL de destino","pg.method":"Método","pg.mode":"Modo de respuesta","pg.headers":"Cabeceras personalizadas","pg.cookies":"Cookies",
+  "pg.body":"Cuerpo de la solicitud (JSON o texto)","pg.timeout":"Tiempo de espera (ms)","pg.follow":"Seguir redirecciones",
+  "pg.send":"Enviar solicitud","pg.clear":"Limpiar","pg.idle":"Listo","pg.sending":"Enviando…",
+  "pg.proxymode":"Modo proxy","pg.proxy.direct":"Directo (por Edge)","pg.proxy.hint":"Todas las solicitudes salen por el edge Worker de Cloudflare para saltarse CORS.",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.cookies.ph":"session=abc123; theme=dark","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"Elegir preset...","preset.save":"Guardar","preset.delete":"Eliminar",
+  "batch.count":"Número de solicitudes","batch.send":"Ejecutar lote","batch.downloadall":"Descargar todo","batch.summary":"{n} solicitudes completadas","batch.avg":"Latencia media",
+  "docs.eyebrow":"Documentación","docs.title":"Referencia de API","docs.sub":"Todo lo que necesitas para integrar NebulaProxy.",
+  "docs.baseurl.t":"URL base","docs.baseurl.d":"Todas las llamadas van a la URL base de tu Worker.",
+  "docs.quick.t":"Inicio rápido (cURL)","docs.quick.d":"Obtén cualquier URL desde tu terminal:","docs.quick.d2":"POST con cuerpo y cabeceras:",
+  "docs.endpoints":"Endpoints","docs.method":"Método","docs.endpoint":"Endpoint","docs.description":"Descripción",
+  "docs.e.proxy":"Obtener una URL de destino (query GET o cuerpo POST)","docs.e.health":"Verificación de salud","docs.e.version":"Información de versión",
+  "docs.e.stats":"Estadísticas globales de solicitudes","docs.e.login":"Inicio de sesión de admin (limitado)",
+  "docs.params":"Parámetros de solicitud","docs.field":"Campo","docs.type":"Tipo","docs.req":"Obligatorio","docs.desc2":"Descripción",
+  "docs.p.url":"URL de destino a obtener","docs.p.method":"Método HTTP","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"Cabeceras a reenviar","docs.p.cookies":"Cookies a adjuntar","docs.p.body":"Cuerpo (para POST/PUT/PATCH)",
+  "docs.p.bodyb64":"Cuerpo codificado en Base64","docs.p.timeout":"Tiempo de espera (pred. 30000)","docs.p.follow":"Seguir redirecciones (pred. true)","docs.p.token":"Token API (si API_TOKEN está definido)",
+  "docs.res":"Envoltorio de respuesta","docs.res.d":"En modo text/json/base64, el proxy devuelve un envoltorio JSON:",
+  "docs.res.d2":"En modo stream, el cuerpo crudo se transmite con el Content-Type original.",
+  "yes":"sí","no":"no",
+  "set.eyebrow":"Ajustes","set.title":"Configuración","set.sub":"Ajusta tus preferencias y gestiona la clave API opcional.",
+  "set.general":"General","set.timeout":"Tiempo de espera (ms)","set.timeout.sub":"Aplica a nuevas solicitudes",
+  "set.followredir":"Seguir redirecciones","set.followredir.sub":"Seguir respuestas 3xx automáticamente",
+  "set.history":"Guardar historial","set.history.sub":"Almacenar solicitudes recientes localmente",
+  "set.batchdelay":"Retraso de lote (ms)","set.batchdelay.sub":"Espacio entre solicitudes por lotes",
+  "set.dark":"Apariencia","set.theme":"Tema","set.theme.sub":"Sigue el sistema por defecto",
+  "set.admin":"Acceso de administrador","set.admin.desc":"Define el token API opcional para proteger el proxy.",
+  "set.username":"Usuario","set.password":"Contraseña","set.login":"Iniciar sesión","set.logout":"Cerrar sesión","set.locked":"Inicio de sesión bloqueado temporalmente.",
+  "set.apikey":"Token API (opcional)","set.apikey.hint":"Guardado localmente y enviado como Authorization: Bearer.",
+  "footer.note":"Puerta de enlace proxy edge sin servidor impulsada por Cloudflare fetch.","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"Credenciales no válidas.","login.ok":"Sesión iniciada como administrador."
+});
+
+// ---- हिन्दी ----
+Object.assign(STRINGS.hi, {
+  "hero.badge":"एज प्रॉक्सी ऑनलाइन","hero.title":"तेज़, लचीला","hero.title2":"एज प्रॉक्सी","hero.title3":"Cloudflare से संचालित",
+  "hero.sub":"NebulaProxy एक सर्वरलेस एज प्रॉक्सी गेटवे है। CORS के बिना API लाएँ, बाइनरी मीडिया स्ट्रीम करें और कस्टम हेडर भेजें।",
+  "hero.play":"प्लेग्राउंड खोलें","hero.docs":"दस्तावेज़ पढ़ें","hero.live":"CORS बाईपास","hero.cookies":"कुकीज़ और हेडर",
+  "nav.regions":"Cloudflare एज","nav.home":"होम","nav.playground":"प्लेग्राउंड","nav.docs":"डॉक्स","nav.settings":"सेटिंग्स",
+  "stat.requests":"अनुरोध","stat.success":"सफलता दर","stat.latency":"औसत लेटेंसी","stat.regions":"एज होस्ट",
+  "feat.eyebrow":"NebulaProxy क्यों","feat.title":"एज प्रॉक्सी से आपको जो चाहिए","feat.sub":"एक ही एंडपॉइंट जो CORS बाईपास, बाइनरी स्ट्रीमिंग और कस्टम हेडर संभालता है।",
+  "feat.f1.t":"CORS बाईपास और गेटवे","feat.f1.d":"बिना CORS बाधाओं के किसी भी API को ब्राउज़र या बैकएंड से लाएँ।",
+  "feat.f2.t":"ग्लोबल एज रूटिंग","feat.f2.d":"Cloudflare के 300+ शहरों के एज नेटवर्क से ट्रैफ़िक गुजरता है।",
+  "feat.f3.t":"कुकीज़ और हेडर फ़ॉरवर्डिंग","feat.f3.d":"कस्टम हेडर, कुकीज़ और रेंज अनुरोध सीधे लक्ष्य तक भेजें।",
+  "feat.f4.t":"लाइव बाइनरी स्ट्रीमिंग","feat.f4.d":"वीडियो, ऑडियो और फ़ाइलें बिना मेमोरी में बफ़र किए स्ट्रीम करें।",
+  "feat.f5.t":"स्मार्ट फ़ॉर्मेट डिटेक्शन","feat.f5.d":"स्वचालित JSON पार्सिंग और बाइनरी के लिए Base64 एन्कोडिंग।",
+  "feat.f6.t":"कोई भी HTTP क्लाइंट","feat.f6.d":"cURL, Python, Node.js या प्लेग्राउंड का उपयोग करें। कोई SDK नहीं।",
+  "pg.eyebrow":"प्लेग्राउंड","pg.title":"प्रॉक्सी लाइव टेस्ट करें","pg.sub":"गेटवे से अनुरोध भेजें और पूरा उत्तर देखें।",
+  "pg.single":"एकल अनुरोध","pg.batchtab":"बैच मोड","pg.shortcuts":"(Ctrl+Enter भेजें · Ctrl+K URL)",
+  "pg.target":"लक्ष्य URL","pg.method":"विधि","pg.mode":"प्रतिक्रिया मोड","pg.headers":"कस्टम हेडर","pg.cookies":"कुकीज़",
+  "pg.body":"अनुरोध बॉडी (JSON या टेक्स्ट)","pg.timeout":"टाइमआउट (ms)","pg.follow":"रीडायरेक्ट का पालन करें",
+  "pg.send":"अनुरोध भेजें","pg.clear":"साफ़ करें","pg.idle":"तैयार","pg.sending":"भेजा जा रहा है…",
+  "pg.proxymode":"प्रॉक्सी मोड","pg.proxy.direct":"सीधा (एज से)","pg.proxy.hint":"सभी अनुरोध CORS बाईपास के लिए Cloudflare Worker एज से गुजरते हैं।",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.cookies.ph":"session=abc123; theme=dark","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"प्रीसेट चुनें...","preset.save":"सहेजें","preset.delete":"हटाएँ",
+  "batch.count":"अनुरोधों की संख्या","batch.send":"बैच चलाएँ","batch.downloadall":"सभी डाउनलोड करें","batch.summary":"{n} अनुरोध पूर्ण","batch.avg":"औसत लेटेंसी",
+  "docs.eyebrow":"दस्तावेज़","docs.title":"API संदर्भ","docs.sub":"NebulaProxy को एकीकृत करने के लिए ज़रूरी जानकारी।",
+  "docs.baseurl.t":"बेस URL","docs.baseurl.d":"सभी API कॉल आपके Worker बेस URL पर जाते हैं।",
+  "docs.quick.t":"त्वरित शुरुआत (cURL)","docs.quick.d":"टर्मिनल से कोई भी URL लाएँ:","docs.quick.d2":"बॉडी और हेडर के साथ POST:",
+  "docs.endpoints":"एंडपॉइंट","docs.method":"विधि","docs.endpoint":"एंडपॉइंट","docs.description":"विवरण",
+  "docs.e.proxy":"लक्ष्य URL लाएँ","docs.e.health":"स्वास्थ्य जाँच","docs.e.version":"संस्करण जानकारी",
+  "docs.e.stats":"वैश्विक अनुरोध आँकड़े","docs.e.login":"एडमिन साइन-इन (सीमित)",
+  "docs.params":"अनुरोध पैरामीटर","docs.field":"फ़ील्ड","docs.type":"प्रकार","docs.req":"आवश्यक","docs.desc2":"विवरण",
+  "docs.p.url":"लक्ष्य URL","docs.p.method":"HTTP विधि","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"कस्टम हेडर","docs.p.cookies":"कुकीज़","docs.p.body":"बॉडी (POST/PUT/PATCH के लिए)",
+  "docs.p.bodyb64":"Base64 बॉडी","docs.p.timeout":"टाइमआउट (डिफ़ॉल्ट 30000)","docs.p.follow":"रीडायरेक्ट (डिफ़ॉल्ट true)","docs.p.token":"API टोकन",
+  "docs.res":"प्रतिक्रिया एनवेलप","docs.res.d":"text/json/base64 मोड में JSON एनवेलप मिलता है:",
+  "docs.res.d2":"stream मोड में कच्चा बॉडी मूल Content-Type के साथ स्ट्रीम होता है।",
+  "yes":"हाँ","no":"नहीं",
+  "set.eyebrow":"सेटिंग्स","set.title":"कॉन्फ़िगरेशन","set.sub":"अपनी प्राथमिकताएँ सेट करें।",
+  "set.general":"सामान्य","set.timeout":"डिफ़ॉल्ट टाइमआउट (ms)","set.timeout.sub":"नए अनुरोधों पर लागू",
+  "set.followredir":"रीडायरेक्ट का पालन","set.followredir.sub":"3xx स्वचालित रूप से",
+  "set.history":"इतिहास सहेजें","set.history.sub":"हाल के अनुरोध स्थानीय रूप से",
+  "set.batchdelay":"बैच विलंब (ms)","set.batchdelay.sub":"बैच अनुरोधों के बीच अंतर",
+  "set.dark":"रूप","set.theme":"थीम","set.theme.sub":"सिस्टम का अनुसरण करता है",
+  "set.admin":"एडमिन एक्सेस","set.admin.desc":"प्रॉक्सी सुरक्षा के लिए वैकल्पिक API टोकन सेट करें।",
+  "set.username":"उपयोगकर्ता","set.password":"पासवर्ड","set.login":"साइन इन","set.logout":"साइन आउट","set.locked":"लॉगिन अस्थायी रूप से लॉक।",
+  "set.apikey":"API टोकन (वैकल्पिक)","set.apikey.hint":"स्थानीय रूप से सहेजा गया।",
+  "footer.note":"Cloudflare fetch द्वारा संचालित तेज़ सर्वरलेस एज प्रॉक्सी गेटवे।","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"अमान्य क्रेडेंशियल।","login.ok":"एडमिन के रूप में साइन इन।"
+});
+
+// ---- Français ----
+Object.assign(STRINGS.fr, {
+  "hero.badge":"Proxy Edge en ligne","hero.title":"Rapide, flexible","hero.title2":"Proxy Edge","hero.title3":"propulsé par Cloudflare",
+  "hero.sub":"NebulaProxy est une passerelle proxy edge sans serveur. Récupérez des API sans CORS, streamez du contenu binaire et envoyez des en-têtes personnalisés.",
+  "hero.play":"Ouvrir Playground","hero.docs":"Lire la documentation","hero.live":"Contournement CORS","hero.cookies":"Cookies et en-têtes",
+  "nav.regions":"Cloudflare Edge","nav.home":"Accueil","nav.playground":"Playground","nav.docs":"Docs","nav.settings":"Paramètres",
+  "stat.requests":"Requêtes","stat.success":"Taux de réussite","stat.latency":"Latence moyenne","stat.regions":"Hôte Edge",
+  "feat.eyebrow":"Pourquoi NebulaProxy","feat.title":"Tout ce qu'il faut d'un Proxy Edge","feat.sub":"Un seul endpoint pour contourner CORS, streamer du binaire et gérer les en-têtes.",
+  "feat.f1.t":"Contournement CORS","feat.f1.d":"Récupérez toute API sans barrières CORS.",
+  "feat.f2.t":"Routage edge global","feat.f2.d":"Le trafic passe par le réseau edge de plus de 300 villes Cloudflare.",
+  "feat.f3.t":"Cookies et en-têtes","feat.f3.d":"Envoyez en-têtes et cookies directement à la cible.",
+  "feat.f4.t":"Streaming binaire","feat.f4.d":"Streamez vidéo, audio et fichiers sans tout mettre en mémoire.",
+  "feat.f5.t":"Détection de format","feat.f5.d":"Analyse JSON et encodage Base64 par blocs.",
+  "feat.f6.t":"Tout client HTTP","feat.f6.d":"cURL, Python, Node.js ou le Playground. Sans SDK.",
+  "pg.eyebrow":"Playground","pg.title":"Tester le proxy en direct","pg.sub":"Envoyez une requête et inspectez la réponse.",
+  "pg.single":"Requête unique","pg.batchtab":"Mode lot","pg.shortcuts":"(Ctrl+Entrée Envoyer · Ctrl+K URL)",
+  "pg.target":"URL cible","pg.method":"Méthode","pg.mode":"Mode de réponse","pg.headers":"En-têtes","pg.cookies":"Cookies",
+  "pg.body":"Corps (JSON ou texte)","pg.timeout":"Délai (ms)","pg.follow":"Suivre les redirections",
+  "pg.send":"Envoyer","pg.clear":"Effacer","pg.idle":"Prêt","pg.sending":"Envoi…",
+  "pg.proxymode":"Mode proxy","pg.proxy.direct":"Direct (via Edge)","pg.proxy.hint":"Toutes les requêtes passent par l'edge Worker Cloudflare.",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.cookies.ph":"session=abc123","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"Choisir un preset...","preset.save":"Enregistrer","preset.delete":"Supprimer",
+  "batch.count":"Nombre de requêtes","batch.send":"Lancer le lot","batch.downloadall":"Tout télécharger","batch.summary":"{n} requêtes terminées","batch.avg":"Latence moyenne",
+  "docs.eyebrow":"Documentation","docs.title":"Référence API","docs.sub":"Tout pour intégrer NebulaProxy.",
+  "docs.baseurl.t":"URL de base","docs.baseurl.d":"Tous les appels vont à l'URL de base de votre Worker.",
+  "docs.quick.t":"Démarrage rapide","docs.quick.d":"Récupérez une URL depuis le terminal :","docs.quick.d2":"POST avec corps et en-têtes :",
+  "docs.endpoints":"Endpoints","docs.method":"Méthode","docs.endpoint":"Endpoint","docs.description":"Description",
+  "docs.e.proxy":"Récupérer une URL cible","docs.e.health":"Vérification de santé","docs.e.version":"Information de version",
+  "docs.e.stats":"Statistiques globales","docs.e.login":"Connexion admin (limitée)",
+  "docs.params":"Paramètres","docs.field":"Champ","docs.type":"Type","docs.req":"Requis","docs.desc2":"Description",
+  "docs.p.url":"URL cible","docs.p.method":"Méthode HTTP","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"En-têtes","docs.p.cookies":"Cookies","docs.p.body":"Corps (POST/PUT/PATCH)",
+  "docs.p.bodyb64":"Corps Base64","docs.p.timeout":"Délai (défaut 30000)","docs.p.follow":"Redirections (défaut true)","docs.p.token":"Jeton API",
+  "docs.res":"Enveloppe de réponse","docs.res.d":"En mode text/json/base64, JSON :",
+  "docs.res.d2":"En mode stream, le corps brut est transmis avec le Content-Type d'origine.",
+  "yes":"oui","no":"non",
+  "set.eyebrow":"Paramètres","set.title":"Configuration","set.sub":"Réglez vos préférences.",
+  "set.general":"Général","set.timeout":"Délai par défaut (ms)","set.timeout.sub":"Appliqué aux nouvelles requêtes",
+  "set.followredir":"Suivre les redirections","set.followredir.sub":"Suivre les 3xx",
+  "set.history":"Enregistrer l'historique","set.history.sub":"Stocker localement",
+  "set.batchdelay":"Délai de lot (ms)","set.batchdelay.sub":"Écart entre requêtes",
+  "set.dark":"Apparence","set.theme":"Thème","set.theme.sub":"Suit le système par défaut",
+  "set.admin":"Accès admin","set.admin.desc":"Définissez le jeton API optionnel.",
+  "set.username":"Utilisateur","set.password":"Mot de passe","set.login":"Connexion","set.logout":"Déconnexion","set.locked":"Connexion temporairement verrouillée.",
+  "set.apikey":"Jeton API (optionnel)","set.apikey.hint":"Envoyé en Authorization: Bearer.",
+  "footer.note":"Passerelle proxy edge sans serveur propulsée par Cloudflare fetch.","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"Identifiants invalides.","login.ok":"Connecté en tant qu'admin."
+});
+
+// ---- العربية ----
+Object.assign(STRINGS.ar, {
+  "hero.badge":"البروكسي الحافي متصل","hero.title":"سريع ومرن","hero.title2":"بروكسي الحافة","hero.title3":"يعمل بواسطة Cloudflare",
+  "hero.sub":"NebulaProxy بوابة بروكسي حافية بدون خادم. اجلب واجهات API دون CORS وبث الوسائط الثنائية من حافة Cloudflare.",
+  "hero.play":"افتح الملعب","hero.docs":"اقرأ التوثيق","hero.live":"تجاوز CORS","hero.cookies":"الكوكيز والترويسات",
+  "nav.regions":"حافة Cloudflare","nav.home":"الرئيسية","nav.playground":"الملعب","nav.docs":"التوثيق","nav.settings":"الإعدادات",
+  "stat.requests":"الطلبات","stat.success":"معدل النجاح","stat.latency":"متوسط زمن الاستجابة","stat.regions":"مضيف الحافة",
+  "feat.eyebrow":"لماذا NebulaProxy","feat.title":"كل ما تحتاجه من بروكسي حافة","feat.sub":"نقطة نهاية واحدة لتجاوز CORS وبث ثنائي وترويسات مخصصة.",
+  "feat.f1.t":"تجاوز CORS","feat.f1.d":"اجلب أي API دون عوائق CORS.",
+  "feat.f2.t":"توجيه حافة عالمي","feat.f2.d":"يمر المرور عبر شبكة حافة Cloudflare في 300+ مدينة.",
+  "feat.f3.t":"الكوكيز والترويسات","feat.f3.d":"أرسل ترويسات وكوكيز مخصصة إلى الهدف.",
+  "feat.f4.t":"بث ثنائي مباشر","feat.f4.d":"بث الفيديو والصوت دون تخزين كامل في الذاكرة.",
+  "feat.f5.t":"كشف ذكي للصيغة","feat.f5.d":"تحليل JSON تلقائي وترميز Base64.",
+  "feat.f6.t":"أي عميل HTTP","feat.f6.d":"cURL أو Python أو Node.js أو الملعب. بدون SDK.",
+  "pg.eyebrow":"الملعب","pg.title":"اختبر البروكسي مباشرة","pg.sub":"أرسل طلبًا وافحص الاستجابة.",
+  "pg.single":"طلب واحد","pg.batchtab":"وضع الدفعات","pg.shortcuts":"(Ctrl+Enter إرسال · Ctrl+K URL)",
+  "pg.target":"URL الهدف","pg.method":"الطريقة","pg.mode":"وضع الاستجابة","pg.headers":"ترويسات مخصصة","pg.cookies":"كوكيز",
+  "pg.body":"نص الطلب","pg.timeout":"المهلة (ms)","pg.follow":"اتبع إعادة التوجيه",
+  "pg.send":"إرسال","pg.clear":"مسح","pg.idle":"جاهز","pg.sending":"جارٍ الإرسال…",
+  "pg.proxymode":"وضع البروكسي","pg.proxy.direct":"مباشر (عبر الحافة)","pg.proxy.hint":"تمر جميع الطلبات عبر حافة Cloudflare Worker.",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.cookies.ph":"session=abc123","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"اختر إعدادًا مسبقًا...","preset.save":"حفظ","preset.delete":"حذف",
+  "batch.count":"عدد الطلبات","batch.send":"تشغيل الدفعة","batch.downloadall":"تنزيل الكل","batch.summary":"{n} طلبًا مكتملًا","batch.avg":"متوسط زمن الاستجابة",
+  "docs.eyebrow":"التوثيق","docs.title":"مرجع API","docs.sub":"كل ما تحتاجه لدمج NebulaProxy.",
+  "docs.baseurl.t":"URL الأساس","docs.baseurl.d":"تذهب جميع الاستدعاءات إلى URL أساس Worker لديك.",
+  "docs.quick.t":"بداية سريعة","docs.quick.d":"اجلب أي URL من الطرفية:","docs.quick.d2":"POST مع نص وترويسات:",
+  "docs.endpoints":"النقاط النهائية","docs.method":"الطريقة","docs.endpoint":"النقطة","docs.description":"الوصف",
+  "docs.e.proxy":"جلب URL هدف","docs.e.health":"فحص الصحة","docs.e.version":"معلومات الإصدار",
+  "docs.e.stats":"إحصائيات عامة","docs.e.login":"تسجيل دخول المشرف (محدود)",
+  "docs.params":"معاملات الطلب","docs.field":"الحقل","docs.type":"النوع","docs.req":"مطلوب","docs.desc2":"الوصف",
+  "docs.p.url":"URL الهدف","docs.p.method":"طريقة HTTP","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"ترويسات","docs.p.cookies":"كوكيز","docs.p.body":"النص",
+  "docs.p.bodyb64":"نص Base64","docs.p.timeout":"المهلة (الافتراضي 30000)","docs.p.follow":"إعادة التوجيه (الافتراضي true)","docs.p.token":"رمز API",
+  "docs.res":"غلاف الاستجابة","docs.res.d":"في وضع text/json/base64:",
+  "docs.res.d2":"في وضع stream يُبث النص الخام بنوع المحتوى الأصلي.",
+  "yes":"نعم","no":"لا",
+  "set.eyebrow":"الإعدادات","set.title":"التهيئة","set.sub":"اضبط تفضيلاتك.",
+  "set.general":"عام","set.timeout":"المهلة الافتراضية (ms)","set.timeout.sub":"تُطبق على الطلبات الجديدة",
+  "set.followredir":"اتباع إعادة التوجيه","set.followredir.sub":"اتبع 3xx تلقائيًا",
+  "set.history":"حفظ السجل","set.history.sub":"تخزين محلي",
+  "set.batchdelay":"تأخير الدفعات (ms)","set.batchdelay.sub":"الفارق بين الطلبات",
+  "set.dark":"المظهر","set.theme":"السمة","set.theme.sub":"تتبع النظام افتراضيًا",
+  "set.admin":"وصول المشرف","set.admin.desc":"حدد رمز API اختياريًا.",
+  "set.username":"اسم المستخدم","set.password":"كلمة المرور","set.login":"تسجيل الدخول","set.logout":"تسجيل الخروج","set.locked":"تم قفل تسجيل الدخول مؤقتًا.",
+  "set.apikey":"رمز API (اختياري)","set.apikey.hint":"يُرسل كـ Authorization: Bearer.",
+  "footer.note":"بوابة بروكسي حافية سريعة بدون خادم تعمل بواسطة Cloudflare fetch.","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"بيانات غير صالحة.","login.ok":"تم تسجيل الدخول كمشرف."
+});
+
+// ---- Русский ----
+Object.assign(STRINGS.ru, {
+  "hero.badge":"Edge-прокси в сети","hero.title":"Быстрый, гибкий","hero.title2":"Edge-прокси","hero.title3":"на базе Cloudflare",
+  "hero.sub":"NebulaProxy — бессерверный edge-прокси шлюз. Получайте API без CORS, стримьте бинарные медиа с edge Cloudflare.",
+  "hero.play":"Открыть Playground","hero.docs":"Читать документацию","hero.live":"Обход CORS","hero.cookies":"Куки и заголовки",
+  "nav.regions":"Cloudflare Edge","nav.home":"Главная","nav.playground":"Playground","nav.docs":"Документация","nav.settings":"Настройки",
+  "stat.requests":"Запросы","stat.success":"Успешность","stat.latency":"Средняя задержка","stat.regions":"Edge-хост",
+  "feat.eyebrow":"Почему NebulaProxy","feat.title":"Всё, что нужно от Edge-прокси","feat.sub":"Один эндпоинт для обхода CORS, бинарного стриминга и кастомных заголовков.",
+  "feat.f1.t":"Обход CORS","feat.f1.d":"Получайте любой API без барьеров CORS.",
+  "feat.f2.t":"Глобальная маршрутизация","feat.f2.d":"Трафик идёт через edge-сеть Cloudflare в 300+ городах.",
+  "feat.f3.t":"Куки и заголовки","feat.f3.d":"Передавайте заголовки и куки прямо цели.",
+  "feat.f4.t":"Бинарный стриминг","feat.f4.d":"Стримьте видео, аудио и файлы без буферизации в памяти.",
+  "feat.f5.t":"Умное определение формата","feat.f5.d":"Авто-парсинг JSON и блочное кодирование Base64.",
+  "feat.f6.t":"Любой HTTP-клиент","feat.f6.d":"cURL, Python, Node.js или Playground. Без SDK.",
+  "pg.eyebrow":"Playground","pg.title":"Тестируйте прокси вживую","pg.sub":"Отправьте запрос и посмотрите ответ.",
+  "pg.single":"Один запрос","pg.batchtab":"Пакетный режим","pg.shortcuts":"(Ctrl+Enter Отправить · Ctrl+K URL)",
+  "pg.target":"Целевой URL","pg.method":"Метод","pg.mode":"Режим ответа","pg.headers":"Заголовки","pg.cookies":"Куки",
+  "pg.body":"Тело запроса","pg.timeout":"Таймаут (мс)","pg.follow":"Следовать редиректам",
+  "pg.send":"Отправить","pg.clear":"Очистить","pg.idle":"Готово","pg.sending":"Отправка…",
+  "pg.proxymode":"Режим прокси","pg.proxy.direct":"Прямой (через Edge)","pg.proxy.hint":"Все запросы идут через edge Worker Cloudflare.",
+  "pg.target.ph":"https://api.ipify.org?format=json","pg.cookies.ph":"session=abc123","pg.body.ph":"{\"key\":\"value\"}",
+  "preset.choose":"Выбрать пресет...","preset.save":"Сохранить","preset.delete":"Удалить",
+  "batch.count":"Количество запросов","batch.send":"Запустить пакет","batch.downloadall":"Скачать всё","batch.summary":"{n} запросов завершено","batch.avg":"Средняя задержка",
+  "docs.eyebrow":"Документация","docs.title":"Справка API","docs.sub":"Всё для интеграции NebulaProxy.",
+  "docs.baseurl.t":"Базовый URL","docs.baseurl.d":"Все вызовы идут на базовый URL вашего Worker.",
+  "docs.quick.t":"Быстрый старт","docs.quick.d":"Получите любой URL из терминала:","docs.quick.d2":"POST с телом и заголовками:",
+  "docs.endpoints":"Эндпоинты","docs.method":"Метод","docs.endpoint":"Эндпоинт","docs.description":"Описание",
+  "docs.e.proxy":"Получить целевой URL","docs.e.health":"Проверка здоровья","docs.e.version":"Информация о версии",
+  "docs.e.stats":"Глобальная статистика","docs.e.login":"Вход админа (с лимитом)",
+  "docs.params":"Параметры запроса","docs.field":"Поле","docs.type":"Тип","docs.req":"Обязательно","docs.desc2":"Описание",
+  "docs.p.url":"Целевой URL","docs.p.method":"HTTP-метод","docs.p.mode":"auto | text | json | base64 | stream",
+  "docs.p.headers":"Заголовки","docs.p.cookies":"Куки","docs.p.body":"Тело (POST/PUT/PATCH)",
+  "docs.p.bodyb64":"Тело Base64","docs.p.timeout":"Таймаут (по умолч. 30000)","docs.p.follow":"Редиректы (по умолч. true)","docs.p.token":"API-токен",
+  "docs.res":"Обёртка ответа","docs.res.d":"В режиме text/json/base64:",
+  "docs.res.d2":"В режиме stream сырое тело передаётся с исходным Content-Type.",
+  "yes":"да","no":"нет",
+  "set.eyebrow":"Настройки","set.title":"Конфигурация","set.sub":"Настройте параметры.",
+  "set.general":"Общие","set.timeout":"Таймаут (мс)","set.timeout.sub":"Применяется к новым запросам",
+  "set.followredir":"Следовать редиректам","set.followredir.sub":"Следовать 3xx",
+  "set.history":"Сохранять историю","set.history.sub":"Локальное хранение",
+  "set.batchdelay":"Задержка пакета (мс)","set.batchdelay.sub":"Пауза между запросами",
+  "set.dark":"Внешний вид","set.theme":"Тема","set.theme.sub":"Следует за системой",
+  "set.admin":"Доступ админа","set.admin.desc":"Задайте опциональный API-токен.",
+  "set.username":"Пользователь","set.password":"Пароль","set.login":"Войти","set.logout":"Выйти","set.locked":"Вход временно заблокирован.",
+  "set.apikey":"API-токен (опционально)","set.apikey.hint":"Отправляется как Authorization: Bearer.",
+  "footer.note":"Быстрый бессерверный edge-прокси шлюз на Cloudflare fetch.","footer.tag":"NebulaProxy · v1.1.0",
+  "login.err":"Неверные учётные данные.","login.ok":"Вход выполнен как админ."
+});
+
+/* i18n runtime */
+let currentLang = localStorage.getItem("nebula_lang") || "en";
+
+function resolveString(key){
+  return STRINGS[currentLang]?.[key] ?? STRINGS.en[key] ?? key;
+}
 
 function applyLang(){
-  const L = STRINGS[CURRENT_LANG] || STRINGS.en;
-  const rtl = I18N.find(i=>i.code===CURRENT_LANG)?.rtl;
-  document.documentElement.lang = CURRENT_LANG;
-  document.documentElement.dir = rtl ? "rtl" : "ltr";
-  document.getElementById("langLabel").textContent = I18N.find(i=>i.code===CURRENT_LANG)?.label || "English";
+  const lang = I18N.find(l=>l.code===currentLang);
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = (lang && lang.rtl) ? "rtl" : "ltr";
+
+  // Static text
   $$("[data-i18n]").forEach(el=>{
-    const k = el.getAttribute("data-i18n");
-    if(L[k]!==undefined) el.textContent = L[k];
+    el.textContent = resolveString(el.getAttribute("data-i18n"));
   });
+
+  // Placeholders
+  $$("[data-i18n-ph]").forEach(el=>{
+    const k = el.getAttribute("data-i18n-ph");
+    const v = STRINGS[currentLang]?.[k] ?? STRINGS.en[k];
+    if(v) el.setAttribute("placeholder", v);
+  });
+
+  // Language label
+  const lbl = document.getElementById("langLabel");
+  if(lbl) lbl.textContent = (lang && lang.label) || "English";
+
+  // Re-render dynamic lists that may contain translated text
+  renderLangMenu();
+  renderPresets();
+  renderBatchCountLabel();
+  refreshStatsLabels();
 }
 
 function renderLangMenu(){
@@ -852,886 +1064,780 @@ function renderLangMenu(){
   menu.innerHTML = "";
   I18N.forEach(l=>{
     const b = document.createElement("button");
-    b.className = "lang-item" + (l.code===CURRENT_LANG?" active":"");
+    b.className = "lang-item" + (l.code===currentLang ? " active" : "");
     b.textContent = l.label;
-    b.addEventListener("click",()=>{
-      CURRENT_LANG = l.code;
-      localStorage.setItem("npx_lang", l.code);
-      applyLang(); renderLangMenu();
+    b.addEventListener("click", ()=>{
+      currentLang = l.code;
+      localStorage.setItem("nebula_lang", l.code);
+      applyLang();
       document.getElementById("langWrap").classList.remove("open");
     });
     menu.appendChild(b);
   });
 }
 
-document.getElementById("langBtn").addEventListener("click",e=>{
-  e.stopPropagation();
-  document.getElementById("langWrap").classList.toggle("open");
-});
-document.addEventListener("click",()=>document.getElementById("langWrap").classList.remove("open"));
-
 /* ==================== Navigation ==================== */
-function navigate(tab){
+function navigate(page){
   $$(".page").forEach(p=>p.classList.remove("active"));
-  const page = document.getElementById("page-"+tab);
-  if(page) page.classList.add("active");
-  $$(".tab").forEach(t=>t.classList.toggle("active", t.getAttribute("data-nav")===tab));
-  window.scrollTo({top:0,behavior:"smooth"});
-  if(tab === "history") renderHistory();
-  if(tab === "settings") refreshAdminUI();
+  const el = document.getElementById("page-" + page);
+  if(el) el.classList.add("active");
+  $$(".tab").forEach(t=>t.classList.toggle("active", t.getAttribute("data-nav")===page));
+  if(page === "home") refreshStats();
 }
-
 $$("[data-nav]").forEach(el=>{
-  el.addEventListener("click",e=>{
+  el.addEventListener("click", (e)=>{
     e.preventDefault();
-    navigate(el.getAttribute("data-nav"));
+    const page = el.getAttribute("data-nav");
+    if(page) navigate(page);
   });
 });
 
-/* ==================== Keyboard Shortcuts ==================== */
-document.addEventListener("keydown", e=>{
-  if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
-    e.preventDefault();
-    document.getElementById("pg-send").click();
-  } else if((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")){
-    e.preventDefault();
-    navigate("playground");
-    const u = document.getElementById("pg-url");
-    u.focus(); u.select();
-  } else if((e.ctrlKey || e.metaKey) && (e.key === "h" || e.key === "H")){
-    e.preventDefault();
-    navigate("history");
-  } else if((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")){
-    e.preventDefault();
-    navigate("settings");
+/* ==================== Theme ==================== */
+const THEME_KEY = "nebula_theme"; // "auto" | "dark" | "light"
+function getTheme(){
+  return localStorage.getItem(THEME_KEY) || "auto";
+}
+function applyTheme(){
+  let t = getTheme();
+  let resolved = t;
+  if(t === "auto"){
+    resolved = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   }
+  document.documentElement.setAttribute("data-theme", resolved);
+  const btn = document.getElementById("themeBtn");
+  if(btn) btn.textContent = resolved === "dark" ? "🌙" : "☀️";
+  // sync pills
+  $$("#theme-pills .pill").forEach(p=>{
+    p.classList.toggle("active", p.getAttribute("data-theme-choice")===t);
+  });
+}
+document.getElementById("themeBtn").addEventListener("click", ()=>{
+  const cur = getTheme();
+  let resolved = document.documentElement.getAttribute("data-theme");
+  // simple cycle: dark <-> light
+  const nextResolved = resolved === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, nextResolved);
+  applyTheme();
 });
-
-/* ==================== Theme Toggle ==================== */
-function applyTheme(theme){
-  const isLight = theme === "light";
-  document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
-  const el = document.getElementById("set-dark");
-  if(el) el.checked = !isLight;
-  const tb = document.getElementById("themeBtn");
-  if(tb) tb.textContent = isLight ? "☀️" : "🌙";
-}
-
-function initTheme(){
-  let saved = localStorage.getItem("nebula_theme");
-  if(!saved){
-    saved = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-  }
-  applyTheme(saved);
-}
-
-document.getElementById("themeBtn").addEventListener("click",()=>{
-  const current = document.documentElement.getAttribute("data-theme") || "dark";
-  const next = current === "light" ? "dark" : "light";
-  localStorage.setItem("nebula_theme", next);
-  applyTheme(next);
-});
-
-/* ==================== Settings & Storage ==================== */
-function getSettings(){
-  return {
-    timeout: parseInt(localStorage.getItem("nebula_timeout")||"30000",10),
-    mode: localStorage.getItem("nebula_mode") || "auto",
-    follow: localStorage.getItem("nebula_follow") !== "false",
-    autohist: localStorage.getItem("nebula_autohist") !== "false",
-    maxhist: parseInt(localStorage.getItem("nebula_maxhist")||"50",10),
-    batchdelay: parseInt(localStorage.getItem("nebula_batchdelay")||"500",10),
-  };
-}
-
-function loadSettingsUI(){
-  const s = getSettings();
-  document.getElementById("set-timeout").value = s.timeout;
-  document.getElementById("set-mode").value = s.mode;
-  document.getElementById("set-follow").checked = s.follow;
-  document.getElementById("set-autohist").checked = s.autohist;
-  document.getElementById("set-maxhist").value = s.maxhist;
-  document.getElementById("set-batchdelay").value = s.batchdelay;
-  document.getElementById("set-dark").checked = document.documentElement.getAttribute("data-theme") !== "light";
-}
-
-["set-timeout","set-mode","set-follow","set-autohist","set-maxhist","set-batchdelay","set-dark"].forEach(id=>{
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.addEventListener("change",()=>{
-    localStorage.setItem("nebula_timeout", document.getElementById("set-timeout").value);
-    localStorage.setItem("nebula_mode", document.getElementById("set-mode").value);
-    localStorage.setItem("nebula_follow", document.getElementById("set-follow").checked);
-    localStorage.setItem("nebula_autohist", document.getElementById("set-autohist").checked);
-    localStorage.setItem("nebula_maxhist", document.getElementById("set-maxhist").value);
-    localStorage.setItem("nebula_batchdelay", document.getElementById("set-batchdelay").value);
-    const darkChecked = document.getElementById("set-dark").checked;
-    const theme = darkChecked ? "dark" : "light";
-    localStorage.setItem("nebula_theme", theme);
-    applyTheme(theme);
-    showToast("Settings updated", "ok");
+$$("#theme-pills .pill").forEach(p=>{
+  p.addEventListener("click", ()=>{
+    localStorage.setItem(THEME_KEY, p.getAttribute("data-theme-choice"));
+    applyTheme();
   });
 });
-
-/* ==================== Auth & API Key ==================== */
-function getApiKey(){ return (localStorage.getItem("nebula_api_key") || "").trim(); }
-
-function isAdmin(){ return !!localStorage.getItem("npx_admin"); }
-
-function refreshAdminUI(){
-  const admin = isAdmin();
-  const form = document.getElementById("login-form");
-  const logoutBtn = document.getElementById("admin-logout-btn");
-  const statusTxt = document.getElementById("admin-status-text");
-  const keyInput = document.getElementById("set-apikey");
-
-  if(admin){
-    form.style.display = "none";
-    logoutBtn.style.display = "block";
-    statusTxt.textContent = "✅ Signed in as " + localStorage.getItem("npx_admin") + ". You have permission to manage API keys.";
-    keyInput.disabled = false;
-  } else {
-    form.style.display = "flex";
-    logoutBtn.style.display = "none";
-    statusTxt.textContent = "Sign in as admin to configure or modify the API key.";
-    keyInput.disabled = true;
-  }
-  refreshApiKeyUI();
-}
-
-function refreshApiKeyUI(){
-  const key = getApiKey();
-  const input = document.getElementById("set-apikey");
-  const status = document.getElementById("key-status");
-  input.value = key;
-  if(key){
-    status.textContent = "🔐 API key active: Requests automatically send 'Authorization: Bearer " + key.slice(0,4) + "...'";
-    status.style.color = "var(--accent-ok)";
-  } else {
-    status.textContent = "🔓 No API key configured: Requests are sent unauthenticated (public mode).";
-    status.style.color = "var(--text-dim)";
-  }
-}
-
-document.getElementById("btn-save-key").addEventListener("click",()=>{
-  if(!isAdmin()){
-    showToast("Admin access required — sign in first.", "warn");
-    return;
-  }
-  const val = document.getElementById("set-apikey").value.trim();
-  if(val){
-    localStorage.setItem("nebula_api_key", val);
-    showToast("API key saved", "ok");
-  } else {
-    localStorage.removeItem("nebula_api_key");
-    showToast("API key removed", "ok");
-  }
-  refreshApiKeyUI();
+window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", ()=>{
+  if(getTheme()==="auto") applyTheme();
 });
 
-document.getElementById("btn-clear-key").addEventListener("click",()=>{
-  if(!isAdmin()){
-    showToast("Admin access required — sign in first.", "warn");
-    return;
-  }
-  localStorage.removeItem("nebula_api_key");
-  document.getElementById("set-apikey").value = "";
-  refreshApiKeyUI();
-  showToast("API key cleared", "ok");
-});
-
-document.getElementById("btn-test-key").addEventListener("click", async()=>{
-  const key = document.getElementById("set-apikey").value.trim();
-  const status = document.getElementById("key-status");
-  status.textContent = "Testing key with /api/health...";
+/* ==================== Stats (real) ==================== */
+const STATS_KEY = "nebula_session_stats";
+function getSessionStats(){
   try{
-    const h = {};
-    if(key) h["Authorization"] = "Bearer " + key;
-    const res = await fetch("/api/health", { headers: h });
+    const raw = localStorage.getItem(STATS_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(_){}
+  return { requests:0, successes:0, latencySum:0 };
+}
+function saveSessionStats(s){
+  localStorage.setItem(STATS_KEY, JSON.stringify(s));
+}
+function recordRequest(success, latencyMs){
+  const s = getSessionStats();
+  s.requests++;
+  if(success) s.successes++;
+  s.latencySum += latencyMs;
+  saveSessionStats(s);
+  refreshStats();
+}
+
+// Fetch global (worker in-memory) + local session stats for the dashboard.
+async function refreshStats(){
+  const session = getSessionStats();
+  const reqEl = document.getElementById("stat-req");
+  const okEl = document.getElementById("stat-ok");
+  const latEl = document.getElementById("stat-lat");
+
+  // Local session values always shown (fallback baseline)
+  let requests = session.requests;
+  let successRate = session.requests > 0 ? Math.round((session.successes / session.requests) * 100) : null;
+  let avgLat = session.requests > 0 ? Math.round(session.latencySum / session.requests) : null;
+
+  // Merge with worker global stats if reachable
+  try{
+    const res = await fetch("/api/stats");
     if(res.ok){
-      status.textContent = "✅ Success: API reachable" + (key ? " and key accepted!" : " (no auth required)");
-      status.style.color = "var(--accent-ok)";
-    } else if(res.status === 401){
-      status.textContent = "❌ 401: Invalid API key!";
-      status.style.color = "var(--accent-bad)";
-    } else {
-      status.textContent = "⚠️ Response status: " + res.status;
-      status.style.color = "var(--accent-warn)";
+      const g = await res.json();
+      if(typeof g.requests === "number" && g.requests > 0){
+        requests = g.requests;
+        successRate = (typeof g.success_rate === "number") ? g.success_rate : null;
+        avgLat = (typeof g.avg_latency_ms === "number" && g.avg_latency_ms > 0) ? g.avg_latency_ms : avgLat;
+      }
     }
-  }catch(e){
-    status.textContent = "❌ Test failed: " + e.message;
-    status.style.color = "var(--accent-bad)";
+  }catch(_){ /* offline; keep session stats */ }
+
+  if(reqEl) reqEl.textContent = requests;
+  if(okEl) okEl.textContent = (successRate === null) ? "—" : successRate + "%";
+  if(latEl) latEl.textContent = (avgLat === null) ? "—" : fmtLatency(avgLat);
+
+  document.getElementById("stat-req-sub").textContent = session.requests > 0 ? (session.requests + " this session") : "—";
+  document.getElementById("stat-ok-sub").textContent = session.requests > 0 ? (session.successes + " success") : "—";
+}
+
+function refreshStatsLabels(){
+  const el = document.getElementById("stat-req-sub");
+  // placeholder strings are not i18n'd; keep as-is
+}
+
+/* ==================== Playground / Batch ==================== */
+const PGMODE = { single:"single", batch:"batch" };
+let currentMode = PGMODE.single;
+
+function setMode(mode){
+  currentMode = mode;
+  document.getElementById("modeSingleTab").classList.toggle("active", mode===PGMODE.single);
+  document.getElementById("modeBatchTab").classList.toggle("active", mode===PGMODE.batch);
+  document.getElementById("batch-count-field").style.display = (mode===PGMODE.batch) ? "" : "none";
+  const sendSpan = document.querySelector("#pg-send span");
+  if(sendSpan) sendSpan.textContent = mode===PGMODE.batch ? resolveString("batch.send") : resolveString("pg.send");
+}
+document.getElementById("modeSingleTab").addEventListener("click", ()=>setMode(PGMODE.single));
+document.getElementById("modeBatchTab").addEventListener("click", ()=>setMode(PGMODE.batch));
+
+function renderBatchCountLabel(){
+  const lbl = document.querySelector("#batch-count-field label");
+  if(lbl) lbl.textContent = resolveString("batch.count");
+}
+
+// Gather request config from the form
+function gatherConfig(){
+  const url = document.getElementById("pg-url").value.trim();
+  const method = document.getElementById("pg-method").value;
+  const mode = document.getElementById("pg-mode").value;
+  const headersRaw = document.getElementById("pg-headers").value.trim();
+  const cookies = document.getElementById("pg-cookies").value.trim();
+  const body = document.getElementById("pg-body").value;
+  const timeout = parseInt(document.getElementById("pg-timeout").value, 10) || 30000;
+  const follow = document.getElementById("pg-follow").value === "true";
+  const apiKey = localStorage.getItem("nebula_api_key") || "";
+
+  let headers = {};
+  if(headersRaw){
+    try{ headers = JSON.parse(headersRaw); }catch(_){ headers = {}; }
   }
+  return { url, method, mode, headers, cookies, body, timeout, follow, apiKey };
+}
+
+async function proxyFetch(cfg){
+  const qs = new URLSearchParams({ url: cfg.url });
+  if(cfg.method && cfg.method !== "GET") qs.set("method", cfg.method);
+  if(cfg.mode && cfg.mode !== "auto") qs.set("mode", cfg.mode);
+  if(cfg.timeout) qs.set("timeout", String(cfg.timeout));
+  qs.set("follow_redirects", cfg.follow ? "true" : "false");
+  if(cfg.headers && Object.keys(cfg.headers).length) qs.set("headers", JSON.stringify(cfg.headers));
+  if(cfg.cookies) qs.set("cookies", cfg.cookies);
+
+  const fetchHeaders = {};
+  if(cfg.apiKey) fetchHeaders["Authorization"] = "Bearer " + cfg.apiKey;
+
+  let target = "/api/proxy?" + qs.toString();
+  let init = { method: cfg.method, headers: fetchHeaders };
+
+  if(cfg.method === "POST" || cfg.method === "PUT" || cfg.method === "PATCH"){
+    if(cfg.body){
+      init.body = cfg.body;
+      init.headers["Content-Type"] = "text/plain";
+    } else {
+      // POST with no body: pass config as JSON (like docs example)
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify({ url: cfg.url, method: cfg.method, mode: cfg.mode, timeout: cfg.timeout, follow_redirects: cfg.follow });
+    }
+  }
+
+  return await fetch(target, init);
+}
+
+function interpretResponse(res, json){
+  // For single mode, decide how to render based on content-type / mode
+}
+
+async function renderSingleResult(res){
+  const resultEl = document.getElementById("pg-result");
+  const statusEl = document.getElementById("pg-r-status");
+  const elapsedEl = document.getElementById("pg-r-elapsed");
+  const sizeEl = document.getElementById("pg-r-size");
+  const hostEl = document.getElementById("pg-r-host");
+  const attemptEl = document.getElementById("pg-r-attempt");
+  const bodyEl = document.getElementById("pg-r-body");
+
+  const ct = res.headers.get("content-type") || "";
+
+  // If the worker returned a JSON envelope
+  if(ct.includes("application/json")){
+    let data;
+    try{ data = await res.json(); }catch(e){ data = null; }
+    if(data && typeof data === "object" && ("status" in data) && ("data" in data || "data_b64" in data)){
+      // envelope
+      statusEl.textContent = "HTTP " + data.status;
+      statusEl.className = "chip " + (data.status >= 200 && data.status < 400 ? "ok" : "err");
+      elapsedEl.textContent = data.elapsed_ms + " ms";
+      sizeEl.textContent = formatBytes(data.size_bytes);
+      hostEl.textContent = data.proxy_host || "edge";
+      attemptEl.textContent = "attempt " + data.attempt;
+      renderEnvelopeBody(data, bodyEl);
+      recordRequest(data.status >= 200 && data.status < 400, data.elapsed_ms || 0);
+      return;
+    }
+    if(data){
+      // raw JSON response (not envelope)
+      statusEl.textContent = "HTTP " + res.status;
+      statusEl.className = "chip " + (res.ok ? "ok" : "err");
+      bodyEl.textContent = JSON.stringify(data, null, 2);
+      bodyEl.className = "result-body";
+      const pre = document.createElement("pre");
+      pre.className = "code json";
+      pre.textContent = JSON.stringify(data, null, 2);
+      bodyEl.innerHTML = "";
+      bodyEl.appendChild(pre);
+      return;
+    }
+  }
+
+  // Binary content types -> media render
+  if(isBinaryType(ct)){
+    const blob = await res.blob();
+    statusEl.textContent = "HTTP " + res.status;
+    statusEl.className = "chip " + (res.ok ? "ok" : "err");
+    sizeEl.textContent = formatBytes(blob.size);
+    const objectUrl = URL.createObjectURL(blob);
+    bodyEl.innerHTML = "";
+    const media = renderMedia(objectUrl, ct, blob);
+    bodyEl.appendChild(media);
+    return;
+  }
+
+  // Fallback: text
+  const text = await res.text();
+  statusEl.textContent = "HTTP " + res.status;
+  statusEl.className = "chip " + (res.ok ? "ok" : "err");
+  bodyEl.innerHTML = "";
+  const pre = document.createElement("pre");
+  pre.className = "code";
+  pre.textContent = text;
+  bodyEl.appendChild(pre);
+}
+
+function isBinaryType(ct){
+  if(!ct) return false;
+  const lower = ct.toLowerCase();
+  return ["image/","video/","audio/","application/octet-stream","application/pdf","application/zip","font/"].some(p=>lower.startsWith(p));
+}
+
+function renderMedia(objectUrl, ct, blob){
+  const lower = ct.toLowerCase();
+  if(lower.startsWith("image/")){
+    const img = document.createElement("img");
+    img.src = objectUrl;
+    img.alt = "Proxied image";
+    return img;
+  }
+  if(lower.startsWith("video/")){
+    const v = document.createElement("video");
+    v.controls = true;
+    v.src = objectUrl;
+    return v;
+  }
+  if(lower.startsWith("audio/")){
+    const a = document.createElement("audio");
+    a.controls = true;
+    a.src = objectUrl;
+    return a;
+  }
+  // fallback: download link
+  const wrapper = document.createElement("div");
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = "download";
+  a.textContent = "⬇️ Download file (" + formatBytes(blob.size) + ")";
+  a.style.cssText = "display:inline-flex;gap:8px;align-items:center;color:var(--accent-hi);text-decoration:none;font-weight:600";
+  wrapper.appendChild(a);
+  return wrapper;
+}
+
+function renderEnvelopeBody(data, bodyEl){
+  bodyEl.innerHTML = "";
+  const ct = (data.content_type || "").toLowerCase();
+  const mode = data.mode || "";
+
+  // base64 binary content -> media
+  if(data.data_b64){
+    const binary = base64ToBlob(data.data_b64, ct);
+    const objectUrl = URL.createObjectURL(binary);
+    const media = renderMedia(objectUrl, ct, binary);
+    bodyEl.appendChild(media);
+    // also expose for download-all in batch
+    bodyEl._mediaBlob = binary;
+    bodyEl._mediaCt = ct;
+    return;
+  }
+
+  // JSON data -> pretty print if it parses
+  const raw = data.data;
+  if(typeof raw === "string"){
+    let parsed = null;
+    try{ parsed = JSON.parse(raw); }catch(_){}
+    if(parsed !== null && typeof parsed === "object"){
+      const pre = document.createElement("pre");
+      pre.className = "code json";
+      pre.textContent = JSON.stringify(parsed, null, 2);
+      bodyEl.appendChild(pre);
+    } else if(ct.includes("text/html")){
+      // render HTML in an iframe-like container (escaped for safety)
+      const pre = document.createElement("pre");
+      pre.className = "code";
+      pre.textContent = raw;
+      bodyEl.appendChild(pre);
+    } else {
+      const pre = document.createElement("pre");
+      pre.className = "code";
+      pre.textContent = raw;
+      bodyEl.appendChild(pre);
+    }
+  } else {
+    const pre = document.createElement("pre");
+    pre.className = "code";
+    pre.textContent = JSON.stringify(raw, null, 2);
+    bodyEl.appendChild(pre);
+  }
+}
+
+function base64ToBlob(b64, contentType){
+  const bin = atob(b64);
+  const len = bin.length;
+  const bytes = new Uint8Array(len);
+  for(let i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: contentType || "application/octet-stream" });
+}
+
+async function handleSend(){
+  const cfg = gatherConfig();
+  if(!cfg.url){
+    showToast("Please enter a target URL.", "err");
+    document.getElementById("pg-url").focus();
+    return;
+  }
+  const statusEl = document.getElementById("pg-status");
+  statusEl.textContent = resolveString("pg.sending");
+  statusEl.className = "status-text warn";
+
+  if(currentMode === PGMODE.batch){
+    await handleBatch(cfg);
+  } else {
+    await handleSingle(cfg);
+  }
+}
+
+async function handleSingle(cfg){
+  const resultEl = document.getElementById("pg-result");
+  const batchResult = document.getElementById("pg-batch-result");
+  batchResult.style.display = "none";
+  resultEl.style.display = "block";
+  const bodyEl = document.getElementById("pg-r-body");
+  bodyEl.textContent = "";
+
+  const t0 = performance.now();
+  try{
+    const res = await proxyFetch(cfg);
+    const elapsed = Math.round(performance.now() - t0);
+    document.getElementById("pg-r-elapsed").textContent = (res.status >= 200 && res.status < 400) ? elapsed + " ms" : "—";
+    await renderSingleResult(res);
+    document.getElementById("pg-status").textContent = resolveString("pg.idle");
+    document.getElementById("pg-status").className = "status-text";
+  }catch(err){
+    // If direct fetch failed (CORS or network), inform user
+    resultEl.style.display = "block";
+    bodyEl.innerHTML = "";
+    const pre = document.createElement("pre");
+    pre.className = "code";
+    pre.textContent = "Request failed: " + err.message;
+    bodyEl.appendChild(pre);
+    document.getElementById("pg-r-status").textContent = "ERR";
+    document.getElementById("pg-r-status").className = "chip err";
+    document.getElementById("pg-status").textContent = err.message;
+    document.getElementById("pg-status").className = "status-text err";
+  }
+}
+
+async function handleBatch(cfg){
+  const count = Math.max(1, Math.min(200, parseInt(document.getElementById("pg-count").value, 10) || 10));
+  const batchResult = document.getElementById("pg-batch-result");
+  const singleResult = document.getElementById("pg-result");
+  const listEl = document.getElementById("pg-batch-list");
+  const delay = parseInt(document.getElementById("set-batchdelay").value, 10) || 500;
+  singleResult.style.display = "none";
+  batchResult.style.display = "block";
+  listEl.innerHTML = "";
+
+  let ok = 0, totalLat = 0, completed = 0;
+  const collected = []; // { url, name, blob } for successful media/files
+
+  const summaryEl = document.getElementById("pg-b-summary");
+  const okEl = document.getElementById("pg-b-ok");
+  const avgEl = document.getElementById("pg-b-avg");
+
+  summaryEl.textContent = "…";
+  summaryEl.className = "chip";
+
+  for(let i=1; i<=count; i++){
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = '<div class="li-main"><div class="li-url" style="font-family:var(--mono)">#' + i + ' — ' + escapeHtml(cfg.url) + '</div><div class="li-meta">pending…</div></div>';
+    listEl.appendChild(item);
+
+    const t0 = performance.now();
+    try{
+      const res = await proxyFetch(cfg);
+      const elapsed = Math.round(performance.now() - t0);
+      completed++;
+      totalLat += elapsed;
+      const isOk = res.status >= 200 && res.status < 400;
+      if(isOk) ok++;
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+      // capture media/files for download-all
+      if(isBinaryType(ct)){
+        const blob = await res.blob();
+        const name = fileNameFromUrl(cfg.url, ct, i);
+        collected.push({ url: URL.createObjectURL(blob), name, blob });
+        const thumb = renderMedia(URL.createObjectURL(blob), ct, blob);
+        const meta = item.querySelector(".li-meta");
+        meta.textContent = "HTTP " + res.status + " · " + elapsed + " ms · " + formatBytes(blob.size) + " · " + (ct || "binary");
+        const bodyWrap = document.createElement("div");
+        bodyWrap.style.cssText = "margin-top:8px;width:100%";
+        bodyWrap.appendChild(thumb);
+        item.appendChild(bodyWrap);
+      } else if(ct.includes("application/json")){
+        let data; try{ data = await res.json(); }catch(_){ data = null; }
+        if(data && typeof data === "object" && "data" in data){
+          // envelope
+          const meta = item.querySelector(".li-meta");
+          meta.textContent = "HTTP " + data.status + " · " + (data.elapsed_ms||0) + " ms · " + formatBytes(data.size_bytes);
+          if(data.data_b64){
+            const blob = base64ToBlob(data.data_b64, data.content_type);
+            const name = fileNameFromUrl(cfg.url, data.content_type, i);
+            collected.push({ url: URL.createObjectURL(blob), name, blob });
+            const thumb = renderMedia(URL.createObjectURL(blob), data.content_type, blob);
+            const bodyWrap = document.createElement("div");
+            bodyWrap.style.cssText = "margin-top:8px;width:100%";
+            bodyWrap.appendChild(thumb);
+            item.appendChild(bodyWrap);
+          } else {
+            const bodyWrap = document.createElement("div");
+            bodyWrap.style.cssText = "margin-top:8px;width:100%";
+            const pre = document.createElement("pre");
+            pre.className = "code";
+            pre.textContent = String(data.data).slice(0, 500);
+            bodyWrap.appendChild(pre);
+            item.appendChild(bodyWrap);
+          }
+        } else {
+          const meta = item.querySelector(".li-meta");
+          meta.textContent = "HTTP " + res.status + " · " + elapsed + " ms";
+        }
+      } else {
+        const text = await res.text();
+        const meta = item.querySelector(".li-meta");
+        meta.textContent = "HTTP " + res.status + " · " + elapsed + " ms";
+        const bodyWrap = document.createElement("div");
+        bodyWrap.style.cssText = "margin-top:8px;width:100%";
+        const pre = document.createElement("pre");
+        pre.className = "code";
+        pre.textContent = text.slice(0, 500);
+        bodyWrap.appendChild(pre);
+        item.appendChild(bodyWrap);
+      }
+
+      recordRequest(isOk, elapsed);
+    }catch(err){
+      const meta = item.querySelector(".li-meta");
+      meta.textContent = "error: " + err.message;
+      meta.style.color = "var(--accent-bad)";
+    }
+
+    // update summary live
+    summaryEl.textContent = completed + " / " + count + " done";
+    okEl.textContent = ok + " ok";
+    okEl.className = "chip " + (ok === completed && completed>0 ? "ok" : "warn");
+    avgEl.textContent = completed>0 ? "avg " + Math.round(totalLat/completed) + " ms" : "—";
+
+    if(i < count) await new Promise(r=>setTimeout(r, delay));
+  }
+
+  summaryEl.textContent = (resolveString("batch.summary") || "{n} requests completed").replace("{n}", completed);
+  summaryEl.className = "chip ok";
+
+  // Wire download-all
+  const dlBtn = document.getElementById("pg-batch-download-all");
+  dlBtn.onclick = ()=>downloadAll(collected);
+
+  document.getElementById("pg-status").textContent = resolveString("pg.idle");
+  document.getElementById("pg-status").className = "status-text";
+}
+
+function fileNameFromUrl(url, ct, idx){
+  try{
+    const p = new URL(url).pathname;
+    const base = p.split("/").filter(Boolean).pop() || "file";
+    return base || ("file-" + idx);
+  }catch(_){ return "file-" + idx; }
+}
+
+function downloadAll(collected){
+  if(!collected || collected.length === 0){
+    showToast("No downloadable files collected.", "err");
+    return;
+  }
+  collected.forEach((item, i)=>{
+    const a = document.createElement("a");
+    a.href = item.url;
+    a.download = item.name || ("file-" + (i+1));
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+  showToast("Downloading " + collected.length + " file(s)…", "ok");
+}
+
+document.getElementById("pg-send").addEventListener("click", handleSend);
+document.getElementById("pg-clear").addEventListener("click", ()=>{
+  document.getElementById("pg-url").value = "";
+  document.getElementById("pg-body").value = "";
+  document.getElementById("pg-headers").value = "";
+  document.getElementById("pg-cookies").value = "";
+  document.getElementById("pg-result").style.display = "none";
+  document.getElementById("pg-batch-result").style.display = "none";
+  document.getElementById("pg-status").textContent = resolveString("pg.idle");
 });
 
-const ADMIN_LOCK_KEY = "nebula_admin_lock"; // timestamp (ms) until which login is locked
+/* ==================== Presets ==================== */
+const PRESET_KEY = "nebula_presets";
+function getPresets(){
+  try{ return JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); }catch(_){ return []; }
+}
+function savePresets(list){
+  localStorage.setItem(PRESET_KEY, JSON.stringify(list));
+}
+function renderPresets(){
+  const sel = document.getElementById("pg-preset-select");
+  if(!sel) return;
+  const presets = getPresets();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">' + resolveString("preset.choose") + '</option>';
+  presets.forEach((p, i)=>{
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = p.name || ("Preset " + (i+1));
+    sel.appendChild(o);
+  });
+  sel.value = cur;
+}
+document.getElementById("pg-preset-save").addEventListener("click", ()=>{
+  const cfg = gatherConfig();
+  const name = prompt("Preset name:");
+  if(!name) return;
+  const presets = getPresets();
+  presets.push({ name, ...cfg });
+  savePresets(presets);
+  renderPresets();
+  showToast("Preset saved.", "ok");
+});
+document.getElementById("pg-preset-delete").addEventListener("click", ()=>{
+  const sel = document.getElementById("pg-preset-select");
+  const idx = parseInt(sel.value, 10);
+  if(isNaN(idx)){ showToast("Choose a preset first.", "err"); return; }
+  const presets = getPresets();
+  presets.splice(idx, 1);
+  savePresets(presets);
+  renderPresets();
+  showToast("Preset deleted.", "ok");
+});
+document.getElementById("pg-preset-select").addEventListener("change", ()=>{
+  const idx = parseInt(this.value, 10);
+  if(isNaN(idx)) return;
+  const p = getPresets()[idx];
+  if(!p) return;
+  document.getElementById("pg-url").value = p.url || "";
+  document.getElementById("pg-method").value = p.method || "GET";
+  document.getElementById("pg-mode").value = p.mode || "auto";
+  document.getElementById("pg-headers").value = p.headers ? JSON.stringify(p.headers) : "";
+  document.getElementById("pg-cookies").value = p.cookies || "";
+  document.getElementById("pg-body").value = p.body || "";
+});
 
+/* ==================== Settings ==================== */
+function loadSettings(){
+  document.getElementById("set-timeout").value = localStorage.getItem("nebula_timeout") || "30000";
+  document.getElementById("set-follow").checked = (localStorage.getItem("nebula_follow") || "true") === "true";
+  document.getElementById("set-autosave").checked = (localStorage.getItem("nebula_history_enabled") || "true") === "true";
+  document.getElementById("set-batchdelay").value = localStorage.getItem("nebula_batch_delay") || "500";
+  document.getElementById("pg-timeout").value = localStorage.getItem("nebula_timeout") || "30000";
+  document.getElementById("api-key").value = localStorage.getItem("nebula_api_key") || "";
+}
+document.getElementById("set-timeout").addEventListener("change", (e)=>{
+  localStorage.setItem("nebula_timeout", e.target.value);
+  document.getElementById("pg-timeout").value = e.target.value;
+});
+document.getElementById("set-follow").addEventListener("change", (e)=>{
+  localStorage.setItem("nebula_follow", e.target.checked ? "true" : "false");
+});
+document.getElementById("set-batchdelay").addEventListener("change", (e)=>{
+  localStorage.setItem("nebula_batch_delay", e.target.value);
+});
+document.getElementById("set-autosave").addEventListener("change", (e)=>{
+  localStorage.setItem("nebula_history_enabled", e.target.checked ? "true" : "false");
+});
+document.getElementById("api-key").addEventListener("change", (e)=>{
+  localStorage.setItem("nebula_api_key", e.target.value.trim());
+});
+
+/* Admin login (rate-limited) */
+const ADMIN_LOCK_KEY = "nebula_admin_lock";
 function adminLoginLockedMs(){
   const ts = parseInt(localStorage.getItem(ADMIN_LOCK_KEY) || "0", 10);
   if(!ts) return 0;
-  const left = ts - Date.now();
-  return left > 0 ? left : 0;
+  const remain = ts - Date.now();
+  return remain > 0 ? remain : 0;
 }
-
 function renderLockCountdown(){
-  const left = adminLoginLockedMs();
-  const btn = document.querySelector("#login-form button[type=submit]");
-  const statusTxt = document.getElementById("admin-status-text");
-  if(!btn) return;
-  if(left > 0){
-    btn.disabled = true;
-    const s = Math.ceil(left/1000);
-    btn.firstElementChild.textContent = "Locked (" + s + "s)";
-    if(statusTxt && !isAdmin()){
-      statusTxt.textContent = "Too many failed attempts. Try again in " + s + "s.";
-      statusTxt.style.color = "var(--accent-bad)";
+  const form = document.getElementById("admin-ui");
+  const loggedIn = document.getElementById("admin-logged-in");
+  const lockedEl = document.getElementById("admin-locked");
+  const btn = document.getElementById("admin-login");
+  const remain = adminLoginLockedMs();
+
+  if(isAdmin()){
+    form.style.display = "none";
+    loggedIn.style.display = "block";
+    lockedEl.style.display = "none";
+    document.getElementById("admin-logged-in-text").textContent =
+      resolveString("login.ok") + " (" + localStorage.getItem("npx_admin") + ")";
+    return;
+  }
+
+  if(remain > 0){
+    form.style.display = "block";
+    lockedEl.style.display = "block";
+    loggedIn.style.display = "none";
+    if(btn){ btn.disabled = true; }
+    const secs = Math.ceil(remain / 1000);
+    document.getElementById("admin-locked-text").textContent =
+      resolveString("set.locked") + " " + secs + "s";
+    document.getElementById("admin-status-text").textContent = "";
+    if(btn){
+      const span = btn.querySelector("span");
+      if(span) span.textContent = "Locked (" + secs + "s)";
     }
   } else {
-    btn.disabled = false;
-    btn.firstElementChild.textContent = "Sign In";
+    form.style.display = "block";
+    lockedEl.style.display = "none";
+    loggedIn.style.display = "none";
+    if(btn){ btn.disabled = false; }
+    if(btn){
+      const span = btn.querySelector("span");
+      if(span) span.textContent = resolveString("set.login");
+    }
   }
 }
+function isAdmin(){ return !!localStorage.getItem("npx_admin"); }
 
-document.getElementById("login-form").addEventListener("submit",async e=>{
-  e.preventDefault();
+document.getElementById("admin-login").addEventListener("click", async ()=>{
   if(adminLoginLockedMs() > 0){ renderLockCountdown(); return; }
+  const username = document.getElementById("admin-user").value.trim();
+  const password = document.getElementById("admin-pass").value;
+  if(!username || !password){
+    showToast("Enter username and password.", "err");
+    return;
+  }
+  const btn = document.getElementById("admin-login");
+  const statusEl = document.getElementById("admin-status-text");
+  const span = btn.querySelector("span");
+  const orig = span.textContent;
+  span.textContent = "Checking…";
+  statusEl.textContent = "";
+  statusEl.className = "status-text";
 
-  const u = document.getElementById("login-user").value.trim();
-  const p = document.getElementById("login-pass").value;
-  const btn = document.querySelector("#login-form button[type=submit]");
-  const statusTxt = document.getElementById("admin-status-text");
-
-  if(!u || !p){ showToast("Enter username and password", "bad"); return; }
-
-  btn.disabled = true;
-  const origTxt = btn.firstElementChild.textContent;
-  btn.firstElementChild.textContent = "Checking…";
   try{
     const res = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: u, password: p }),
+      body: JSON.stringify({ username, password })
     });
     const data = await res.json().catch(()=>({}));
 
     if(res.ok && data.ok){
-      localStorage.setItem("npx_admin", data.user || u);
-      if(data.session) localStorage.setItem("npx_admin_session", data.session);
+      localStorage.setItem("npx_admin", data.user || username);
+      localStorage.setItem("npx_admin_session", data.session || "");
       localStorage.removeItem(ADMIN_LOCK_KEY);
-      document.getElementById("login-pass").value = "";
-      showToast("Signed in as admin", "ok");
-      refreshAdminUI();
-    } else {
-      // Wrong credentials -> lock for 2 minutes
-      localStorage.setItem(ADMIN_LOCK_KEY, String(Date.now() + 2*60*1000));
-      document.getElementById("login-pass").value = "";
-      if(statusTxt){
-        statusTxt.textContent = data.error || "Invalid username or password.";
-        statusTxt.style.color = "var(--accent-bad)";
-      }
-      showToast("Wrong credentials. Locked for 2 minutes.", "bad");
+      showToast(resolveString("login.ok"), "ok");
       renderLockCountdown();
-    }
-  }catch(err){
-    showToast("Login error: " + err.message, "bad");
-  }finally{
-    btn.disabled = false;
-    btn.firstElementChild.textContent = origTxt;
-    renderLockCountdown();
-  }
-});
-
-document.getElementById("admin-logout-btn").addEventListener("click",()=>{
-  localStorage.removeItem("npx_admin");
-  localStorage.removeItem("npx_admin_session");
-  localStorage.removeItem(ADMIN_LOCK_KEY);
-  showToast("Signed out", "ok");
-  refreshAdminUI();
-  renderLockCountdown();
-});
-
-/* ==================== History ==================== */
-function getHistory(){
-  try{ return JSON.parse(localStorage.getItem("nebula_history")||"[]"); }catch(e){ return []; }
-}
-
-function saveHistoryItem(item){
-  const s = getSettings();
-  if(!s.autohist) return;
-  const list = getHistory();
-  list.unshift(item);
-  const max = s.maxhist || 50;
-  if(list.length > max) list.length = max;
-  localStorage.setItem("nebula_history", JSON.stringify(list));
-}
-
-function renderHistory(){
-  const list = getHistory();
-  const container = document.getElementById("hist-list");
-  if(!list.length){
-    container.innerHTML = '<div class="list-empty">No requests saved yet. Try the Playground.</div>';
-    return;
-  }
-  container.innerHTML = list.map((item, idx)=>{
-    const sc = item.status;
-    const isOk = sc >= 200 && sc < 300;
-    const cls = isOk ? "ok" : "bad";
-    return `
-      <div class="hist-item">
-        <div class="hist-meta">
-          <span class="${cls}">[${item.method}] ${sc}</span>
-          <span>⏱ ${fmtLatency(item.elapsed_ms||0)}</span>
-          <span>📦 ${formatBytes(item.size_bytes||0)}</span>
-          <span style="margin-left:auto">${new Date(item.timestamp).toLocaleTimeString()}</span>
-        </div>
-        <div class="hist-url">${escapeHtml(item.url)}</div>
-        <div class="hist-actions">
-          <button class="mini-btn" onclick="rerunHistory(${idx})">▶ Re-run in Playground</button>
-          <button class="mini-btn" onclick="copyCurl('${escapeHtml(item.url)}', '${item.method}')">📋 Copy as cURL</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-window.copyCurl = function(url, method){
-  const key = getApiKey();
-  let cmd = `curl -X ${method} "${window.location.origin}/api/proxy?url=${encodeURIComponent(url)}"`;
-  if(key) cmd = `curl -X ${method} -H "Authorization: Bearer ${key}" "${window.location.origin}/api/proxy?url=${encodeURIComponent(url)}"`;
-  navigator.clipboard.writeText(cmd).then(()=>showToast("cURL copied to clipboard", "ok"));
-};
-
-window.rerunHistory = function(idx){
-  const list = getHistory();
-  const item = list[idx];
-  if(!item) return;
-  document.getElementById("pg-url").value = item.url;
-  document.getElementById("pg-mode").value = item.mode || "auto";
-  if(item.body) document.getElementById("pg-body").value = typeof item.body==="string"?item.body:JSON.stringify(item.body,null,2);
-  currentMethod = item.method || "GET";
-  $$("#pg-method .method").forEach(m=>m.classList.toggle("active", m.getAttribute("data-m")===currentMethod));
-  navigate("playground");
-  showToast("Loaded into Playground", "ok");
-};
-
-document.getElementById("hist-clear").addEventListener("click",()=>{
-  localStorage.removeItem("nebula_history");
-  renderHistory();
-  showToast("History cleared", "ok");
-});
-
-document.getElementById("hist-export").addEventListener("click",()=>{
-  const list = getHistory();
-  const blob = new Blob([JSON.stringify(list,null,2)], { type:"application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `nebula-history-${Date.now()}.json`;
-  a.click();
-});
-
-/* ==================== Presets ==================== */
-function getPresets(){
-  try{ return JSON.parse(localStorage.getItem("nebula_presets")||"{}"); }catch(e){ return {}; }
-}
-
-function savePresets(p){
-  localStorage.setItem("nebula_presets", JSON.stringify(p));
-  updatePresetDropdown();
-}
-
-function updatePresetDropdown(){
-  const presets = getPresets();
-  const sel = document.getElementById("pg-preset-select");
-  sel.innerHTML = '<option value="">Choose a preset...</option>';
-  Object.keys(presets).forEach(name=>{
-    const opt = document.createElement("option");
-    opt.value = name; opt.textContent = name;
-    sel.appendChild(opt);
-  });
-  const countEl = document.getElementById("presets-count");
-  if(countEl) countEl.textContent = `Total saved presets: ${Object.keys(presets).length}`;
-}
-
-document.getElementById("pg-preset-select").addEventListener("change", e=>{
-  const name = e.target.value;
-  const presets = getPresets();
-  const delBtn = document.getElementById("pg-preset-del-btn");
-  if(!name || !presets[name]){
-    delBtn.style.display = "none";
-    return;
-  }
-  delBtn.style.display = "inline-flex";
-  const p = presets[name];
-  document.getElementById("pg-url").value = p.url || "";
-  document.getElementById("pg-mode").value = p.mode || "auto";
-  currentMethod = p.method || "GET";
-  $$("#pg-method .method").forEach(m=>m.classList.toggle("active", m.getAttribute("data-m")===currentMethod));
-  document.getElementById("pg-body").value = p.body || "";
-  showToast(`Preset "${name}" loaded`, "ok");
-});
-
-document.getElementById("pg-preset-save-btn").addEventListener("click",()=>{
-  const name = prompt("Enter a name for this preset:");
-  if(!name || !name.trim()) return;
-  const presets = getPresets();
-  presets[name.trim()] = {
-    url: document.getElementById("pg-url").value.trim(),
-    mode: document.getElementById("pg-mode").value,
-    method: currentMethod,
-    body: document.getElementById("pg-body").value,
-  };
-  savePresets(presets);
-  document.getElementById("pg-preset-select").value = name.trim();
-  document.getElementById("pg-preset-del-btn").style.display = "inline-flex";
-  showToast(`Preset "${name}" saved`, "ok");
-});
-
-document.getElementById("pg-preset-del-btn").addEventListener("click",()=>{
-  const name = document.getElementById("pg-preset-select").value;
-  if(!name) return;
-  const presets = getPresets();
-  delete presets[name];
-  savePresets(presets);
-  document.getElementById("pg-preset-del-btn").style.display = "none";
-  showToast(`Preset "${name}" deleted`, "ok");
-});
-
-document.getElementById("preset-export-btn").addEventListener("click",()=>{
-  const presets = getPresets();
-  const blob = new Blob([JSON.stringify(presets,null,2)], { type:"application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `nebula-presets-${Date.now()}.json`;
-  a.click();
-});
-
-document.getElementById("preset-import-btn").addEventListener("click",()=>{
-  document.getElementById("preset-import-file").click();
-});
-
-document.getElementById("preset-import-file").addEventListener("change", e=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const r = new FileReader();
-  r.onload = ev=>{
-    try{
-      const imported = JSON.parse(ev.target.result);
-      if(typeof imported === "object"){
-        const current = getPresets();
-        const merged = { ...current, ...imported };
-        savePresets(merged);
-        showToast("Presets imported successfully", "ok");
-      }
-    }catch(err){ showToast("Invalid JSON file", "bad"); }
-  };
-  r.readAsText(file);
-});
-
-/* ==================== Playground ==================== */
-let sessionStats = { req:0, ok:0, latSum:0 };
-let currentMethod = "GET";
-let activeAbortController = null;
-let lastResponseData = { rawText:"", json:null, headers:{} };
-
-$$("#pg-method .method").forEach(m=>{
-  m.addEventListener("click",()=>{
-    $$("#pg-method .method").forEach(x=>x.classList.remove("active"));
-    m.classList.add("active");
-    currentMethod = m.getAttribute("data-m");
-  });
-});
-
-function updateStats(lastLatency, isSuccess){
-  sessionStats.req++;
-  if(lastLatency !== undefined){
-    sessionStats.latSum += lastLatency;
-    $("#stat-lat").textContent = fmtLatency(Math.round(sessionStats.latSum / sessionStats.req));
-  }
-  if(isSuccess) sessionStats.ok++;
-  $("#stat-req").textContent = sessionStats.req;
-  $("#stat-ok").textContent = Math.round((sessionStats.ok / sessionStats.req) * 100) + "%";
-}
-
-function renderError(code, message, suggestion){
-  const container = document.getElementById("pg-err-container");
-  container.innerHTML = `
-    <div class="err-card">
-      <div class="err-title">⚠️ Error ${code}</div>
-      <div class="err-msg">${escapeHtml(message)}</div>
-      ${suggestion ? `<div class="err-sug">💡 Suggestion: ${escapeHtml(suggestion)}</div>` : ""}
-    </div>
-  `;
-}
-
-function clearError(){
-  document.getElementById("pg-err-container").innerHTML = "";
-}
-
-document.getElementById("pg-cancel").addEventListener("click",()=>{
-  if(activeAbortController){
-    activeAbortController.abort();
-    activeAbortController = null;
-    showToast("Request cancelled", "warn");
-  }
-});
-
-document.getElementById("pg-send").addEventListener("click", async()=>{
-  const btn = document.getElementById("pg-send");
-  const cancelBtn = document.getElementById("pg-cancel");
-  const spinner = document.getElementById("pg-spinner");
-  const sendText = document.getElementById("pg-send-text");
-  const resp = document.getElementById("pg-response");
-  const preview = document.getElementById("pg-preview");
-  const dlWrap = document.getElementById("pg-download-wrap");
-  const meta = document.getElementById("pg-meta");
-  const viewer = document.getElementById("pg-viewer");
-
-  clearError();
-  preview.style.display = "none"; preview.innerHTML = "";
-  dlWrap.style.display = "none"; dlWrap.innerHTML = "";
-  viewer.style.display = "none"; meta.textContent = "";
-
-  const url = document.getElementById("pg-url").value.trim();
-  const mode = document.getElementById("pg-mode").value;
-  const bodyRaw = document.getElementById("pg-body").value;
-
-  if(!url){
-    renderError(400, "Target URL is required", "Enter a full URL like https://api.ipify.org?format=json");
-    return;
-  }
-
-  const payload = { url, method: currentMethod, mode };
-  if(bodyRaw){
-    try{ payload.body = JSON.parse(bodyRaw); }catch(e){ payload.body = bodyRaw; }
-  }
-
-  const s = getSettings();
-  payload.timeout = s.timeout;
-  payload.follow_redirects = s.follow;
-
-  btn.disabled = true;
-  spinner.style.display = "inline-block";
-  sendText.textContent = "Sending...";
-  cancelBtn.style.display = "inline-flex";
-
-  activeAbortController = new AbortController();
-  const t0 = performance.now();
-
-  try{
-    const reqHeaders = { "Content-Type":"application/json" };
-    const key = getApiKey();
-    if(key) reqHeaders["Authorization"] = "Bearer " + key;
-
-    const res = await fetch("/api/proxy", {
-      method: "POST",
-      headers: reqHeaders,
-      body: JSON.stringify(payload),
-      signal: activeAbortController.signal,
-    });
-
-    const elapsed = Math.round(performance.now() - t0);
-    const sc = res.status;
-    const isOk = sc >= 200 && sc < 300;
-    const ct = res.headers.get("content-type") || "";
-
-    // Save response headers for headers tab
-    lastResponseData.headers = {};
-    for(const [hk, hv] of res.headers.entries()){
-      lastResponseData.headers[hk] = hv;
-    }
-
-    if(mode === "stream"){
-      const blob = await res.blob();
-      lastResponseData.rawText = `[Stream Response: ${blob.size} bytes, type ${ct}]`;
-      resp.innerHTML = `<span class="status-tag ${isOk?'status-2xx':'status-4xx'}">${sc} STREAM</span>`;
-      renderBinaryPreview(blob, ct, url, preview, dlWrap, blob.size);
-      meta.textContent = `Host: cloudflare-edge  ·  Elapsed: ${elapsed}ms  ·  Size: ${formatBytes(blob.size)}`;
-      saveHistoryItem({ timestamp:Date.now(), url, method:currentMethod, status:sc, elapsed_ms:elapsed, size_bytes:blob.size, mode });
-      updateStats(elapsed, isOk);
-      setupResponseViewer("stream", lastResponseData.rawText);
       return;
     }
 
-    const isJson = ct.includes("application/json");
-    if(isJson){
-      const data = await res.json();
-      lastResponseData.json = data;
-      lastResponseData.rawText = JSON.stringify(data, null, 2);
-
-      if(data.headers && typeof data.headers === "object"){
-        lastResponseData.headers = data.headers;
-      }
-
-      if(data.error){
-        renderError(data.code || sc, data.error, data.suggestion);
-        resp.innerHTML = `<span class="status-tag status-5xx">${sc}</span>`;
-      } else if(mode === "base64" && data.data_b64){
-        const bin = atob(data.data_b64);
-        const bytes = new Uint8Array(bin.length);
-        for(let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        const ctype = data.content_type || "application/octet-stream";
-        const blob = new Blob([bytes], { type: ctype });
-        resp.innerHTML = `<span class="status-tag ${isOk?'status-2xx':'status-4xx'}">${sc}</span>`;
-        renderBinaryPreview(blob, ctype, url, preview, dlWrap, data.size_bytes);
-        meta.textContent = `Host: ${data.proxy_host||"cloudflare-edge"}  ·  Elapsed: ${data.elapsed_ms||elapsed}ms  ·  Size: ${formatBytes(data.size_bytes)}`;
-      } else {
-        const bodyContent = typeof data.data === "string" ? data.data : JSON.stringify(data.data, null, 2);
-        resp.innerHTML = `
-          <span class="status-tag ${isOk?'status-2xx':'status-4xx'}">${sc}</span>
-          <pre style="margin-top:8px;white-space:pre-wrap;word-break:break-word">${escapeHtml(bodyContent)}</pre>
-        `;
-        meta.textContent = `Host: ${data.proxy_host||"cloudflare-edge"}  ·  Elapsed: ${data.elapsed_ms||elapsed}ms  ·  Size: ${formatBytes(data.size_bytes||0)}`;
-      }
-
-      saveHistoryItem({ timestamp:Date.now(), url, method:currentMethod, status:sc, elapsed_ms:data.elapsed_ms||elapsed, size_bytes:data.size_bytes||0, mode });
-      updateStats(elapsed, isOk);
-      setupResponseViewer("json", lastResponseData.rawText);
-    } else {
-      const text = await res.text();
-      lastResponseData.rawText = text;
-      resp.innerHTML = `
-        <span class="status-tag ${isOk?'status-2xx':'status-4xx'}">${sc}</span>
-        <pre style="margin-top:8px;white-space:pre-wrap;word-break:break-word">${escapeHtml(text)}</pre>
-      `;
-      meta.textContent = `Host: cloudflare-edge  ·  Elapsed: ${elapsed}ms  ·  Size: ${formatBytes(text.length)}`;
-      saveHistoryItem({ timestamp:Date.now(), url, method:currentMethod, status:sc, elapsed_ms:elapsed, size_bytes:text.length, mode });
-      updateStats(elapsed, isOk);
-      setupResponseViewer("text", text);
-    }
-  }catch(e){
-    const elapsed = Math.round(performance.now() - t0);
-    if(e.name === "AbortError"){
-      renderError(499, "Request Aborted", "The request was cancelled by the user or timed out.");
-    } else {
-      renderError(500, e.message || "Failed to fetch", "Check network connection or ensure target URL is reachable.");
-    }
-    resp.innerHTML = `<span class="status-tag status-5xx">ERR</span>`;
-    updateStats(elapsed, false);
-  }finally{
-    activeAbortController = null;
-    btn.disabled = false;
-    spinner.style.display = "none";
-    sendText.textContent = STRINGS[CURRENT_LANG]?.["pg.send"] || "Send Request";
-    cancelBtn.style.display = "none";
+    // failure: set client lock
+    localStorage.setItem(ADMIN_LOCK_KEY, String(Date.now() + 2*60*1000));
+    statusEl.textContent = resolveString("login.err");
+    statusEl.className = "status-text err";
+    showToast(resolveString("login.err"), "err");
+    renderLockCountdown();
+  }catch(err){
+    statusEl.textContent = err.message;
+    statusEl.className = "status-text err";
+    span.textContent = orig;
+  } finally {
+    span.textContent = resolveString("set.login");
   }
 });
 
-function renderBinaryPreview(blob, contentType, url, preview, dlWrap, sizeBytes){
-  preview.style.display = "block";
-  const objectUrl = URL.createObjectURL(blob);
-  const ct = (contentType || "").toLowerCase();
+document.getElementById("admin-logout").addEventListener("click", ()=>{
+  localStorage.removeItem("npx_admin");
+  localStorage.removeItem("npx_admin_session");
+  localStorage.removeItem(ADMIN_LOCK_KEY);
+  renderLockCountdown();
+});
 
-  if(ct.startsWith("image/")){
-    preview.innerHTML = `<img src="${objectUrl}" style="max-width:100%;border-radius:var(--radius);border:1px solid var(--border)" alt="preview" />`;
-  } else if(ct.startsWith("video/")){
-    preview.innerHTML = `<video controls src="${objectUrl}" style="max-width:100%;border-radius:var(--radius)"></video>`;
-  } else if(ct.startsWith("audio/")){
-    preview.innerHTML = `<audio controls src="${objectUrl}" style="width:100%"></audio>`;
-  } else if(ct === "application/pdf"){
-    preview.innerHTML = `<p style="color:var(--text-dim);margin-bottom:8px">📄 PDF Document (${formatBytes(sizeBytes||blob.size)})</p>`;
-  } else {
-    preview.innerHTML = `<p style="color:var(--text-dim)">📦 Binary Data (${formatBytes(sizeBytes||blob.size)}, ${ct})</p>`;
+/* ==================== Keyboard Shortcuts ==================== */
+document.addEventListener("keydown", (e)=>{
+  const target = e.target;
+  const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT";
+  // Ctrl+Enter → send
+  if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+    e.preventDefault();
+    handleSend();
+    return;
   }
-  makeDownloadButton(dlWrap, blob, contentType, url);
-}
-
-function makeDownloadButton(dlWrap, blob, contentType, url){
-  dlWrap.style.display = "block";
-  const objectUrl = URL.createObjectURL(blob);
-  let filename = "response-file";
-  try{
-    const u = new URL(url);
-    const parts = u.pathname.split("/").filter(Boolean);
-    if(parts.length) filename = parts[parts.length-1];
-  }catch(_){}
-  dlWrap.innerHTML = `<a class="btn btn-ghost" href="${objectUrl}" download="${filename}">⬇ Download Binary File</a>`;
-}
-
-function setupResponseViewer(type, rawText){
-  const viewer = document.getElementById("pg-viewer");
-  viewer.style.display = "block";
-  switchRvTab("preview");
-}
-
-function switchRvTab(tab){
-  $$(".rv-tab").forEach(t=>t.classList.toggle("active", t.getAttribute("data-rv")===tab));
-  const body = document.getElementById("rv-body");
-  if(tab === "preview"){
-    const json = lastResponseData.json;
-    if(json && json.data){
-      body.innerHTML = `<pre style="font-family:var(--mono);font-size:12.5px;color:var(--text-dim);max-height:300px;overflow-y:auto">${escapeHtml(typeof json.data==="string"?json.data:JSON.stringify(json.data,null,2))}</pre>`;
-    } else {
-      body.innerHTML = `<pre style="font-family:var(--mono);font-size:12.5px;color:var(--text-dim);max-height:300px;overflow-y:auto">${escapeHtml(lastResponseData.rawText)}</pre>`;
-    }
-  } else if(tab === "raw"){
-    body.innerHTML = `<pre style="font-family:var(--mono);font-size:12px;color:var(--text-dim);max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all">${escapeHtml(lastResponseData.rawText)}</pre>`;
-  } else if(tab === "headers"){
-    const entries = Object.entries(lastResponseData.headers||{});
-    if(!entries.length){
-      body.innerHTML = '<div style="color:var(--text-faint);font-size:13px">No headers available</div>';
-    } else {
-      body.innerHTML = `
-        <table class="rv-headers">
-          ${entries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`).join("")}
-        </table>
-      `;
-    }
+  // Ctrl+K → focus URL
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){
+    e.preventDefault();
+    document.getElementById("pg-url").focus();
+    return;
   }
-}
-
-$$(".rv-tab").forEach(b=>b.addEventListener("click",()=>switchRvTab(b.getAttribute("data-rv"))));
-
-document.getElementById("rv-copy").addEventListener("click",()=>{
-  navigator.clipboard.writeText(lastResponseData.rawText).then(()=>showToast("Response copied", "ok"));
-});
-
-document.getElementById("rv-download").addEventListener("click",()=>{
-  const blob = new Blob([lastResponseData.rawText], { type:"text/plain" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `response-${Date.now()}.txt`;
-  a.click();
-});
-
-/* ==================== Batch Mode ==================== */
-let batchAbortController = null;
-let lastBatchResults = [];
-
-document.getElementById("batch-run").addEventListener("click", async()=>{
-  const urlsRaw = document.getElementById("batch-urls").value;
-  const urls = urlsRaw.split("\n").map(u=>u.trim()).filter(Boolean);
-  if(!urls.length){ showToast("Enter at least one URL", "warn"); return; }
-
-  const delay = parseInt(document.getElementById("batch-delay").value,10) || 500;
-  const mode = document.getElementById("batch-mode").value;
-  const runBtn = document.getElementById("batch-run");
-  const cancelBtn = document.getElementById("batch-cancel");
-  const progressWrap = document.getElementById("batch-progress-wrap");
-  const progressFill = document.getElementById("batch-progress-fill");
-  const resultsDiv = document.getElementById("batch-results");
-
-  runBtn.disabled = true;
-  cancelBtn.style.display = "inline-flex";
-  progressWrap.style.display = "block";
-  progressFill.style.width = "0%";
-  resultsDiv.innerHTML = "";
-  lastBatchResults = [];
-
-  batchAbortController = new AbortController();
-  const key = getApiKey();
-
-  for(let i=0; i<urls.length; i++){
-    if(batchAbortController.signal.aborted) break;
-    const target = urls[i];
-    const t0 = performance.now();
-    let status = 0, size = 0;
-
-    try{
-      const h = { "Content-Type":"application/json" };
-      if(key) h["Authorization"] = "Bearer " + key;
-      const res = await fetch("/api/proxy", {
-        method: "POST",
-        headers: h,
-        body: JSON.stringify({ url: target, mode, method: "GET" }),
-        signal: batchAbortController.signal,
-      });
-      status = res.status;
-      const buf = await res.arrayBuffer();
-      size = buf.byteLength;
-    }catch(err){
-      status = err.name === "AbortError" ? 499 : 500;
-    }
-
-    const elapsed = Math.round(performance.now() - t0);
-    const isOk = status >= 200 && status < 300;
-    lastBatchResults.push({ url: target, status, elapsed_ms: elapsed, size_bytes: size });
-
-    const row = document.createElement("div");
-    row.className = "batch-row";
-    row.innerHTML = `
-      <span class="b-status ${isOk?'ok':'bad'}">${status}</span>
-      <span class="b-url" title="${escapeHtml(target)}">${escapeHtml(target)}</span>
-      <span style="color:var(--text-faint)">${elapsed}ms</span>
-      <span style="color:var(--text-faint)">${formatBytes(size)}</span>
-    `;
-    resultsDiv.appendChild(row);
-
-    const pct = Math.round(((i+1) / urls.length) * 100);
-    progressFill.style.width = pct + "%";
-
-    if(i < urls.length - 1 && delay > 0){
-      await new Promise(r=>setTimeout(r, delay));
-    }
-  }
-
-  runBtn.disabled = false;
-  cancelBtn.style.display = "none";
-  batchAbortController = null;
-  showToast("Batch finished", "ok");
-});
-
-document.getElementById("batch-cancel").addEventListener("click",()=>{
-  if(batchAbortController){
-    batchAbortController.abort();
-    batchAbortController = null;
-    showToast("Batch cancelled", "warn");
-  }
-});
-
-document.getElementById("batch-export-json").addEventListener("click",()=>{
-  if(!lastBatchResults.length){ showToast("No batch results to export", "warn"); return; }
-  const blob = new Blob([JSON.stringify(lastBatchResults, null, 2)], { type:"application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `batch-results-${Date.now()}.json`;
-  a.click();
-});
-
-document.getElementById("batch-export-csv").addEventListener("click",()=>{
-  if(!lastBatchResults.length){ showToast("No batch results to export", "warn"); return; }
-  const header = "url,status,elapsed_ms,size_bytes\n";
-  const rows = lastBatchResults.map(r=>`"${r.url.replace(/"/g,'""')}",${r.status},${r.elapsed_ms},${r.size_bytes}`).join("\n");
-  const blob = new Blob([header + rows], { type:"text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `batch-results-${Date.now()}.csv`;
-  a.click();
-});
-
-/* ==================== Copy Buttons ==================== */
-$$("[data-copy]").forEach(b=>{
-  b.addEventListener("click",()=>{
-    const code = b.closest(".code").querySelector("code").innerText;
-    navigator.clipboard.writeText(code).then(()=>{
-      const old = b.textContent; b.textContent = "Copied!";
-      setTimeout(()=>b.textContent=old, 1500);
-    });
-  });
 });
 
 /* ==================== Init ==================== */
-initTheme();
-loadSettingsUI();
-refreshAdminUI();
-updatePresetDropdown();
-applyLang();
-renderLangMenu();
-
-// Re-render the admin lock countdown every second while locked
-if(typeof renderLockCountdown === "function"){
-  renderLockCountdown();
-  setInterval(renderLockCountdown, 1000);
+function init(){
+  renderLangMenu();
+  applyLang();
+  applyTheme();
+  loadSettings();
+  renderPresets();
+  setMode(PGMODE.single);
+  if(typeof renderLockCountdown === "function"){
+    renderLockCountdown();
+    setInterval(renderLockCountdown, 1000);
+  }
+  refreshStats();
 }
-
-// Fake counter animation for initial eye-candy
-(function countUp(el, target){
-  let cur = 0; const step = Math.max(1, Math.round(target/30));
-  const t = setInterval(()=>{
-    cur += step;
-    if(cur >= target){ cur = target; clearInterval(t); }
-    el.textContent = cur.toLocaleString();
-  }, 20);
-})(document.getElementById("stat-req"), 12480);
+init();
 </script>
 </body>
 </html>
