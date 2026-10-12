@@ -2,7 +2,7 @@
 
 A fast, versatile edge proxy gateway running on **Cloudflare Workers** with the Ember-themed NebulaProxy web console. Requests egress from Cloudflare's global edge network (AS13335) using native `fetch()` — with zero external proxy dependencies, zero SOCKS5 overhead, and ultra-low latency.
 
-> **What it is:** A production-ready, flexible fetch proxy supporting text, JSON, chunked Base64, and raw streaming responses. Ideal for CORS bypassing, scraping, media streaming, batch URL execution, and header forwarding.
+> **What it is:** A production-ready, flexible fetch proxy supporting text, JSON, chunked Base64, and raw streaming responses. Ideal for CORS bypassing, scraping, media streaming, batch execution, and header forwarding.
 
 ---
 
@@ -10,12 +10,14 @@ A fast, versatile edge proxy gateway running on **Cloudflare Workers** with the 
 
 - **Optional API Key Authentication:** By default, public mode is enabled (no API key required). Set `API_TOKEN` in Cloudflare to lock down access instantly.
 - **CORS Preflight & Bypass:** Seamlessly fetch third-party APIs from browser applications with proper OPTIONS handling and open CORS headers.
-- **Request History:** Inspect your last 50 requests with execution latency, byte sizes, copy-to-cURL, and one-click re-run in the Playground.
-- **Named Presets:** Save frequently used request configurations, export them as JSON, or import shared preset bundles.
-- **Batch Processing:** Run lists of URLs sequentially with configurable delay intervals, progress bars, and CSV/JSON export.
-- **Enhanced Response Viewer:** Switch between formatted **Preview** (with embedded images/video/audio players), **Raw Body**, and **Headers** inspector.
+- **7-Language i18n:** Full UI translation for English, বাংলা, हिन्दी, Español, Français, العربية, and Русский — including placeholders, RTL support, and instant switching without reload.
+- **Merged Playground + Batch:** A single Playground with a Single / Batch toggle. Send one request, or fire the same request N times (10, 50, 100…) with a progress list and **Download All** for collected media.
+- **Smart Media Rendering:** Responses are auto-detected by Content-Type — images render in `<img>`, audio in `<audio>`, video in `<video>`, and other binaries as download links.
+- **Proxy Mode (CORS bypass):** Every request egresses through the Cloudflare Worker edge to bypass CORS and reach blocked origins, with seamless in-page rendering.
+- **Real Statistics:** Live dashboard metrics (total requests, success rate, avg latency) served by the worker `/api/stats` endpoint, merged with client session stats.
+- **Named Presets:** Save, load, and delete frequently used request configurations.
 - **Dark / Light Theme Toggle:** Clean Ember dark palette by default with full light mode support and automatic system preference matching.
-- **Keyboard Shortcuts:** Fast developer workflows with `Ctrl+Enter`, `Ctrl+K`, `Ctrl+H`, and `Ctrl+S`.
+- **Keyboard Shortcuts:** `Ctrl+Enter` send, `Ctrl+K` focus URL.
 - **Chunked Base64 & Streaming:** Safe binary handling avoiding call-stack limits, alongside raw streaming with Range header forwarding for media seek.
 
 ---
@@ -33,7 +35,6 @@ NebulaProxy makes authentication **entirely optional**:
    - Unauthenticated or invalid requests return `401 Unauthorized`.
 3. **Web Console Settings:**
    - In the **Settings** tab, sign in as admin to save or clear your API key in `localStorage` (`nebula_api_key`).
-   - Use the **Test API Key** button to verify connectivity against `/api/health`.
 
 ---
 
@@ -54,12 +55,10 @@ The Settings tab admin login is protected against brute-force attacks:
 |---|---|---|---|
 | **API Key** | `nebula_api_key` | *(empty)* | Optional Bearer token sent with every proxy request. Requires admin access to set. |
 | **Default Timeout** | `nebula_timeout` | `30000` | Max milliseconds to wait before aborting (returns 504 Gateway Timeout). |
-| **Default Mode** | `nebula_mode` | `auto` | Fallback mode when none is specified (`auto`, `text`, `json`, `base64`, `stream`). |
 | **Follow Redirects** | `nebula_follow` | `true` | Automatically follow HTTP 3xx redirects up to 5 hops. |
-| **Auto-save History** | `nebula_autohist` | `true` | Automatically append requests to the History tab. |
-| **Max History Entries** | `nebula_maxhist` | `50` | Maximum requests retained in local history before trimming. |
-| **Batch Delay** | `nebula_batchdelay` | `500` | Delay in milliseconds between consecutive batch URL requests. |
-| **Theme** | `nebula_theme` | `system` | Dark or light theme preference. |
+| **Auto-save History** | `nebula_history_enabled` | `true` | Enabled flag for request history persistence. |
+| **Batch Delay** | `nebula_batch_delay` | `500` | Delay in milliseconds between consecutive batch requests. |
+| **Theme** | `nebula_theme` | `auto` | `auto` (system) / `dark` / `light` theme preference. |
 
 ---
 
@@ -67,17 +66,17 @@ The Settings tab admin login is protected against brute-force attacks:
 
 | Shortcut | Action |
 |---|---|
-| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> (or <kbd>⌘</kbd>+<kbd>Enter</kbd>) | Send request from the Playground |
-| <kbd>Ctrl</kbd> + <kbd>K</kbd> (or <kbd>⌘</kbd>+<kbd>K</kbd>) | Focus and select Target URL input |
-| <kbd>Ctrl</kbd> + <kbd>H</kbd> (or <kbd>⌘</kbd>+<kbd>H</kbd>) | Open History tab |
-| <kbd>Ctrl</kbd> + <kbd>S</kbd> (or <kbd>⌘</kbd>+<kbd>S</kbd>) | Open Settings tab |
+| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> (or <kbd>⌘</kbd>+<kbd>Enter</kbd>) | Send request from the Playground (Single or Batch) |
+| <kbd>Ctrl</kbd> + <kbd>K</kbd> (or <kbd>⌘</kbd>+<kbd>K</kbd>) | Focus and select the Target URL input |
 
 ---
 
 ## 📡 API Endpoints
 
+Base URL: `https://nebulaproxy.rayhan1789789.workers.dev` (replace with your deployed domain).
+
 ### 1. `ANY /api/proxy`
-Proxy requests to any remote endpoint. Supports query parameters (GET) or a JSON body (POST/PUT/PATCH).
+Proxy requests to any remote endpoint. Supports query parameters (GET) or a JSON body (POST/PUT/PATCH). Works directly from cURL, fetch, or any external HTTP client — no frontend required.
 
 #### Parameters:
 | Param | Type | Default | Description |
@@ -91,6 +90,7 @@ Proxy requests to any remote endpoint. Supports query parameters (GET) or a JSON
 | `body_b64` | boolean | `false` | Set `true` if `body` is base64 encoded |
 | `timeout` | number | `30000` | Timeout in ms (aborts with 504 on timeout) |
 | `follow_redirects`| boolean | `true` | Follow HTTP 3xx redirects |
+| `token` | string | — | API token (if `API_TOKEN` is set) |
 | `filename` | string | — | Attaches `Content-Disposition: attachment; filename="..."` |
 
 ### 2. `GET /api/health`
@@ -113,7 +113,19 @@ Returns service and runtime metadata:
 }
 ```
 
-### 4. `POST /api/admin/login`
+### 4. `GET /api/stats`
+Returns live global request statistics (in-memory, resets on cold start):
+```json
+{
+  "status": "ok",
+  "requests": 12480,
+  "successes": 12390,
+  "success_rate": 99,
+  "avg_latency_ms": 87
+}
+```
+
+### 5. `POST /api/admin/login`
 Verifies admin credentials against `env.ADMIN_USER` / `env.ADMIN_PASSWORD`. A wrong attempt locks the client IP out for 2 minutes.
 
 **Request:**
@@ -137,18 +149,19 @@ Verifies admin credentials against `env.ADMIN_USER` / `env.ADMIN_PASSWORD`. A wr
 
 ### cURL (Public Mode / No Token)
 ```bash
-curl "https://your-worker.dev/api/proxy?url=https://api.ipify.org?format=json"
+curl -G "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy" \
+  --data-urlencode "url=https://api.ipify.org?format=json"
 ```
 
 ### cURL (With API Token)
 ```bash
 curl -H "Authorization: Bearer YOUR_API_TOKEN" \
-  "https://your-worker.dev/api/proxy?url=https://api.ipify.org?format=json"
+  "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy?url=https://api.ipify.org%3Fformat%3Djson"
 ```
 
 ### POST Request with Custom Body & Headers
 ```bash
-curl -X POST "https://your-worker.dev/api/proxy" \
+curl -X POST "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://httpbin.org/post",
@@ -158,10 +171,19 @@ curl -X POST "https://your-worker.dev/api/proxy" \
   }'
 ```
 
+### JavaScript fetch (browser or Node)
+```js
+const res = await fetch(
+  "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy?url=" +
+  encodeURIComponent("https://api.ipify.org?format=json")
+);
+const data = await res.json(); // { status, data, content_type, ... }
+```
+
 ### Video / Audio Streaming with Range Header
 ```bash
 curl -i -H "Range: bytes=0-1048575" \
-  "https://your-worker.dev/api/proxy?url=https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4&mode=stream"
+  "https://nebulaproxy.rayhan1789789.workers.dev/api/proxy?url=https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4&mode=stream"
 ```
 
 ---
@@ -172,7 +194,8 @@ curl -i -H "Range: bytes=0-1048575" \
 |---|---|---|
 | **401 Unauthorized** | API key is required or invalid | If `API_TOKEN` is set on the worker, ensure you include `Authorization: Bearer <token>` or set it in the Settings UI. |
 | **502 Bad Gateway** | Target unreachable | Upstream DNS resolution or SSL handshake failed. Check target URL and ensure it starts with `http://` or `https://`. |
-| **504 Gateway Timeout** | Upstream request timed out | The target server took longer than the configured timeout (default: 30s). Increase `timeout` parameter or check server health. |
+| **504 Gateway Timeout** | Upstream request timed out | The target server took longer than the configured timeout (default: 30s). Increase `timeout` parameter or check server health.
+|
 | **400 Bad Request** | Missing or malformed parameters | Ensure `url` is provided and is a valid URL string. Check JSON formatting in POST bodies. |
 | **429 Rate Limit** | Target or Worker rate limited | Slow down concurrent requests. In batch mode, increase the delay interval between requests. |
 
@@ -197,21 +220,19 @@ npm run deploy
 
 ---
 
-## 📝 Changelog (v1.1.0)
+## 📝 Changelog (v1.2.0)
 
+- **7-Language i18n:** Added full translations (English, বাংলা, हिन्दी, Español, Français, العربية, Русский) with placeholder translation, RTL support, and instant language switching.
+- **Merged Batch into Playground:** Single / Batch toggle inside one Playground page.
+- **Batch × N requests:** Send the same request 10/50/100 times in one click with a live progress list.
+- **Media Rendering:** Auto-detect Content-Type and render images/audio/video inline; binaries become download links.
+- **Download All (Batch):** Collect media/files across a batch and download them all at once.
+- **Proxy Mode:** All requests egress through the Worker edge for CORS bypass and blocked-site access.
+- **Real Statistics:** New `/api/stats` endpoint + client session stats replace static placeholder numbers.
+- **Docs accuracy:** Updated base URL to `nebulaproxy.rayhan1789789.workers.dev` and added working cURL/fetch examples.
+- **Worker fixes:** Corrected `method` resolution precedence; added in-memory global request counters.
+
+### v1.1.0
 - **Optional API Token:** Worker supports both unauthenticated public mode and token-secured mode based on `env.API_TOKEN`.
-- **Admin-Gated Key Configuration:** Settings UI requires admin login to modify or clear the saved API key.
-- **Request History:** Added History tab tracking up to 50 requests with latency, size, cURL export, and re-run.
-- **Request Presets:** Save, delete, export, and import request configurations.
-- **Batch Processing:** Run multi-URL sequential requests with delay control, real-time progress, and CSV/JSON export.
-- **Response Viewer Tabs:** Added Preview, Raw Body, and Headers inspection tabs with download and copy actions.
-- **Dark/Light Theme:** Added header theme toggle with system theme detection.
-- **Keyboard Shortcuts:** Added `Ctrl+Enter`, `Ctrl+K`, `Ctrl+H`, `Ctrl+S`.
-- **Admin Login Rate Limiting:** Added server-verified admin credentials (`ADMIN_USER` / `ADMIN_PASSWORD`) with a 2-minute lockout after a failed login attempt, enforced both server-side (per-IP) and client-side (per-browser).
-- **Bug Fixes:**
-  - Robust CORS preflight (OPTIONS) response.
-  - Chunked ArrayBuffer-to-Base64 conversion preventing memory spikes.
-  - AbortController timeout handling returning 504 Gateway Timeout.
-  - Range header forwarding preserving 206 Partial Content.
-  - HEAD requests returning headers without body.
-  - Health (`/api/health`) and version (`/api/version`) endpoints added.
+- **Admin Login Rate Limiting:** Server-verified admin credentials with 2-minute lockout after a failed attempt.
+- **Bug Fixes:** CORS preflight, chunked Base64 conversion, AbortController timeout (504), Range forwarding (206), HEAD request support, `/api/health` + `/api/version` endpoints.

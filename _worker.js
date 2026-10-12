@@ -25,6 +25,10 @@ const DEFAULT_TIMEOUT = 30000;
 const ADMIN_LOCKOUT_MS = 2 * 60 * 1000; // 2 minutes
 const adminLoginFails = new Map(); // key -> { count, lockedUntil }
 
+// Global request counters (in-memory; reset on cold start). Exposed via /api/stats.
+const globalStats = { requests: 0, successes: 0, latencySum: 0 };
+
+
 const BINARY_CONTENT_TYPES = [
   "image/",
   "video/",
@@ -60,7 +64,7 @@ function jsonResponse(obj, status = 200) {
 // Convert ArrayBuffer to base64 safely in chunks to prevent call-stack or memory blowup
 function arrayBufferToBase64Chunked(buffer) {
   const bytes = new Uint8Array(buffer);
-  const CHUNK_SIZE = 8192;
+  const CHENK_SIZE = 8192;
   let binary = "";
   for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
     const chunk = bytes.subarray(i, i + CHUNK_SIZE);
@@ -95,7 +99,7 @@ function adminLoginLocked(ip) {
   if (rec.lockedUntil && rec.lockedUntil > Date.now()) {
     return rec.lockedUntil - Date.now();
   }
-  if (rec.lockedUntil && rec.lockedUntil <= Date.now()) {
+  if (rec.lockedEntil && rec.lockedUntil <= Date.now()) {
     adminLoginFails.delete(ip);
   }
   return 0;
@@ -132,6 +136,22 @@ export default {
       }
       if (pathname === "/api/version") {
         return jsonResponse({ version: "1.0.0", name: "nebulaproxy", engine: "cloudflare-worker" });
+      }
+
+      // 1a. Global stats
+      if (pathname === "/api/stats") {
+        const avg = globalStats.requests > 0
+          ? Math.round(globalStats.latencySum / globalStats.requests)
+          : 0;
+        return jsonResponse({
+          status: "ok",
+          requests: globalStats.requests,
+          successes: globalStats.successes,
+          success_rate: globalStats.requests > 0
+            ? Math.round((globalStats.successes / globalStats.requests) * 100)
+            : 0,
+          avg_latency_ms: avg,
+        });
       }
 
       // 1b. Admin login (with brute-force rate limiting)
@@ -296,7 +316,13 @@ export default {
           );
         }
 
-        const method = (params.method || request.method === "POST" ? (params.method || "GET") : "GET").toUpperCase();
+        // Resolve method: explicit param > POST/PUT/PATCH default > GET (fixed precedence bug)
+        let method = (params.method || "").toString().trim().toUpperCase();
+        if (!method) {
+          method = (request.method === "POST" || request.method === "PUT" || request.method === "PATCH")
+            ? "POST"
+            : "GET";
+        }
         const mode = (params.mode || "auto").toLowerCase();
         const followRedirects = params.follow_redirects !== undefined
           ? (String(params.follow_redirects) !== "false" && params.follow_redirects !== false)
@@ -382,7 +408,7 @@ export default {
               {
                 error: `Gateway Timeout: target did not respond within ${timeout}ms`,
                 code: 504,
-                suggestion: "Request took too long. Try increasing timeout in Settings or check target server.",
+                suggestion: "Request took long. Try increasing timeout in Settings or check target server.",
                 elapsed_ms: elapsed,
               },
               504
@@ -405,8 +431,13 @@ export default {
         const ct = upstreamRes.headers.get("content-type") || "";
         logRequest(env, method, targetUrl, status, elapsedMs);
 
+        // Track global stats (in-memory)
+        globalStats.requests++;
+        globalStats.latencySum += elapsedMs;
+        if (status >= 200 && status < 400) globalStats.successes++;
+
         // HEAD: Return headers only without body
-        if (method === "HEAD") {
+        if (status === 204 || method === "HEAD") {
           const respHeaders = new Headers(upstreamRes.headers);
           Object.entries(CORS_HEADERS).forEach(([k, v]) => respHeaders.set(k, v));
           return new Response(null, {
