@@ -176,11 +176,12 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
 .code code{font-family:var(--mono)}
 
 /* ===== Tables ===== */
-.tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
-.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border-soft)}
-.tbl th{font-family:var(--mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}
-.tbl td{color:var(--text-dim)}
-.tbl code,.tbl .mn{font-family:var(--mono);color:var(--accent-hi);font-size:12.5px}
+.tbl-scroll{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;table-layout:auto}
+.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border-soft);word-break:break-word;vertical-align:top}
+.tbl th{font-family:var(--mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.tbl td{color:var(--text-dim);min-width:0}
+.tbl code,.tbl .mn{font-family:var(--mono);color:var(--accent-hi);font-size:12.5px;word-break:break-word}
 .tbl tr:hover td{background:rgba(225,29,63,.04)}
 
 /* ===== Settings ===== */
@@ -231,6 +232,27 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
 .media-preview{display:block;max-width:100%;max-height:520px;width:auto;height:auto;object-fit:contain;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-0)}
 audio.media-preview{width:100%;max-height:none;border:none;border-radius:0;background:transparent}
 
+/* ===== Results gallery (all generated media) ===== */
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.gal-item{background:linear-gradient(180deg,var(--panel-raised),var(--panel-solid));border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px}
+.gal-media{position:relative;width:100%;aspect-ratio:16/10;background:var(--bg-0);border-radius:var(--radius-sm);overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-soft)}
+.gal-media img{width:100%;height:100%;object-fit:contain;display:block}
+.gal-media video,.gal-media audio{width:100%;max-height:100%}
+.gal-media.audio{aspect-ratio:auto;min-height:54px}
+.gal-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);z-index:1}
+.gal-loaded .gal-placeholder{display:none}
+.gal-media.hidden-src > img,.gal-media.hidden-src > video{opacity:0}
+.gal-meta{font-family:var(--mono);font-size:10.5px;color:var(--text-faint);display:flex;justify-content:space-between;align-items:center;gap:6px}
+.gal-type{color:var(--accent-hi);text-transform:uppercase;letter-spacing:.04em}
+/* shimmer placeholder */
+.shimmer{position:relative;overflow:hidden;background:var(--bg-2)}
+.shimmer::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:shimmer 1.4s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+
+@media (max-width:600px){
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+}
+
 /* Tooltips */
 [data-tip]{position:relative}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--panel-solid);border:1px solid var(--border-strong);color:var(--text);padding:5px 9px;border-radius:var(--radius-sm);font-size:11px;white-space:nowrap;z-index:120;box-shadow:var(--shadow-panel);pointer-events:none}
@@ -266,6 +288,9 @@ audio.media-preview{width:100%;max-height:none;border:none;border-radius:0;backg
   .container{padding:0 14px}
   .field-row{flex-direction:column}
   .t-label{font-size:10px}
+  .tbl{font-size:12px}
+  .tbl th,.tbl td{padding:8px 10px}
+  .tbl td{word-break:break-word;overflow-wrap:anywhere}
 }
 </style>
 </head>
@@ -460,6 +485,15 @@ audio.media-preview{width:100%;max-height:none;border:none;border-radius:0;backg
           <div id="pg-download-wrap" style="display:none;margin-top:10px"></div>
           <div id="pg-meta" style="margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--text-faint)"></div>
 
+          <!-- Results gallery: every generated media item is appended here -->
+          <div id="pg-gallery" style="margin-top:18px">
+            <div id="pg-gallery-head" style="display:none;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:13px;font-weight:700" data-i18n="pg.gallery">Generated results</span>
+              <button class="mini-btn" id="pg-gallery-clear">Clear all</button>
+            </div>
+            <div id="pg-gallery-grid"></div>
+          </div>
+
           <!-- Response viewer tabs -->
           <div id="pg-viewer" style="display:none;margin-top:16px">
             <div class="rv-tabs">
@@ -556,6 +590,7 @@ audio.media-preview{width:100%;max-height:none;border:none;border-radius:0;backg
 
       <h3 style="margin:20px 0 8px" data-i18n="docs.endpoints">Endpoints</h3>
       <div class="card" style="padding:8px 0">
+        <div class="tbl-scroll">
         <table class="tbl">
           <thead><tr><th data-i18n="docs.method">Method</th><th data-i18n="docs.endpoint">Endpoint</th><th data-i18n="docs.description">Description</th></tr></thead>
           <tbody>
@@ -564,10 +599,12 @@ audio.media-preview{width:100%;max-height:none;border:none;border-radius:0;backg
             <tr><td><span class="mn">GET</span></td><td><code>/api/version</code></td><td>Returns current version and edge engine metadata</td></tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <h3 style="margin:24px 0 8px" data-i18n="docs.params">Request parameters</h3>
       <div class="card" style="padding:8px 0">
+        <div class="tbl-scroll">
         <table class="tbl">
           <thead><tr><th data-i18n="docs.field">Field</th><th data-i18n="docs.type">Type</th><th data-i18n="docs.req">Required</th><th data-i18n="docs.desc2">Description</th></tr></thead>
           <tbody>
@@ -583,6 +620,7 @@ audio.media-preview{width:100%;max-height:none;border:none;border-radius:0;backg
             <tr><td><code>filename</code></td><td>string</td><td data-i18n="no">no</td><td>Optional Content-Disposition filename</td></tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <h3 style="margin:24px 0 8px" data-i18n="docs.examples">Examples</h3>
@@ -818,7 +856,7 @@ const STRINGS = {
     "feat.f5.t":"Smart Format Detection","feat.f5.d":"Automatic JSON parsing, base64 chunked encoding for binaries, or raw streams with Range support for video seek.",
     "feat.f6.t":"Any HTTP Client","feat.f6.d":"Use cURL, Python, Node.js, fetch, or our built-in browser Playground. One simple endpoint, zero SDK required.",
     "pg.eyebrow":"Playground","pg.title":"Test the proxy live","pg.sub":"Send a request through the gateway and inspect the full response.",
-    "pg.target":"Target URL","pg.method":"Method","pg.body":"Request body (JSON or text)","pg.send":"Send Request","pg.idle":"Ready","pg.hint":"Fill the fields and press Send to see the response.",
+    "pg.target":"Target URL","pg.method":"Method","pg.body":"Request body (JSON or text)","pg.send":"Send Request","pg.gallery":"Generated results","pg.galleryClear":"Clear all","pg.idle":"Ready","pg.hint":"Fill the fields and press Send to see the response.",
     "docs.eyebrow":"Documentation","docs.title":"API reference","docs.sub":"Everything you need to integrate NebulaProxy into your app.",
     "docs.endpoints":"Endpoints","docs.method":"Method","docs.endpoint":"Endpoint","docs.description":"Description",
     "docs.params":"Request parameters","docs.field":"Field","docs.type":"Type","docs.req":"Required","docs.desc2":"Description",
@@ -844,7 +882,7 @@ const STRINGS = {
     "feat.f5.t":"স্মার্ট ফরম্যাট ডিটেকশন","feat.f5.d":"স্বয়ংক্রিয় JSON পার্সিং এবং বাইনারির জন্য চাঙ্কড Base64 এনকোডিং।",
     "feat.f6.t":"যেকোনো ক্লায়েন্ট সমর্থিত","feat.f6.d":"cURL, Python, Node.js বা ব্রাউজার প্লেগ্রাউন্ড দিয়ে ব্যবহার করুন। কোনো SDK দরকার নেই।",
     "pg.eyebrow":"প্লেগ্রাউন্ড","pg.title":"প্রক্সি লাইভ টেস্ট করুন","pg.sub":"গেটওয়ে দিয়ে একটি অনুরোধ পাঠান এবং পুরো উত্তর পরীক্ষা করুন।",
-    "pg.target":"টার্গেট URL","pg.method":"মেথড","pg.body":"অনুরোধ বডি (JSON বা টেক্সট)","pg.send":"অনুরোধ পাঠান","pg.idle":"প্রস্তুত","pg.hint":"ফর্ম পূরণ করে Send চাপুন।",
+    "pg.target":"টার্গেট URL","pg.method":"মেথড","pg.body":"অনুরোধ বডি (JSON বা টেক্সট)","pg.send":"অনুরোধ পাঠান","pg.gallery":"জেনারেটেড ফলাফল","pg.galleryClear":"সব মুছুন","pg.idle":"প্রস্তুত","pg.hint":"ফর্ম পূরণ করে Send চাপুন।",
     "docs.eyebrow":"ডকুমেন্টেশন","docs.title":"API রেফারেন্স","docs.sub":"আপনার অ্যাপে NebulaProxy যুক্ত করতে প্রয়োজনীয় তথ্য।",
     "docs.endpoints":"এন্ডপয়েন্ট","docs.method":"মেথড","docs.endpoint":"এন্ডপয়েন্ট","docs.description":"বর্ণনা",
     "docs.params":"অনুরোধ প্যারামিটার","docs.field":"ফিল্ড","docs.type":"টাইপ","docs.req":"আবশ্যক","docs.desc2":"বর্ণনা",
@@ -870,7 +908,7 @@ const STRINGS = {
     "feat.f5.t":"स्मार्ट फ़ॉर्मेट डिटेक्शन","feat.f5.d":"स्वचालित JSON पार्सिंग, बाइनरी के लिए बेस64 चंक्ड एन्कोडिंग, या वीडियो सीक के लिए रेंज सपोर्ट के साथ रॉ स्ट्रीम।",
     "feat.f6.t":"कोई भी HTTP क्लाइंट","feat.f6.d":"cURL, Python, Node.js, fetch या हमारे बिल्ट-इन ब्राउज़र प्लेग्राउंड का उपयोग करें। एक सरल एंडपॉइंट, कोई SDK आवश्यक नहीं।",
     "pg.eyebrow":"प्लेग्राउंड","pg.title":"प्रॉक्सी को लाइव टेस्ट करें","pg.sub":"गेटवे से एक अनुरोध भेजें और पूरा रिस्पॉन्स देखें।",
-    "pg.target":"लक्ष्य URL","pg.method":"मेथड","pg.body":"अनुरोध बॉडी (JSON या टेक्स्ट)","pg.send":"अनुरोध भेजें","pg.idle":"तैयार","pg.hint":"फ़ील्ड भरें और रिस्पॉन्स देखने के लिए Send दबाएं।",
+    "pg.target":"लक्ष्य URL","pg.method":"मेथड","pg.body":"अनुरोध बॉडी (JSON या टेक्स्ट)","pg.send":"अनुरोध भेजें","pg.gallery":"जनरेट किए गए परिणाम","pg.galleryClear":"सभी हटाएं","pg.idle":"तैयार","pg.hint":"फ़ील्ड भरें और रिस्पॉन्स देखने के लिए Send दबाएं।",
     "docs.eyebrow":"दस्तावेज़","docs.title":"API संदर्भ","docs.sub":"NebulaProxy को अपने ऐप में जोड़ने के लिए आवश्यक सब कुछ।",
     "docs.endpoints":"एंडपॉइंट","docs.method":"मेथड","docs.endpoint":"एंडपॉइंट","docs.description":"विवरण",
     "docs.params":"अनुरोध पैरामीटर","docs.field":"फ़ील्ड","docs.type":"प्रकार","docs.req":"आवश्यक","docs.desc2":"विवरण",
@@ -896,7 +934,7 @@ const STRINGS = {
     "feat.f5.t":"Detección inteligente de formato","feat.f5.d":"Análisis JSON automático, codificación base64 por fragmentos para binarios, o transmisiones crudas con soporte Range para búsqueda de video.",
     "feat.f6.t":"Cualquier cliente HTTP","feat.f6.d":"Usa cURL, Python, Node.js, fetch o nuestro Playground integrado. Un endpoint simple, sin SDK.",
     "pg.eyebrow":"Playground","pg.title":"Prueba el proxy en vivo","pg.sub":"Envía una solicitud a través de la puerta de enlace e inspecciona la respuesta completa.",
-    "pg.target":"URL de destino","pg.method":"Método","pg.body":"Cuerpo de la solicitud (JSON o texto)","pg.send":"Enviar solicitud","pg.idle":"Listo","pg.hint":"Completa los campos y pulsa Send para ver la respuesta.",
+    "pg.target":"URL de destino","pg.method":"Método","pg.body":"Cuerpo de la solicitud (JSON o texto)","pg.send":"Enviar solicitud","pg.gallery":"Resultados generados","pg.galleryClear":"Borrar todo","pg.idle":"Listo","pg.hint":"Completa los campos y pulsa Send para ver la respuesta.",
     "docs.eyebrow":"Documentación","docs.title":"Referencia de la API","docs.sub":"Todo lo que necesitas para integrar NebulaProxy en tu app.",
     "docs.endpoints":"Endpoints","docs.method":"Método","docs.endpoint":"Endpoint","docs.description":"Descripción",
     "docs.params":"Parámetros de solicitud","docs.field":"Campo","docs.type":"Tipo","docs.req":"Obligatorio","docs.desc2":"Descripción",
@@ -922,7 +960,7 @@ const STRINGS = {
     "feat.f5.t":"Détection intelligente du format","feat.f5.d":"Analyse JSON automatique, encodage base64 par blocs pour les binaires, ou flux bruts avec support Range pour la recherche vidéo.",
     "feat.f6.t":"Tout client HTTP","feat.f6.d":"Utilisez cURL, Python, Node.js, fetch ou notre Playground intégré. Un endpoint simple, aucun SDK requis.",
     "pg.eyebrow":"Playground","pg.title":"Testez le proxy en direct","pg.sub":"Envoyez une requête via la passerelle et inspectez la réponse complète.",
-    "pg.target":"URL cible","pg.method":"Méthode","pg.body":"Corps de la requête (JSON ou texte)","pg.send":"Envoyer la requête","pg.idle":"Prêt","pg.hint":"Remplissez les champs et appuyez sur Send pour voir la réponse.",
+    "pg.target":"URL cible","pg.method":"Méthode","pg.body":"Corps de la requête (JSON ou texte)","pg.send":"Envoyer la requête","pg.gallery":"Résultats générés","pg.galleryClear":"Tout effacer","pg.idle":"Prêt","pg.hint":"Remplissez les champs et appuyez sur Send pour voir la réponse.",
     "docs.eyebrow":"Documentation","docs.title":"Référence API","docs.sub":"Tout ce qu'il faut pour intégrer NebulaProxy dans votre application.",
     "docs.endpoints":"Endpoints","docs.method":"Méthode","docs.endpoint":"Endpoint","docs.description":"Description",
     "docs.params":"Paramètres de requête","docs.field":"Champ","docs.type":"Type","docs.req":"Requis","docs.desc2":"Description",
@@ -948,7 +986,7 @@ const STRINGS = {
     "feat.f5.t":"اكتشاف ذكي للتنسيق","feat.f5.d":"تحليل JSON تلقائي، وترميز base64 مجزأ للملفات الثنائية، أو تدفقات خام مع دعم النطاق للتنقل في الفيديو.",
     "feat.f6.t":"أي عميل HTTP","feat.f6.d":"استخدم cURL أو Python أو Node.js أو fetch أو الملعب المدمج في المتصفح. نقطة نهاية واحدة بسيطة دون الحاجة لأي SDK.",
     "pg.eyebrow":"الملعب","pg.title":"اختبر البروكسي مباشرة","pg.sub":"أرسل طلبًا عبر البوابة وافحص الاستجابة الكاملة.",
-    "pg.target":"عنوان URL الهدف","pg.method":"الطريقة","pg.body":"جسم الطلب (JSON أو نص)","pg.send":"إرسال الطلب","pg.idle":"جاهز","pg.hint":"املأ الحقول واضغط إرسال لرؤية الاستجابة.",
+    "pg.target":"عنوان URL الهدف","pg.method":"الطريقة","pg.body":"جسم الطلب (JSON أو نص)","pg.send":"إرسال الطلب","pg.gallery":"النتائج المولدة","pg.galleryClear":"مسح الكل","pg.idle":"جاهز","pg.hint":"املأ الحقول واضغط إرسال لرؤية الاستجابة.",
     "docs.eyebrow":"الوثائق","docs.title":"مرجع API","docs.sub":"كل ما تحتاجه لدمج NebulaProxy في تطبيقك.",
     "docs.endpoints":"نقاط النهاية","docs.method":"الطريقة","docs.endpoint":"نقطة النهاية","docs.description":"الوصف",
     "docs.params":"معاملات الطلب","docs.field":"الحقل","docs.type":"النوع","docs.req":"مطلوب","docs.desc2":"الوصف",
@@ -974,7 +1012,7 @@ const STRINGS = {
     "feat.f5.t":"Умное определение формата","feat.f5.d":"Автоматический парсинг JSON, блочное base64-кодирование для бинарных данных или сырые потоки с поддержкой Range для перемотки видео.",
     "feat.f6.t":"Любой HTTP-клиент","feat.f6.d":"Используйте cURL, Python, Node.js, fetch или встроенный Playground. Одна простая конечная точка, без SDK.",
     "pg.eyebrow":"Playground","pg.title":"Протестируйте прокси вживую","pg.sub":"Отправьте запрос через шлюз и изучите полный ответ.",
-    "pg.target":"Целевой URL","pg.method":"Метод","pg.body":"Тело запроса (JSON или текст)","pg.send":"Отправить запрос","pg.idle":"Готово","pg.hint":"Заполните поля и нажмите Send, чтобы увидеть ответ.",
+    "pg.target":"Целевой URL","pg.method":"Метод","pg.body":"Тело запроса (JSON или текст)","pg.send":"Отправить запрос","pg.gallery":"Сгенерированные результаты","pg.galleryClear":"Очистить всё","pg.idle":"Готово","pg.hint":"Заполните поля и нажмите Send, чтобы увидеть ответ.",
     "docs.eyebrow":"Документация","docs.title":"Справочник API","docs.sub":"Всё необходимое для интеграции NebulaProxy в ваше приложение.",
     "docs.endpoints":"Конечные точки","docs.method":"Метод","docs.endpoint":"Конечная точка","docs.description":"Описание",
     "docs.params":"Параметры запроса","docs.field":"Поле","docs.type":"Тип","docs.req":"Обязательно","docs.desc2":"Описание",
@@ -1716,23 +1754,136 @@ document.getElementById("pg-send").addEventListener("click", async()=>{
 });
 
 function renderBinaryPreview(blob, contentType, url, preview, dlWrap, sizeBytes){
-  preview.style.display = "block";
-  const objectUrl = URL.createObjectURL(blob);
   const ct = (contentType || "").toLowerCase();
+  const mediaType = ct.startsWith("image/") ? "image"
+    : ct.startsWith("video/") ? "video"
+    : ct.startsWith("audio/") ? "audio"
+    : ct === "application/pdf" ? "pdf"
+    : "binary";
 
-  if(ct.startsWith("image/")){
-    preview.innerHTML = `<img src="${objectUrl}" class="media-preview" alt="preview" />`;
-  } else if(ct.startsWith("video/")){
-    preview.innerHTML = `<video controls class="media-preview" src="${objectUrl}" playsinline></video>`;
-  } else if(ct.startsWith("audio/")){
-    preview.innerHTML = `<audio controls class="media-preview" src="${objectUrl}"></audio>`;
-  } else if(ct === "application/pdf"){
+  const isMedia = (mediaType === "image" || mediaType === "video" || mediaType === "audio");
+
+  if(isMedia){
+    // Single latest preview (unchanged behaviour)
+    preview.style.display = "block";
+    const objectUrl = URL.createObjectURL(blob);
+    if(mediaType === "image"){
+      preview.innerHTML = `<img src="${objectUrl}" class="media-preview" alt="preview" loading="lazy" />`;
+    } else if(mediaType === "video"){
+      preview.innerHTML = `<video controls class="media-preview" src="${objectUrl}" playsinline preload="none"></video>`;
+    } else {
+      preview.innerHTML = `<audio controls class="media-preview" src="${objectUrl}" preload="none"></audio>`;
+    }
+    makeDownloadButton(dlWrap, blob, contentType, url);
+    // Append a card to the persistent results gallery (keeps ALL media)
+    appendGalleryItem(blob, contentType, url, mediaType, sizeBytes);
+  } else if(mediaType === "pdf"){
+    preview.style.display = "block";
     preview.innerHTML = `<p style="color:var(--text-dim);margin-bottom:8px">📄 PDF Document (${formatBytes(sizeBytes||blob.size)})</p>`;
+    makeDownloadButton(dlWrap, blob, contentType, url);
+    appendGalleryItem(blob, contentType, url, mediaType, sizeBytes);
   } else {
+    preview.style.display = "block";
     preview.innerHTML = `<p style="color:var(--text-dim)">📦 Binary Data (${formatBytes(sizeBytes||blob.size)}, ${ct})</p>`;
+    makeDownloadButton(dlWrap, blob, contentType, url);
   }
-  makeDownloadButton(dlWrap, blob, contentType, url);
 }
+
+// ---- Persistent results gallery: keeps every generated media item ----
+let galleryCount = 0;
+const galleryObserver = (typeof IntersectionObserver !== "undefined")
+  ? new IntersectionObserver((entries, obs)=>{
+      for(const en of entries){
+        if(!en.isIntersecting) continue;
+        const item = en.target;
+        const src = item.getAttribute("data-src");
+        const kind = item.getAttribute("data-kind");
+        if(kind === "image"){
+          const img = item.querySelector("img");
+          if(img && !img.src) img.src = src;
+        } else if(kind === "video"){
+          const v = item.querySelector("video");
+          if(v && !v.src) v.src = src;
+        } else if(kind === "audio"){
+          const a = item.querySelector("audio");
+          if(a && !a.src) a.src = src;
+        }
+        item.classList.add("gal-loaded");
+        obs.unobserve(item);
+      }
+    }, { rootMargin: "120px" })
+  : null;
+
+function appendGalleryItem(blob, contentType, url, mediaType, sizeBytes){
+  const head = document.getElementById("pg-gallery-head");
+  const grid = document.getElementById("pg-gallery-grid");
+  if(!head || !grid) return;
+  head.style.display = "flex";
+
+  const ct = (contentType || "").toLowerCase();
+  const objectUrl = URL.createObjectURL(blob);
+  galleryCount++;
+  const label = (mediaType === "audio" ? "Audio" : mediaType === "video" ? "Video" : mediaType === "pdf" ? "PDF" : "Image");
+
+  let mediaInner = "";
+  if(mediaType === "image"){
+    mediaInner = `<img alt="generated ${galleryCount}" loading="lazy" />`;
+  } else if(mediaType === "video"){
+    mediaInner = `<video controls playsinline preload="none"></video>`;
+  } else if(mediaType === "audio"){
+    mediaInner = `<audio controls preload="none" style="width:100%"></audio>`;
+  } else {
+    mediaInner = `<span style="font-size:26px">📄</span>`;
+  }
+
+  const item = document.createElement("div");
+  item.className = "gal-item";
+  item.innerHTML = `
+    <div class="gal-media ${mediaType==='audio'?'audio':''}" data-kind="${mediaType}" data-src="${objectUrl}">
+      <div class="gal-placeholder shimmer">
+        <span>${label} · ${formatBytes(sizeBytes||blob.size)}</span>
+      </div>
+      ${mediaInner}
+    </div>
+    <div class="gal-meta">
+      <span class="gal-type">${label}</span>
+      <span>${formatBytes(sizeBytes||blob.size)}</span>
+    </div>
+    <div class="gal-actions" style="display:flex;gap:6px">
+      <a class="mini-btn" href="${objectUrl}" download="${uniqueFileName(contentType, url)}" style="text-decoration:none">⬇ Download</a>
+      <a class="mini-btn" href="${objectUrl}" target="_blank" rel="noopener" style="text-decoration:none">Open</a>
+    </div>`;
+
+  const mediaEl = item.querySelector(".gal-media");
+  if(mediaEl && galleryObserver){
+    galleryObserver.observe(mediaEl);
+  } else if(mediaEl){
+    // no IntersectionObserver fallback → load immediately
+    const src = mediaEl.getAttribute("data-src");
+    const img = mediaEl.querySelector("img");
+    const v = mediaEl.querySelector("video");
+    const a = mediaEl.querySelector("audio");
+    if(img) img.src = src;
+    else if(v) v.src = src;
+    else if(a) a.src = src;
+    mediaEl.classList.add("gal-loaded");
+  }
+
+  grid.prepend(item);
+}
+
+function clearGallery(){
+  const grid = document.getElementById("pg-gallery-grid");
+  const head = document.getElementById("pg-gallery-head");
+  if(grid) grid.innerHTML = "";
+  if(head) head.style.display = "none";
+  galleryCount = 0;
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  const clearBtn = document.getElementById("pg-gallery-clear");
+  if(clearBtn) clearBtn.addEventListener("click", clearGallery);
+});
 
 function makeDownloadButton(dlWrap, blob, contentType, url){
   dlWrap.style.display = "block";
