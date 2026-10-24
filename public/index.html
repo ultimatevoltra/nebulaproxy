@@ -227,6 +227,13 @@ body{min-height:100vh;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-
 .batch-row .b-status.ok{color:var(--accent-ok)}
 .batch-row .b-status.bad{color:var(--accent-bad)}
 .batch-row .b-url{flex:1;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.batch-row.batch-hasmedia{flex-direction:column;align-items:stretch;gap:8px;padding:10px}
+.batch-row .b-head{display:flex;align-items:center;gap:10px;width:100%}
+.batch-row .b-media{width:100%;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-0);border:1px solid var(--border-soft);display:flex;justify-content:center}
+.batch-row .b-media img{max-width:100%;max-height:220px;object-fit:contain;display:block}
+.batch-row .b-media video{max-width:100%;max-height:220px;display:block}
+.batch-row .b-media audio{width:100%}
+.batch-row .b-kind{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--accent-hi);background:var(--panel-raised);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px 7px}
 
 /* Responsive media preview (generated images/video/audio) */
 .media-preview{display:block;max-width:100%;max-height:520px;width:auto;height:auto;object-fit:contain;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-0)}
@@ -2003,7 +2010,7 @@ document.getElementById("batch-run").addEventListener("click", async()=>{
     if(batchAbortController.signal.aborted) break;
     const target = urls[i];
     const t0 = performance.now();
-    let status = 0, size = 0;
+    let status = 0, size = 0, elapsed = 0;
 
     try{
       const h = { "Content-Type":"application/json" };
@@ -2015,25 +2022,50 @@ document.getElementById("batch-run").addEventListener("click", async()=>{
         signal: batchAbortController.signal,
       });
       status = res.status;
-      const buf = await res.arrayBuffer();
-      size = buf.byteLength;
+      elapsed = Math.round(performance.now() - t0);
+      const isOk = status >= 200 && status < 300;
+      const ctype = (res.headers.get("content-type") || "").toLowerCase();
+      const isMedia = /^(image|video|audio)\//.test(ctype);
+      let blob = null, objectUrl = null;
+      if(isMedia){
+        blob = await res.blob();
+        size = blob.size;
+        objectUrl = URL.createObjectURL(blob);
+      } else {
+        const buf = await res.arrayBuffer();
+        size = buf.byteLength;
+      }
+      lastBatchResults.push({ url: target, status, elapsed_ms: elapsed, size_bytes: size, content_type: ctype });
+
+      const row = document.createElement("div");
+      row.className = "batch-row" + (isMedia ? " batch-hasmedia" : "");
+      const kind = isMedia ? ctype.split("/")[0] : "";
+      row.innerHTML = `
+        <div class="b-head">
+          <span class="b-status ${isOk?'ok':'bad'}">${status}</span>
+          ${kind ? `<span class="b-kind">${escapeHtml(kind)}</span>` : ""}
+          <span class="b-url" title="${escapeHtml(target)}">${escapeHtml(target)}</span>
+          <span style="color:var(--text-faint)">${elapsed}ms</span>
+          <span style="color:var(--text-faint)">${formatBytes(size)}</span>
+        </div>
+        ${isMedia ? `<div class="b-media"></div>` : ""}
+      `;
+      if(isMedia && objectUrl){
+        const box = row.querySelector(".b-media");
+        if(kind === "image") box.innerHTML = `<img src="${objectUrl}" loading="lazy" alt=""/>`;
+        else if(kind === "video") box.innerHTML = `<video src="${objectUrl}" controls preload="none"></video>`;
+        else if(kind === "audio") box.innerHTML = `<audio src="${objectUrl}" controls preload="none"></audio>`;
+      }
+      resultsDiv.appendChild(row);
     }catch(err){
       status = err.name === "AbortError" ? 499 : 500;
+      elapsed = Math.round(performance.now() - t0);
+      const row = document.createElement("div");
+      row.className = "batch-row";
+      row.innerHTML = `<span class="b-status bad">${status}</span><span class="b-url" title="${escapeHtml(target)}">${escapeHtml(target)}</span><span style="color:var(--text-faint)">${elapsed}ms</span>`;
+      resultsDiv.appendChild(row);
+      lastBatchResults.push({ url: target, status, elapsed_ms: elapsed, size_bytes: 0 });
     }
-
-    const elapsed = Math.round(performance.now() - t0);
-    const isOk = status >= 200 && status < 300;
-    lastBatchResults.push({ url: target, status, elapsed_ms: elapsed, size_bytes: size });
-
-    const row = document.createElement("div");
-    row.className = "batch-row";
-    row.innerHTML = `
-      <span class="b-status ${isOk?'ok':'bad'}">${status}</span>
-      <span class="b-url" title="${escapeHtml(target)}">${escapeHtml(target)}</span>
-      <span style="color:var(--text-faint)">${elapsed}ms</span>
-      <span style="color:var(--text-faint)">${formatBytes(size)}</span>
-    `;
-    resultsDiv.appendChild(row);
 
     const pct = Math.round(((i+1) / urls.length) * 100);
     progressFill.style.width = pct + "%";
