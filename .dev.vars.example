@@ -1,11 +1,13 @@
-# NebulaProxy local development environment variables
-# Note: API_TOKEN is OPTIONAL. If unset or empty, auth is disabled.
-# API_TOKEN=your-optional-secret-token
+# NebulaProxy — Flaregun rotating proxy env (copy to .dev.vars for local dev;
+# .dev.vars is git-ignored — never commit real secrets).
 
-# Admin login (Settings page). If ADMIN_PASSWORD is unset/empty, admin login
-# is disabled. A wrong username/password locks the client out for 2 minutes.
-# ADMIN_USER=admin
-# ADMIN_PASSWORD=your-strong-admin-password
+# Cloudflare credentials used by the Flaregun CLI (`flaregun init` / `flaregun up`).
+CF_API_TOKEN=
+CF_ACCOUNT_ID=
 
-# Set to true to enable Cloudflare Worker request logging in console
-ENABLE_LOGGING=false
+# Fleet size + rotation strategy (also set in wrangler.toml [vars] for deploy).
+WORKER_COUNT=20
+FLAREGUN_STRATEGY=adaptive   # adaptive | round-robin | random
+
+# Optional self-label for a single fleet node (used in /api/proxy mode=json output).
+WORKER_ID=

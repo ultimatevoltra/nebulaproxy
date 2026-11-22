@@ -1,0 +1,25 @@
+# NebulaProxy — Flaregun rotating proxy (Cloudflare Workers)
+name = "nebulaproxy"
+main = "_worker.js"
+compatibility_date = "2026-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Static UI assets (optional — directory under ./public)
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# ---------------------------------------------------------------------------
+# Flaregun fleet settings. Rotation across worker instances (each a distinct
+# Cloudflare egress IP) is driven by the Flaregun CLI / SDK. These env vars are
+# mirrored into every deployed worker so each knows its fleet strategy.
+# ---------------------------------------------------------------------------
+[vars]
+WORKER_COUNT = "20"
+FLAREGUN_STRATEGY = "adaptive"
+
+# Secrets are NOT committed — set them in the dashboard or via `wrangler secret
+# put`, or in a local .dev.vars (git-ignored). See .dev.vars.example.
+#   CF_API_TOKEN, CF_ACCOUNT_ID  -> used by `flaregun init` / CLI
+#   WORKER_ID                    -> optional self-label per fleet node

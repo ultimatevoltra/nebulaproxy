@@ -1,12 +1,14 @@
 {
   "name": "nebulaproxy",
-  "version": "1.0.0",
-  "description": "NebulaProxy — multi-purpose proxy gateway on Cloudflare Workers (native fetch)",
+  "version": "2.0.0",
+  "description": "NebulaProxy — general-purpose rotating proxy on Cloudflare Workers (Flaregun fleet; streams images & video)",
   "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^3.0.0",
+    "@miclivs/flaregun": "latest"
   }
 }
