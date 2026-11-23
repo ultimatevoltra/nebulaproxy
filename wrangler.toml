@@ -11,15 +11,19 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 # ---------------------------------------------------------------------------
-# Flaregun fleet settings. Rotation across worker instances (each a distinct
-# Cloudflare egress IP) is driven by the Flaregun CLI / SDK. These env vars are
-# mirrored into every deployed worker so each knows its fleet strategy.
+# Flaregun fleet settings. A fleet of workers (each a distinct Cloudflare egress
+# IP) is deployed via Flaregun. FLEET_URLS lists the sibling /api/proxy URLs so
+# each worker can fan out to a different egress IP on rate-limit, honouring
+# IP_COOLDOWN_SECONDS per sibling.
 # ---------------------------------------------------------------------------
 [vars]
 WORKER_COUNT = "20"
 FLAREGUN_STRATEGY = "adaptive"
+IP_COOLDOWN_SECONDS = "300"
+# FLEET_URLS is populated at deploy time (comma-separated sibling URLs) — leave
+# empty here; set via `wrangler secret put FLEET_URLS` or the dashboard.
 
 # Secrets are NOT committed — set them in the dashboard or via `wrangler secret
 # put`, or in a local .dev.vars (git-ignored). See .dev.vars.example.
 #   CF_API_TOKEN, CF_ACCOUNT_ID  -> used by `flaregun init` / CLI
-#   WORKER_ID                    -> optional self-label per fleet node
+#   FLEET_URLS                   -> comma-separated sibling worker URLs

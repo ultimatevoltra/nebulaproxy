@@ -9,5 +9,13 @@ CF_ACCOUNT_ID=
 WORKER_COUNT=20
 FLAREGUN_STRATEGY=adaptive   # adaptive | round-robin | random
 
+# Per-IP cooldown (seconds) — how long a sibling worker/IP stays cooling down
+# after a rate limit is detected before it is used again.
+IP_COOLDOWN_SECONDS=300
+
+# Comma-separated sibling worker /api/proxy URLs (each a different Cloudflare
+# egress IP). Populate after `flaregun up 20` (from `flaregun ls` output).
+FLEET_URLS=
+
 # Optional self-label for a single fleet node (used in /api/proxy mode=json output).
 WORKER_ID=
